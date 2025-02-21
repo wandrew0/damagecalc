@@ -12,7 +12,10 @@ export function calculateSingleAutoDamage(
     build: Build
 ): number {
     const crit = build.critChance;
-    const AD = champ.getAD(champLevel) + build.AD;
+    const AD = champ.getAD(champLevel) + build.AD + build.bonusAD;
+    targetArmor -= build.lethality + build.bonusLethality;
+    targetArmor = Math.max(targetArmor, 0);
+    targetArmor *= 1 - build.armorPenetration;
     const armorModifier = 100 / (100 + targetArmor);
 
     return AD * (1 - crit + crit * build.critDamageModifier) * armorModifier;
