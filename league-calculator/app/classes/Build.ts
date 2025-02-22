@@ -13,13 +13,21 @@ export class Build {
 
     bonusAD: number = 0;
     bonusLethality: number = 0;
+    bonusCrit: number = 0;
 
     setBonusAD(bonusAD: number) {
         this.bonusAD = bonusAD;
+        this.update();
     }
 
     setBonusLethality(bonusLethality: number) {
         this.bonusLethality = bonusLethality;
+        this.update();
+    }
+
+    setBonusCrit(bonusCrit: number) {
+        this.bonusCrit = bonusCrit;
+        this.update();
     }
 
     addItem(item: Item) {
@@ -39,9 +47,11 @@ export class Build {
     }
 
     update() {
-        this.critChance = this.items.reduce((acc, it) => acc + it.critChance, 0);
-        this.AD = this.items.reduce((acc, it) => acc + it.AD, 0);
-        this.lethality = this.items.reduce((acc, it) => acc + it.lethality, 0);
+        this.critChance =
+            this.items.reduce((acc, it) => acc + it.critChance, 0) + this.bonusCrit;
+        this.AD = this.items.reduce((acc, it) => acc + it.AD, 0) + this.bonusAD;
+        this.lethality =
+            this.items.reduce((acc, it) => acc + it.lethality, 0) + this.bonusLethality;
         this.armorPenetration = this.items.reduce(
             (acc, it) => Math.max(acc, it.armorPenetration),
             0

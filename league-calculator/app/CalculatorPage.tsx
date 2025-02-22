@@ -1,8 +1,6 @@
 "use client";
 
 import dynamic from "next/dynamic";
-// const Select = dynamic(() => import("react-select"), { ssr: false });
-
 import React, { useEffect, useState } from "react";
 import "./CalculatorPage.css";
 
@@ -15,9 +13,8 @@ import {
     Tooltip,
     Legend,
 } from "chart.js";
-import { Line } from "react-chartjs-2"; // use visx instead maybe ? or desmos xd
+import { Line } from "react-chartjs-2";
 
-// Import classes and data
 import { Champion } from "./classes/Champion";
 import { Build } from "./classes/Build";
 import { calculateSingleAutoDamage } from "./classes/Calculator";
@@ -27,30 +24,27 @@ import { ALL_ITEMS } from "./data/Items";
 import Select from "react-select";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
+
 ALL_ITEMS.sort((a, b) => b.AD - a.AD || b.critChance - a.critChance);
 const itemOptions = ALL_ITEMS.map((item) => ({
     value: item,
     label: `${item.name} (${item.cost}g)`,
 }));
-// const itemOptions = [Item];
 
 function CalculatorPage() {
-    // support multiple builds i guess
-    const [builds, setBuild] = useState([new Build()]);
+    // Global state for level
     const [level, setLevel] = useState(1);
+    const [builds, setBuild] = useState([new Build()]);
     const [champion, setChampion] = useState(new Champion("Aphelios", 55, 2.3));
-
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
         setIsClient(true);
     }, []);
 
-    // Armor range for chart
     const [armorRange, setArmorRange] = useState<[number, number]>([0, 200]);
-    const step = 1; // step for X-axis
+    const step = 1;
 
-    // Handlers
     function handleAddItem(buildIndex: number, item: Item) {
         const newbuilds = [...builds];
         newbuilds[buildIndex].addItem(item);
@@ -63,11 +57,10 @@ function CalculatorPage() {
         setBuild(newbuilds);
     }
 
-    function handleLevelChange(buildIndex: number, newLevel: number) {
+    function handleLevelChange(newLevel: number) {
         setLevel(newLevel);
     }
 
-    // Generate damage data for each build
     function getDamageDataForBuild(buildIndex: number) {
         const results = [] as { armor: number; damage: number }[];
 
@@ -84,7 +77,6 @@ function CalculatorPage() {
         return results;
     }
 
-    // For the chart, each build is a separate dataset
     const chartData = {
         labels: (() => {
             const labels: number[] = [];
@@ -95,10 +87,10 @@ function CalculatorPage() {
         })(),
         datasets: builds.map((build, index) => {
             return {
-                label: "hi",
+                label: `Build ${index}`,
                 data: getDamageDataForBuild(index).map((d) => d.damage),
-                borderColor: `hsl(${0 * 100}, 70%, 50%)`,
-                backgroundColor: `hsl(${0 * 100}, 70%, 50%)`,
+                borderColor: `hsl(${index * 100}, 70%, 50%)`,
+                backgroundColor: `hsl(${index * 100}, 70%, 50%)`,
                 pointRadius: 0,
                 pointHitRadius: 30,
                 pointHoverRadius: 3,
@@ -110,56 +102,108 @@ function CalculatorPage() {
         }),
     };
 
-    // Quick check: damage at 100 armor
-    const SINGLE_ARMOR_CHECK = 100;
-
     return (
         <div className="appContainer">
             <h1>Aphelios Damage Calculator</h1>
+            {/* Global Level Setting */}
+            <div className="globalSettings">
+                <label>
+                    Level:{" "}
+                    <input
+                        type="number"
+                        min={1}
+                        max={18}
+                        value={level}
+                        onChange={(e) => handleLevelChange(+e.target.value)}
+                    />
+                </label>
+                <div className="champ-stats">
+                    <span className="base-ad">Base AD: {champion.getAD(level)}</span>
+                </div>
+            </div>
 
-            <div className="buildPanelContainer">
-                {builds.map((build, buildIndex) => {
-                    return (
+            <div className="mainContent">
+                {/* Build Panel on the Left */}
+                <div className="buildPanelContainer">
+                    {builds.map((build, buildIndex) => (
                         <div key={buildIndex} className="buildPanel">
-                            <h2>{`build ${buildIndex}`}</h2>
-                            <label>
-                                Level:{" "}
-                                <input
-                                    type="number"
-                                    min={1}
-                                    max={18}
-                                    value={level}
-                                    onChange={(e) =>
-                                        handleLevelChange(buildIndex, +e.target.value)
-                                    }
-                                />
-                            </label>
-
+                            <h1>{`Build ${buildIndex}`}</h1>
+                            {/* Bonus Stats Section */}
+                            <div className="bonusStats">
+                                <h3>Bonus Stats</h3>
+                                <div>
+                                    <label>
+                                        Bonus AD:{" "}
+                                        <input
+                                            type="number"
+                                            value={build.bonusAD}
+                                            onChange={(e) => {
+                                                build.setBonusAD(+e.target.value);
+                                                setBuild([...builds]);
+                                            }}
+                                        />
+                                    </label>
+                                </div>
+                                <div>
+                                    <label>
+                                        Bonus Lethality:{" "}
+                                        <input
+                                            type="number"
+                                            value={build.bonusLethality}
+                                            onChange={(e) => {
+                                                build.setBonusLethality(+e.target.value);
+                                                setBuild([...builds]);
+                                            }}
+                                        />
+                                    </label>
+                                </div>
+                                <div>
+                                    <label>
+                                        Bonus Crit:{" "}
+                                        <input
+                                            type="number"
+                                            value={build.bonusCrit}
+                                            onChange={(e) => {
+                                                build.setBonusCrit(+e.target.value);
+                                                setBuild([...builds]);
+                                            }}
+                                        />
+                                    </label>
+                                </div>
+                            </div>
                             <h3>Items:</h3>
                             <ul>
                                 {build.items.map((item, idx2) => (
                                     <li key={idx2} className="item-entry">
-                                        <div className="item-details">
-                                            <span className="item-name">{item.name}</span>
-                                            <span className="item-cost">
-                                                {item.cost}g
-                                            </span>
-                                            <span className="item-ad">AD: {item.AD}</span>
-                                            <span className="item-crit">
-                                                Crit: {(item.critChance * 100).toFixed(0)}
-                                                %
-                                            </span>
-                                            {item.infinityEdgeBonus && (
-                                                <span className="item-IE">
-                                                    Infinity Edge Bonus
+                                        <div className="item-info">
+                                            <div className="item-header">
+                                                <div className="item-name">
+                                                    {item.name}
+                                                </div>
+                                                <div className="item-cost">
+                                                    {item.cost}g
+                                                </div>
+                                            </div>
+                                            <div className="item-stats">
+                                                <span className="item-ad">
+                                                    AD: {item.AD}
                                                 </span>
-                                            )}
-                                            <span className="item-lethality">
-                                                Lethality: {item.lethality}
-                                            </span>
-                                            <span className="item-armorPen">
-                                                Armor Pen: {item.armorPenetration}
-                                            </span>
+                                                <span className="item-crit">
+                                                    Crit:{" "}
+                                                    {(item.critChance * 100).toFixed(0)}%
+                                                </span>
+                                                <span className="item-armorPen">
+                                                    Armor Pen: {item.armorPenetration}
+                                                </span>
+                                                <span className="item-lethality">
+                                                    Lethality: {item.lethality}
+                                                </span>
+                                                {item.infinityEdgeBonus && (
+                                                    <span className="item-IE">
+                                                        +40% Crit Damage
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                         <button
                                             className="remove-button"
@@ -172,7 +216,6 @@ function CalculatorPage() {
                                     </li>
                                 ))}
                             </ul>
-
                             {isClient && (
                                 <Select
                                     options={itemOptions}
@@ -184,73 +227,80 @@ function CalculatorPage() {
                                     }}
                                 />
                             )}
-
                             <div className="itemList">
+                                <p>
+                                    <strong>Build Stats:</strong> AD:{" "}
+                                    {build.items.reduce((sum, item) => sum + item.AD, 0)}{" "}
+                                    | Crit: {(build.critChance * 100).toFixed(0)}% | Armor
+                                    Pen: {(build.armorPenetration * 100).toFixed(0)}% |
+                                    Lethality: {build.lethality} | Crit Damage:{" "}
+                                    {(build.critDamageModifier * 100).toFixed(0)}%
+                                </p>
                                 <p>
                                     <strong>Total Gold:</strong> {build.totalCost}
                                 </p>
                             </div>
                         </div>
-                    );
-                })}
-            </div>
+                    ))}
+                </div>
+                {/* Graph Section on the Right */}
+                <div className="graphSection globalSettings">
+                    <div className="armorRangeContainer">
+                        <label className="armorInputLabel">
+                            Armor Range Start:
+                            <input
+                                className="armorInput"
+                                type="number"
+                                value={armorRange[0]}
+                                onChange={(e) =>
+                                    setArmorRange(([_, end]) => [+e.target.value, end])
+                                }
+                            />
+                        </label>
+                        <label className="armorInputLabel">
+                            Armor Range End:
+                            <input
+                                className="armorInput"
+                                type="number"
+                                value={armorRange[1]}
+                                onChange={(e) =>
+                                    setArmorRange(([start]) => [start, +e.target.value])
+                                }
+                            />
+                        </label>
+                    </div>
 
-            <hr className="divider" />
-
-            <div className="armorRangeContainer">
-                <label className="armorInputLabel">
-                    Armor Range Start:
-                    <input
-                        className="armorInput"
-                        type="number"
-                        value={armorRange[0]}
-                        onChange={(e) =>
-                            setArmorRange(([_, end]) => [+e.target.value, end])
-                        }
-                    />
-                </label>
-                <label className="armorInputLabel">
-                    Armor Range End:
-                    <input
-                        className="armorInput"
-                        type="number"
-                        value={armorRange[1]}
-                        onChange={(e) =>
-                            setArmorRange(([start]) => [start, +e.target.value])
-                        }
-                    />
-                </label>
-            </div>
-
-            <div className="chartContainer">
-                <Line
-                    data={chartData}
-                    options={{
-                        responsive: true,
-                        plugins: {
-                            legend: { position: "bottom" as const },
-                            title: {
-                                display: true,
-                                text: "Single-Auto Damage vs. Armor",
-                            },
-                        },
-                        scales: {
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: "Target Armor",
+                    <div className="chartContainer">
+                        <Line
+                            data={chartData}
+                            options={{
+                                responsive: true,
+                                plugins: {
+                                    legend: { position: "bottom" as const },
+                                    title: {
+                                        display: true,
+                                        text: "Single-Auto Damage vs. Armor",
+                                    },
                                 },
-                            },
-                            y: {
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: "Expected Damage per Auto",
+                                scales: {
+                                    x: {
+                                        title: {
+                                            display: true,
+                                            text: "Target Armor",
+                                        },
+                                    },
+                                    y: {
+                                        beginAtZero: true,
+                                        title: {
+                                            display: true,
+                                            text: "Expected Damage per Auto",
+                                        },
+                                    },
                                 },
-                            },
-                        },
-                    }}
-                />
+                            }}
+                        />
+                    </div>
+                </div>
             </div>
         </div>
     );

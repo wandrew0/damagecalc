@@ -1,61 +1,51 @@
-/* Container around the entire app */
 .appContainer {
-    padding: 1rem;
+    padding: 20px;
 }
 
-/* Container that holds multiple build panels */
-.buildPanelContainer {
+.globalSettings {
+    margin-bottom: 20px;
+}
+
+input[type="number"] {
+    border: 1px solid #aaa;
+    border-radius: 4px;
+    padding: 0px 8px;
+    background-color: #fff;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+input[type="number"]:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+.mainContent {
     display: flex;
-    gap: 2rem;
-    margin-top: 1rem;
+    flex-direction: row;
+    gap: 20px;
+    align-items: flex-start;
 }
 
-/* Individual build panel box */
+/* Left side (Build Panel) */
+.buildPanelContainer {
+    flex: 1;
+}
+
+/* Right side (Graph Section) */
+.graphSection {
+    flex: 2;
+}
+
+/* Build Panel Styling */
 .buildPanel {
-    border: 1px solid #888;
-    padding: 1rem;
-    flex: 1 1 0;
-    min-width: 250px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
 }
 
-.buildPanel h2 {
-    margin-top: 0;
-}
-
-/* Item selector or summary styling */
-.itemList {
-    margin-top: 1rem;
-    font-size: 0.9rem;
-}
-
-/* Simple divider styling (optional) */
-.divider {
-    margin: 1rem 0;
-    border: none;
-    border-top: 1px solid #888;
-}
-
-/* Armor range section */
-.armorRangeContainer {
-    margin-top: 1rem;
-}
-
-.armorInputLabel {
-    margin-right: 0.5rem;
-}
-
-.armorInput {
-    width: 60px;
-    margin-left: 0.5rem;
-}
-
-/* Chart container */
-.chartContainer {
-    width: 700px;
-    height: 400px;
-    margin-top: 1rem;
-}
-
+/* Item List Styling */
 .item-entry {
     display: flex;
     align-items: center;
@@ -64,18 +54,40 @@
     border-bottom: 1px solid #ddd;
 }
 
-.item-details {
+.item-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.item-name {
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.item-cost {
+    font-size: 1rem;
+    color: #555;
+}
+
+.item-stats {
+    flex: 0 0 100%;
+    justify-content: space-between;
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    align-items: center;
-}
-
-.item-details span {
     font-size: 0.9rem;
     color: #333;
 }
 
+/* Remove Button Styling */
 .remove-button {
     background-color: #e74c3c;
     color: #fff;
@@ -90,4 +102,17 @@
 
 .remove-button:hover {
     background-color: #c0392b;
+}
+
+/* Armor Range Styling */
+.armorRangeContainer {
+    margin-bottom: 15px;
+}
+
+.armorInputLabel {
+    margin-right: 10px;
+}
+
+.armorInput {
+    margin-left: 5px;
 }
