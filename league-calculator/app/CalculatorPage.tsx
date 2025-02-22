@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import React, { useEffect, useState } from "react";
 import "./CalculatorPage.css";
 
@@ -34,8 +33,8 @@ const itemOptions = ALL_ITEMS.map((item) => ({
 function CalculatorPage() {
     // Global state for level
     const [level, setLevel] = useState(1);
-    const [builds, setBuild] = useState([new Build()]);
-    const [champion, setChampion] = useState(new Champion("Aphelios", 55, 2.3));
+    const [builds, setBuilds] = useState([new Build()]);
+    const [champion] = useState(new Champion("Aphelios", 55, 2.3));
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
@@ -46,15 +45,15 @@ function CalculatorPage() {
     const step = 1;
 
     function handleAddItem(buildIndex: number, item: Item) {
-        const newbuilds = [...builds];
-        newbuilds[buildIndex].addItem(item);
-        setBuild(newbuilds);
+        const newBuilds = [...builds];
+        newBuilds[buildIndex].addItem(item);
+        setBuilds(newBuilds);
     }
 
     function handleRemoveItem(buildIndex: number, index: number) {
-        const newbuilds = [...builds];
-        newbuilds[buildIndex].removeItem(index);
-        setBuild(newbuilds);
+        const newBuilds = [...builds];
+        newBuilds[buildIndex].removeItem(index);
+        setBuilds(newBuilds);
     }
 
     function handleLevelChange(newLevel: number) {
@@ -85,40 +84,50 @@ function CalculatorPage() {
             }
             return labels;
         })(),
-        datasets: builds.map((build, index) => {
-            return {
-                label: `Build ${index}`,
-                data: getDamageDataForBuild(index).map((d) => d.damage),
-                borderColor: `hsl(${index * 100}, 70%, 50%)`,
-                backgroundColor: `hsl(${index * 100}, 70%, 50%)`,
-                pointRadius: 0,
-                pointHitRadius: 30,
-                pointHoverRadius: 3,
-                tension: 0,
-                animation: {
-                    duration: 0,
-                },
-            };
-        }),
+        datasets: builds.map((build, index) => ({
+            label: `Build ${index + 1}`,
+            data: getDamageDataForBuild(index).map((d) => d.damage),
+            borderColor: `hsl(${index * 100}, 70%, 50%)`,
+            backgroundColor: `hsl(${index * 100}, 70%, 50%)`,
+            pointRadius: 0,
+            pointHitRadius: 30,
+            pointHoverRadius: 3,
+            tension: 0,
+            animation: { duration: 0 },
+        })),
     };
+
+    // New function to add a build
+    function handleAddBuild() {
+        setBuilds([...builds, new Build()]);
+    }
+
+    // New function to remove a build (only if more than one build exists)
+    function handleRemoveBuild(index: number) {
+        if (builds.length > 1) {
+            setBuilds(builds.filter((_, i) => i !== index));
+        }
+    }
 
     return (
         <div className="appContainer">
-            <h1>Aphelios Damage Calculator</h1>
-            {/* Global Level Setting */}
-            <div className="globalSettings">
-                <label>
-                    Level:{" "}
-                    <input
-                        type="number"
-                        min={1}
-                        max={18}
-                        value={level}
-                        onChange={(e) => handleLevelChange(+e.target.value)}
-                    />
-                </label>
-                <div className="champ-stats">
-                    <span className="base-ad">Base AD: {champion.getAD(level)}</span>
+            <div className="headerContainer">
+                <h1>Aphelios Damage Calculator</h1>
+                {/* Global Level Setting */}
+                <div className="globalSettings">
+                    <label>
+                        Level:{" "}
+                        <input
+                            type="number"
+                            min={1}
+                            max={18}
+                            value={level}
+                            onChange={(e) => handleLevelChange(+e.target.value)}
+                        />
+                    </label>
+                    <div className="champ-stats">
+                        <span className="base-ad">Base AD: {champion.getAD(level)}</span>
+                    </div>
                 </div>
             </div>
 
@@ -127,19 +136,31 @@ function CalculatorPage() {
                 <div className="buildPanelContainer">
                     {builds.map((build, buildIndex) => (
                         <div key={buildIndex} className="buildPanel">
-                            <h1>{`Build ${buildIndex}`}</h1>
+                            <div className="buildHeader">
+                                {`Build ${buildIndex + 1}`}
+                                {builds.length > 1 && (
+                                    <button
+                                        className="remove-build-button"
+                                        onClick={() => handleRemoveBuild(buildIndex)}
+                                    >
+                                        Remove Build
+                                    </button>
+                                )}
+                            </div>
                             {/* Bonus Stats Section */}
                             <div className="bonusStats">
-                                <h3>Bonus Stats</h3>
+                                {/* Bonus Stats */}
                                 <div>
                                     <label>
                                         Bonus AD:{" "}
                                         <input
                                             type="number"
-                                            value={build.bonusAD}
+                                            value={
+                                                build.bonusAD === 0 ? "" : build.bonusAD
+                                            }
                                             onChange={(e) => {
                                                 build.setBonusAD(+e.target.value);
-                                                setBuild([...builds]);
+                                                setBuilds([...builds]);
                                             }}
                                         />
                                     </label>
@@ -149,10 +170,14 @@ function CalculatorPage() {
                                         Bonus Lethality:{" "}
                                         <input
                                             type="number"
-                                            value={build.bonusLethality}
+                                            value={
+                                                build.bonusLethality === 0
+                                                    ? ""
+                                                    : build.bonusLethality
+                                            }
                                             onChange={(e) => {
                                                 build.setBonusLethality(+e.target.value);
-                                                setBuild([...builds]);
+                                                setBuilds([...builds]);
                                             }}
                                         />
                                     </label>
@@ -162,10 +187,14 @@ function CalculatorPage() {
                                         Bonus Crit:{" "}
                                         <input
                                             type="number"
-                                            value={build.bonusCrit}
+                                            value={
+                                                build.bonusCrit === 0
+                                                    ? ""
+                                                    : build.bonusCrit * 100
+                                            }
                                             onChange={(e) => {
-                                                build.setBonusCrit(+e.target.value);
-                                                setBuild([...builds]);
+                                                build.setBonusCrit(+e.target.value / 100);
+                                                setBuilds([...builds]);
                                             }}
                                         />
                                     </label>
@@ -229,10 +258,9 @@ function CalculatorPage() {
                             )}
                             <div className="itemList">
                                 <p>
-                                    <strong>Build Stats:</strong> AD:{" "}
-                                    {build.items.reduce((sum, item) => sum + item.AD, 0)}{" "}
-                                    | Crit: {(build.critChance * 100).toFixed(0)}% | Armor
-                                    Pen: {(build.armorPenetration * 100).toFixed(0)}% |
+                                    <strong>Build Stats:</strong> AD: {build.AD} | Crit:{" "}
+                                    {(build.critChance * 100).toFixed(0)}% | Armor Pen:{" "}
+                                    {(build.armorPenetration * 100).toFixed(0)}% |
                                     Lethality: {build.lethality} | Crit Damage:{" "}
                                     {(build.critDamageModifier * 100).toFixed(0)}%
                                 </p>
@@ -242,6 +270,9 @@ function CalculatorPage() {
                             </div>
                         </div>
                     ))}
+                    <button className="add-build-button" onClick={handleAddBuild}>
+                        Add Build
+                    </button>
                 </div>
                 {/* Graph Section on the Right */}
                 <div className="graphSection globalSettings">
@@ -253,7 +284,7 @@ function CalculatorPage() {
                                 type="number"
                                 value={armorRange[0]}
                                 onChange={(e) =>
-                                    setArmorRange(([_, end]) => [+e.target.value, end])
+                                    setArmorRange(([, end]) => [+e.target.value, end])
                                 }
                             />
                         </label>

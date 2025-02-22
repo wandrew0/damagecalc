@@ -1,10 +1,20 @@
 .appContainer {
-    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
 }
 
-.globalSettings {
-    margin-bottom: 20px;
+/* Header container stays at its natural height */
+.headerContainer {
+    flex: 0 0 auto;
+    padding: 40px;
+    margin: 0px 0px;
 }
+
+/* .globalSettings {
+    margin-bottom: 20px;
+} */
 
 input[type="number"] {
     border: 1px solid #aaa;
@@ -21,20 +31,37 @@ input[type="number"]:focus {
 }
 
 .mainContent {
+    flex: 1;
     display: flex;
-    flex-direction: row;
-    gap: 20px;
-    align-items: flex-start;
+    overflow: hidden; /* Prevent overall scrolling */
+}
+
+/* Flex container for the build header */
+.buildHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 1.5rem;
 }
 
 /* Left side (Build Panel) */
 .buildPanelContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+
     flex: 1;
+    overflow-y: auto;
+    padding: 10px; /* Optional: add padding for a better scroll experience */
 }
 
 /* Right side (Graph Section) */
 .graphSection {
     flex: 2;
+    overflow-y: auto;
+    padding: 10px;
 }
 
 /* Build Panel Styling */
@@ -99,9 +126,41 @@ input[type="number"]:focus {
     font-weight: bold;
     transition: background-color 0.3s;
 }
-
 .remove-button:hover {
     background-color: #c0392b;
+}
+
+/* Style for the Remove Build button */
+.remove-build-button {
+    background-color: #e74c3c; /* A vibrant red */
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.3s ease;
+}
+
+.remove-build-button:hover {
+    background-color: #c0392b;
+}
+
+/* Style for the Add Build button */
+.add-build-button {
+    background-color: #3498db; /* A clear blue */
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+    margin: 10px;
+}
+
+.add-build-button:hover {
+    background-color: #2980b9;
 }
 
 /* Armor Range Styling */
