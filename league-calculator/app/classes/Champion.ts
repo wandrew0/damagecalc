@@ -1,3 +1,5 @@
+"use client";
+
 export class Champion {
     name: string;
     startAD: number;

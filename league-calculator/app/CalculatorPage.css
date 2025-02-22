@@ -55,3 +55,39 @@
     height: 400px;
     margin-top: 1rem;
 }
+
+.item-entry {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+.item-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.item-details span {
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.remove-button {
+    background-color: #e74c3c;
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    margin-left: 15px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.remove-button:hover {
+    background-color: #c0392b;
+}
