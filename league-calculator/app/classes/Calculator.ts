@@ -1,3 +1,5 @@
+"use client";
+
 import { Champion } from "./Champion";
 import { Build } from "./Build";
 
