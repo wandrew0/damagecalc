@@ -60,6 +60,8 @@ const DamageChart: React.FC<DamageChartProps> = ({
             backgroundColor: `hsl(${index * 100}, 70%, 50%)`,
             pointRadius: 0,
             tension: 0,
+            pointHitRadius: 40,
+            pointHoverRadius: 4,
             animation: { duration: 0 },
         })),
     };
