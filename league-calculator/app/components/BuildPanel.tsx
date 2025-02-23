@@ -35,6 +35,7 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                 <div key={buildIndex} className="buildPanel">
                     <div className="buildHeader">
                         <input
+                            className="buildName"
                             onChange={(s) => {
                                 build.setName(s.target.value);
                                 setBuilds([...builds]);
@@ -42,7 +43,7 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                             value={build.name}
                         />
                         {/* {`Build ${buildIndex + 1}`} */}
-                        {builds.length > 1 && (
+                        {builds.length >= 1 && (
                             <button
                                 className="remove-build-button"
                                 onClick={() => onRemoveBuild(buildIndex)}

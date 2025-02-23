@@ -63,6 +63,16 @@ input[type="number"]:focus {
     font-size: 1.5rem;
 }
 
+/* build name input */
+input .buildName {
+    border: 1px solid transparent;
+}
+
+.buildName:focus {
+    border-bottom: #007bff 1px solid;
+    outline: none;
+}
+
 /* Left side (Build Panel) */
 .buildPanelContainer {
     display: flex;
