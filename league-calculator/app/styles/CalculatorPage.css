@@ -64,12 +64,12 @@ input[type="number"]:focus {
 }
 
 /* build name input */
-input .buildName {
+.buildName {
     border: 1px solid transparent;
 }
 
 .buildName:focus {
-    border-bottom: #007bff 1px solid;
+    border-bottom: 1px #007bff solid;
     outline: none;
 }
 
