@@ -1,4 +1,4 @@
-import CalculatorPage from "./CalculatorPage";
+import CalculatorPage from "./pages/CalculatorPage";
 
 export default function Page() {
     return (

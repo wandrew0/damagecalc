@@ -26,4 +26,28 @@ export class Item {
         this.lethality = lethality;
         this.armorPenetration = armorPenetration;
     }
+
+    toJSON() {
+        return {
+            name: this.name,
+            cost: this.cost,
+            AD: this.AD,
+            critChance: this.critChance,
+            infinityEdgeBonus: this.infinityEdgeBonus,
+            lethality: this.lethality,
+            armorPenetration: this.armorPenetration,
+        };
+    }
+
+    static fromJSON(json: any): Item {
+        return new Item(
+            json.name,
+            json.cost,
+            json.AD,
+            json.critChance,
+            json.infinityEdgeBonus,
+            json.lethality,
+            json.armorPenetration
+        );
+    }
 }

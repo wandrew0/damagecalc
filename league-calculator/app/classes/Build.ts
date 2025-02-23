@@ -15,6 +15,12 @@ export class Build {
     bonusLethality: number = 0;
     bonusCrit: number = 0;
 
+    name: string = "";
+
+    setName(name: string) {
+        this.name = name;
+    }
+
     setBonusAD(bonusAD: number) {
         this.bonusAD = bonusAD;
         this.update();
@@ -64,5 +70,39 @@ export class Build {
         }
 
         this.totalCost = this.items.reduce((acc, it) => acc + it.cost, 0);
+    }
+
+    toJSON() {
+        console.log(this.name);
+        return {
+            items: this.items.map((it) => it.toJSON()),
+            critChance: this.critChance,
+            critDamageModifier: this.critDamageModifier,
+            AD: this.AD,
+            armorPenetration: this.armorPenetration,
+            lethality: this.lethality,
+            totalCost: this.totalCost,
+            bonusAD: this.bonusAD,
+            bonusLethality: this.bonusLethality,
+            bonusCrit: this.bonusCrit,
+            name: this.name,
+        };
+    }
+
+    static fromJSON(json: any) {
+        const build = new Build();
+        build.items = json.items.map((it: any) => Item.fromJSON(it));
+        build.critChance = json.critChance;
+        build.critDamageModifier = json.critDamageModifier;
+        build.AD = json.AD;
+        build.armorPenetration = json.armorPenetration;
+        build.lethality = json.lethality;
+        build.totalCost = json.totalCost;
+        build.bonusAD = json.bonusAD;
+        build.bonusLethality = json.bonusLethality;
+        build.bonusCrit = json.bonusCrit;
+        console.log(json.name);
+        build.name = json.name;
+        return build;
     }
 }
