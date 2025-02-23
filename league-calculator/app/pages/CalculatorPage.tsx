@@ -158,7 +158,6 @@ function CalculatorPage() {
                             />
                         </label>
                     </div>
-                    (
                     <DamageChart
                         builds={builds}
                         champion={champion}
@@ -166,7 +165,6 @@ function CalculatorPage() {
                         armorRange={armorRange}
                         step={step}
                     />
-                    )
                 </div>
             </div>
         </div>
