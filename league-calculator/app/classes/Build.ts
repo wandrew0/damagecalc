@@ -88,9 +88,21 @@ export class Build {
         };
     }
 
-    static fromJSON(json: any) {
+    static fromJSON(json: {
+        items: Item[];
+        critChance: number;
+        critDamageModifier: number;
+        AD: number;
+        armorPenetration: number;
+        lethality: number;
+        totalCost: number;
+        bonusAD: number;
+        bonusLethality: number;
+        bonusCrit: number;
+        name: string;
+    }) {
         const build = new Build();
-        build.items = json.items.map((it: any) => Item.fromJSON(it));
+        build.items = json.items.map((it: Item) => Item.fromJSON(it));
         build.critChance = json.critChance;
         build.critDamageModifier = json.critDamageModifier;
         build.AD = json.AD;

@@ -39,7 +39,15 @@ export class Item {
         };
     }
 
-    static fromJSON(json: any): Item {
+    static fromJSON(json: {
+        name: string;
+        cost: number;
+        AD: number;
+        critChance: number;
+        infinityEdgeBonus?: boolean;
+        lethality: number;
+        armorPenetration: number;
+    }): Item {
         return new Item(
             json.name,
             json.cost,
