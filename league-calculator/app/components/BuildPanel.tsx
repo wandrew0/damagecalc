@@ -148,6 +148,18 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                             }
                         }}
                     />
+                    <div className="itemList">
+                        <p>
+                            <strong>Build Stats:</strong> AD: {build.AD} | Crit:{" "}
+                            {(build.critChance * 100).toFixed(0)}% | Armor Pen:{" "}
+                            {(build.armorPenetration * 100).toFixed(0)}% | Lethality:{" "}
+                            {build.lethality} | Crit Damage:{" "}
+                            {(build.critDamageModifier * 100).toFixed(0)}%
+                        </p>
+                        <p>
+                            <strong>Total Gold:</strong> {build.totalCost}
+                        </p>
+                    </div>
                 </div>
             ))}
             <button className="add-build-button" onClick={onAddBuild}>
