@@ -21,7 +21,7 @@ function deserializeBuilds(json: any) {
 function CalculatorPage() {
     // Global state
     const [level, setLevel] = useState(1);
-    const [builds, setBuilds] = useState([new Build()]);
+    const [builds, setBuilds] = useState<Build[]>([]);
     const [champion] = useState(new Champion("Aphelios", 55, 2.3));
     const [armorRange, setArmorRange] = useState<[number, number]>([0, 200]);
     const [isClient, setIsClient] = useState(false);
@@ -68,7 +68,7 @@ function CalculatorPage() {
     }
 
     function handleRemoveBuild(index: number) {
-        if (builds.length > 1) {
+        if (builds.length > 0) {
             setBuilds(builds.filter((_, i) => i !== index));
         }
     }
@@ -87,7 +87,7 @@ function CalculatorPage() {
 
     function handleResetAll() {
         setLevel(1);
-        setBuilds([new Build()]);
+        setBuilds([]);
         setArmorRange([0, 200]);
         localStorage.removeItem("calculatorState");
     }

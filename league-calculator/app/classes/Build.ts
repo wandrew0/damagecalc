@@ -73,7 +73,6 @@ export class Build {
     }
 
     toJSON() {
-        console.log(this.name);
         return {
             items: this.items.map((it) => it.toJSON()),
             critChance: this.critChance,
@@ -101,7 +100,6 @@ export class Build {
         build.bonusAD = json.bonusAD;
         build.bonusLethality = json.bonusLethality;
         build.bonusCrit = json.bonusCrit;
-        console.log(json.name);
         build.name = json.name;
         return build;
     }
