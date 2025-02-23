@@ -12,9 +12,27 @@
     margin: 0px 0px;
 }
 
-/* .globalSettings {
+.headerTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 20px;
-} */
+}
+
+.reset-all-button {
+    background-color: #e74c3c;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.reset-all-button:hover {
+    background-color: #c0392b;
+}
 
 input[type="number"] {
     border: 1px solid #aaa;
@@ -57,19 +75,20 @@ input[type="number"]:focus {
     padding: 10px; /* Optional: add padding for a better scroll experience */
 }
 
+/* Build Panel Styling */
+.buildPanel {
+    width: 100%;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+}
+
 /* Right side (Graph Section) */
 .graphSection {
     flex: 2;
     overflow-y: auto;
     padding: 10px;
-}
-
-/* Build Panel Styling */
-.buildPanel {
-    border: 1px solid #ccc;
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 4px;
 }
 
 /* Item List Styling */
@@ -123,6 +142,7 @@ input[type="number"]:focus {
     margin-left: 15px;
     cursor: pointer;
     border-radius: 4px;
+    font-size: 0.9rem;
     font-weight: bold;
     transition: background-color 0.3s;
 }
@@ -132,18 +152,19 @@ input[type="number"]:focus {
 
 /* Style for the Remove Build button */
 .remove-build-button {
-    background-color: #e74c3c; /* A vibrant red */
+    background-color: #da1600; /* A darker red */
     color: #fff;
     border: none;
     padding: 6px 12px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 1rem;
+    font-weight: bold;
     transition: background-color 0.3s ease;
 }
 
 .remove-build-button:hover {
-    background-color: #c0392b;
+    background-color: #a31000;
 }
 
 /* Style for the Add Build button */
