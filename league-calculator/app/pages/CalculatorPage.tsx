@@ -5,7 +5,7 @@ import "../styles/CalculatorPage.css";
 
 import { Champion } from "../classes/Champion";
 import { Build } from "../classes/Build";
-import { ALL_ITEMS } from "../data/Items";
+import { Item } from "../classes/Item";
 
 import BuildPanel from "../components/BuildPanel";
 import DamageChart from "../components/DamageChart";
@@ -14,8 +14,36 @@ function serializeBuilds(builds: Build[]) {
     return builds.map((b) => b.toJSON());
 }
 
-function deserializeBuilds(json: any) {
-    return json.map((b: any) => Build.fromJSON(b));
+function deserializeBuilds(
+    json: {
+        items: Item[];
+        critChance: number;
+        critDamageModifier: number;
+        AD: number;
+        armorPenetration: number;
+        lethality: number;
+        totalCost: number;
+        bonusAD: number;
+        bonusLethality: number;
+        bonusCrit: number;
+        name: string;
+    }[]
+) {
+    return json.map(
+        (b: {
+            items: Item[];
+            critChance: number;
+            critDamageModifier: number;
+            AD: number;
+            armorPenetration: number;
+            lethality: number;
+            totalCost: number;
+            bonusAD: number;
+            bonusLethality: number;
+            bonusCrit: number;
+            name: string;
+        }) => Build.fromJSON(b)
+    );
 }
 
 function CalculatorPage() {
@@ -73,7 +101,7 @@ function CalculatorPage() {
         }
     }
 
-    function handleAddItem(buildIndex: number, item: any) {
+    function handleAddItem(buildIndex: number, item: Item) {
         const newBuilds = [...builds];
         newBuilds[buildIndex].addItem(item);
         setBuilds(newBuilds);

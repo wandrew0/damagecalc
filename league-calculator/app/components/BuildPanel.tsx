@@ -1,6 +1,7 @@
 import React from "react";
 import Select from "react-select";
 import { Build } from "../classes/Build";
+import { Item } from "../classes/Item";
 import { ALL_ITEMS } from "../data/Items";
 
 // sort items by AD and crit
@@ -16,7 +17,7 @@ interface BuildPanelProps {
     builds: Build[];
     onAddBuild: () => void;
     onRemoveBuild: (index: number) => void;
-    onAddItem: (buildIndex: number, item: any) => void;
+    onAddItem: (buildIndex: number, item: Item) => void;
     onRemoveItem: (buildIndex: number, itemIndex: number) => void;
     setBuilds: React.Dispatch<React.SetStateAction<Build[]>>;
 }
