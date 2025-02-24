@@ -89,30 +89,6 @@ function CalculatorPage() {
         setLevel(newLevel);
     }
 
-    function handleAddBuild() {
-        const newbuild = new Build();
-        newbuild.setName(`Build ${builds.length + 1}`);
-        setBuilds([...builds, newbuild]);
-    }
-
-    function handleRemoveBuild(index: number) {
-        if (builds.length > 0) {
-            setBuilds(builds.filter((_, i) => i !== index));
-        }
-    }
-
-    function handleAddItem(buildIndex: number, item: Item) {
-        const newBuilds = [...builds];
-        newBuilds[buildIndex].addItem(item);
-        setBuilds(newBuilds);
-    }
-
-    function handleRemoveItem(buildIndex: number, itemIndex: number) {
-        const newBuilds = [...builds];
-        newBuilds[buildIndex].removeItem(itemIndex);
-        setBuilds(newBuilds);
-    }
-
     function handleResetAll() {
         setLevel(1);
         setBuilds([]);
@@ -151,14 +127,7 @@ function CalculatorPage() {
 
             <div className="mainContent">
                 {/* Left-side: Build Panel */}
-                <BuildPanel
-                    builds={builds}
-                    onAddBuild={handleAddBuild}
-                    onRemoveBuild={handleRemoveBuild}
-                    onAddItem={handleAddItem}
-                    onRemoveItem={handleRemoveItem}
-                    setBuilds={setBuilds}
-                />
+                <BuildPanel builds={builds} setBuilds={setBuilds} />
 
                 {/* Right-side: Chart / Graph Section */}
                 <div className="graphSection globalSettings">

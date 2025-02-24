@@ -15,21 +15,42 @@ const itemOptions = ALL_ITEMS.map((item) => ({
 
 interface BuildPanelProps {
     builds: Build[];
-    onAddBuild: () => void;
-    onRemoveBuild: (index: number) => void;
-    onAddItem: (buildIndex: number, item: Item) => void;
-    onRemoveItem: (buildIndex: number, itemIndex: number) => void;
     setBuilds: React.Dispatch<React.SetStateAction<Build[]>>;
 }
 
-const BuildPanel: React.FC<BuildPanelProps> = ({
-    builds,
-    onAddBuild,
-    onRemoveBuild,
-    onAddItem,
-    onRemoveItem,
-    setBuilds,
-}) => {
+const BuildPanel: React.FC<BuildPanelProps> = ({ builds, setBuilds }) => {
+    function onAddBuild() {
+        const newbuild = new Build();
+        newbuild.setName(`Build ${builds.length + 1}`);
+        setBuilds([...builds, newbuild]);
+    }
+
+    function onRemoveBuild(index: number) {
+        if (builds.length > 0) {
+            setBuilds(builds.filter((_, i) => i !== index));
+        }
+    }
+
+    function onAddItem(buildIndex: number, item: Item) {
+        const newBuilds = [...builds];
+        newBuilds[buildIndex].addItem(item);
+        setBuilds(newBuilds);
+    }
+
+    function onRemoveItem(buildIndex: number, itemIndex: number) {
+        const newBuilds = [...builds];
+        newBuilds[buildIndex].removeItem(itemIndex);
+        setBuilds(newBuilds);
+    }
+
+    function duplicateBuild(buildIndex: number) {
+        const originalJSON = builds[buildIndex].toJSON();
+        const newBuild = Build.fromJSON(originalJSON);
+        newBuild.setName(newBuild.name + " Copy");
+        // Add the new build to the builds list
+        setBuilds([...builds, newBuild]);
+    }
+
     return (
         <div className="buildPanelContainer">
             {builds.map((build, buildIndex) => (
@@ -43,15 +64,18 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                             }}
                             value={build.name}
                         />
-                        {/* {`Build ${buildIndex + 1}`} */}
-                        {builds.length >= 1 && (
-                            <button
-                                className="remove-build-button"
-                                onClick={() => onRemoveBuild(buildIndex)}
-                            >
-                                Remove Build
-                            </button>
-                        )}
+                        <button
+                            className="duplicate-build-button"
+                            onClick={() => duplicateBuild(buildIndex)}
+                        >
+                            Duplicate Build
+                        </button>
+                        <button
+                            className="remove-build-button"
+                            onClick={() => onRemoveBuild(buildIndex)}
+                        >
+                            Remove Build
+                        </button>
                     </div>
 
                     {/* Bonus Stats Section */}
@@ -143,6 +167,8 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                     <Select
                         options={itemOptions}
                         value={null}
+                        blurInputOnSelect={false}
+                        closeMenuOnSelect={false}
                         onChange={(e) => {
                             if (e) {
                                 onAddItem(buildIndex, e.value);

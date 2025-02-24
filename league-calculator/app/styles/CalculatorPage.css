@@ -143,6 +143,24 @@ input[type="number"]:focus {
     color: #333;
 }
 
+/* Duplicate Build Button Styling */
+.duplicate-build-button {
+    background-color: #27ae60; /* Green to differentiate from Remove */
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    margin-right: 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.duplicate-build-button:hover {
+    background-color: #1e8449;
+}
+
 /* Remove Button Styling */
 .remove-button {
     background-color: #e74c3c;
