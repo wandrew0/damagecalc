@@ -8,6 +8,7 @@ export class Item {
     infinityEdgeBonus?: boolean; // Example passive for Infinity Edge
     lethality: number = 0;
     armorPenetration: number = 0;
+    aliases: string[] = [];
 
     constructor(
         name: string,
@@ -16,7 +17,8 @@ export class Item {
         critChance: number,
         infinityEdgeBonus: boolean = false,
         lethality: number = 0,
-        armorPenetration: number = 0
+        armorPenetration: number = 0,
+        aliases: string[] = []
     ) {
         this.name = name;
         this.cost = cost;
@@ -25,6 +27,11 @@ export class Item {
         this.infinityEdgeBonus = infinityEdgeBonus;
         this.lethality = lethality;
         this.armorPenetration = armorPenetration;
+        this.aliases = aliases;
+    }
+
+    toString() {
+        return this.aliases.toString();
     }
 
     toJSON() {
@@ -36,6 +43,7 @@ export class Item {
             infinityEdgeBonus: this.infinityEdgeBonus,
             lethality: this.lethality,
             armorPenetration: this.armorPenetration,
+            aliases: this.aliases,
         };
     }
 
@@ -47,6 +55,7 @@ export class Item {
         infinityEdgeBonus?: boolean;
         lethality: number;
         armorPenetration: number;
+        aliases: string[];
     }): Item {
         return new Item(
             json.name,
@@ -55,7 +64,8 @@ export class Item {
             json.critChance,
             json.infinityEdgeBonus,
             json.lethality,
-            json.armorPenetration
+            json.armorPenetration,
+            json.aliases
         );
     }
 }

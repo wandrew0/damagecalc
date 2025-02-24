@@ -78,12 +78,18 @@ def prune_html(rawhtml):
 
 
 async def fetch_and_save(session, filename, url):
-    async with session.get(url) as response, aiofiles.open(
-        f"{folderpath}/{filename}.html", "w", encoding="utf-8"
-    ) as file:
+    async with session.get(url) as response:
+        # Check if the request was rate limited
+        if response.status == 429:
+            print(f"Rate limited on {url}. Retrying after 5 seconds...")
+            await asyncio.sleep(5)
+            return await fetch_and_save(session, filename, url)
         content = await response.text()
         soup = prune_html(content)
         itemshtml[filename] = soup
+    async with aiofiles.open(
+        f"{folderpath}/{filename}.html", "w", encoding="utf-8"
+    ) as file:
         return await file.write(str(soup))
 
 
@@ -126,12 +132,18 @@ itemstats = {}
 for filename, html_content in itemshtml.items():
     soup = html_content
     base_div = soup.find("div", class_="tabbertab", attrs={"data-title": "Base"})
-    if not base_div:
-        for div in soup.find_all("div", class_="infobox-header"):
-            if div.get_text(strip=True) == "Stats":
-                base_div = div.find_next_sibling("div")
+    aliases = []
+    for div in soup.find_all("div", class_="infobox-header"):
+        if not base_div and div.get_text(strip=True) == "Stats":
+            base_div = div.find_next_sibling("div")
+        if div.get_text(strip=True) == "Keywords":
+            aliases = [
+                a.get_text(strip=True)
+                for a in div.find_next_sibling("div").find_all("li")
+            ]
     itemstats[filename] = {}
     itemstats[filename]["name"] = filename.split(".html")[0]
+    itemstats[filename]["aliases"] = aliases
 
     cost_label = soup.find("div", class_="infobox-data-label", string="Cost")
     if cost_label:
@@ -182,7 +194,7 @@ for item, base_div in base_divs.items():
 
 
 itemstrlist = [
-    f'new Item("{item["name"]}", {item["cost"]}, {item["attack damage"]}, {item["critical strike chance"]}, {"true" if item["name"] == "Infinity Edge" else "false"}, {item["lethality"]}, {item["armor penetration"]}),'
+    f'new Item("{item["name"]}", {item["cost"]}, {item["attack damage"]}, {item["critical strike chance"]}, {"true" if item["name"] == "Infinity Edge" else "false"}, {item["lethality"]}, {item["armor penetration"]}, {str(item["aliases"])}),'
     for item in itemstats.values()
 ]
 
