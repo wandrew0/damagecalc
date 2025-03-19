@@ -31,15 +31,10 @@ const DamageChart: React.FC<DamageChartProps> = ({
     step,
 }) => {
     // Generate damage data for a build
-    function getDamageDataForBuild(buildIndex: number) {
+    function getDamageDataForBuild(build: Build) {
         const results = [] as { armor: number; damage: number }[];
         for (let armor = armorRange[0]; armor <= armorRange[1]; armor += step) {
-            const dmg = calculateSingleAutoDamage(
-                champion,
-                armor,
-                level,
-                builds[buildIndex]
-            );
+            const dmg = calculateSingleAutoDamage(champion, armor, level, build);
             results.push({ armor, damage: dmg });
         }
         return results;
@@ -53,9 +48,9 @@ const DamageChart: React.FC<DamageChartProps> = ({
 
     const chartData = {
         labels,
-        datasets: builds.map((_, index) => ({
-            label: `Build ${index + 1}`,
-            data: getDamageDataForBuild(index).map((d) => d.damage),
+        datasets: builds.map((build, index) => ({
+            label: `${build.name}`,
+            data: getDamageDataForBuild(build).map((d) => d.damage),
             borderColor: `hsl(${index * 100}, 70%, 50%)`,
             backgroundColor: `hsl(${index * 100}, 70%, 50%)`,
             pointRadius: 0,

@@ -115,7 +115,9 @@ import os
 if not os.path.exists(folderpath):
     print("Folder not found, fetching all items")
     init_folder()
-    loop = asyncio.get_event_loop()
+    # loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     loop.run_until_complete(fetch_and_save_all(items))
     loop.close()
 else:
