@@ -55,7 +55,7 @@ const DamageChart: React.FC<DamageChartProps> = ({
             backgroundColor: `hsl(${index * 100}, 70%, 50%)`,
             pointRadius: 0,
             tension: 0,
-            pointHitRadius: 40,
+            pointHitRadius: 40, // these two are unnecessary since index interaction mode
             pointHoverRadius: 4,
             animation: { duration: 0 },
         })),
@@ -67,6 +67,10 @@ const DamageChart: React.FC<DamageChartProps> = ({
                 data={chartData}
                 options={{
                     responsive: true,
+                    interaction: {
+                        mode: "index",
+                        intersect: false,
+                    },
                     plugins: {
                         legend: { position: "bottom" },
                         title: {
