@@ -120,7 +120,9 @@ function CalculatorPage() {
                         />
                     </label>
                     <div className="champ-stats">
-                        <span className="base-ad">Base AD: {champion.getAD(level)}</span>
+                        <span className="base-ad">
+                            Base AD: {champion.getAD(level).toFixed(2)}
+                        </span>
                     </div>
                 </div>
             </div>
