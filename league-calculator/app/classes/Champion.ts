@@ -12,6 +12,9 @@ export class Champion {
     }
 
     getAD(level: number): number {
-        return this.startAD + this.perLevelAD * (level - 1);
+        // Formula: Statistic = base + bonus + g × (n − 1) × (0.7025 + 0.0175 × (n − 1))
+        return (
+            this.startAD + this.perLevelAD * (level - 1) * (0.7025 + 0.0175 * (level - 1))
+        );
     }
 }
