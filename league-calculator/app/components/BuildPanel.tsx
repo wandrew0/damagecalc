@@ -40,9 +40,9 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
     }, [urlImportBuilds]);
 
     function onAddBuild() {
-        const newbuild = new Build();
-        newbuild.setName(`Build ${builds.length + 1}`);
-        setBuilds([...builds, newbuild]);
+        const newBuild = new Build();
+        newBuild.setName(`Build ${builds.length + 1}`);
+        setBuilds([...builds, newBuild]);
     }
 
     function onRemoveBuild(index: number) {
@@ -92,7 +92,7 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                             }}
                             value={build.name}
                         />
-                        <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
+                        <div className="build-header-buttons">
                             <button
                                 className="duplicate-build-button"
                                 onClick={() => duplicateBuild(buildIndex)}
@@ -150,7 +150,12 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                     <h3>Items:</h3>
                     <div className="items-grid">
                         {build.items.map((item, idx) => (
-                            <div key={idx} className="item-slot">
+                            <div
+                                key={idx}
+                                className="item-slot"
+                                onClick={() => onRemoveItem(buildIndex, idx)}
+                                title="Click to remove item"
+                            >
                                 <div className="item-image-container">
                                     <img
                                         src={
@@ -283,13 +288,6 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                                         </div>
                                     </Tooltip>
                                 </div>
-                                <button
-                                    className="item-remove-button"
-                                    onClick={() => onRemoveItem(buildIndex, idx)}
-                                    title="Remove item"
-                                >
-                                    ×
-                                </button>
                             </div>
                         ))}
                     </div>
@@ -327,26 +325,23 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                     </div>
                 </div>
             ))}
-            <div style={{ display: "flex", gap: "8px" }}>
+            <div className="build-actions">
                 <button
-                    className="add-build-button"
+                    className="add-build-button build-action-button"
                     onClick={onAddBuild}
-                    style={{ flex: 1 }}
                 >
                     Add Build
                 </button>
                 <button
-                    className="share-button"
+                    className="share-button build-action-button"
                     onClick={() => setShowShareModal(true)}
                     disabled={builds.length === 0}
-                    style={{ flex: 1 }}
                 >
                     Share Builds
                 </button>
                 <button
-                    className="import-button"
+                    className="import-button build-action-button"
                     onClick={() => setShowImportModal(true)}
-                    style={{ flex: 1 }}
                 >
                     Import Builds
                 </button>
