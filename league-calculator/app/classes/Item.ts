@@ -9,6 +9,7 @@ export class Item {
     lethality: number = 0;
     armorPenetration: number = 0;
     aliases: string[] = [];
+    imagePath: string;
 
     constructor(
         name: string,
@@ -18,7 +19,8 @@ export class Item {
         infinityEdgeBonus: boolean = false,
         lethality: number = 0,
         armorPenetration: number = 0,
-        aliases: string[] = []
+        aliases: string[] = [],
+        imagePath: string = ""
     ) {
         this.name = name;
         this.cost = cost;
@@ -28,6 +30,7 @@ export class Item {
         this.lethality = lethality;
         this.armorPenetration = armorPenetration;
         this.aliases = aliases;
+        this.imagePath = imagePath;
     }
 
     toString() {
@@ -44,6 +47,7 @@ export class Item {
             lethality: this.lethality,
             armorPenetration: this.armorPenetration,
             aliases: this.aliases,
+            imagePath: this.imagePath,
         };
     }
 
@@ -56,6 +60,7 @@ export class Item {
         lethality: number;
         armorPenetration: number;
         aliases: string[];
+        imagePath?: string;
     }): Item {
         return new Item(
             json.name,
@@ -65,7 +70,8 @@ export class Item {
             json.infinityEdgeBonus,
             json.lethality,
             json.armorPenetration,
-            json.aliases
+            json.aliases,
+            json.imagePath || ""
         );
     }
 }
