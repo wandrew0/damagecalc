@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import Select from "react-select";
+import { Tooltip } from "react-tooltip";
 import { Build } from "../classes/Build";
 import { Item } from "../classes/Item";
 import { ALL_ITEMS } from "../data/Items";
+import ShareModal from "./ShareModal";
+import ImportModal from "./ImportModal";
 
 // sort items by AD and crit
 ALL_ITEMS.sort((a, b) => b.AD - a.AD || b.critChance - a.critChance);
@@ -16,9 +19,26 @@ const itemOptions = ALL_ITEMS.map((item) => ({
 interface BuildPanelProps {
     builds: Build[];
     setBuilds: React.Dispatch<React.SetStateAction<Build[]>>;
+    urlImportBuilds?: Build[] | null;
+    onUrlImportHandled?: () => void;
 }
 
-const BuildPanel: React.FC<BuildPanelProps> = ({ builds, setBuilds }) => {
+const BuildPanel: React.FC<BuildPanelProps> = ({
+    builds,
+    setBuilds,
+    urlImportBuilds,
+    onUrlImportHandled,
+}) => {
+    const [showShareModal, setShowShareModal] = useState(false);
+    const [showImportModal, setShowImportModal] = useState(false);
+
+    // Auto-open import modal if there are URL imports
+    React.useEffect(() => {
+        if (urlImportBuilds && urlImportBuilds.length > 0) {
+            setShowImportModal(true);
+        }
+    }, [urlImportBuilds]);
+
     function onAddBuild() {
         const newbuild = new Build();
         newbuild.setName(`Build ${builds.length + 1}`);
@@ -49,6 +69,14 @@ const BuildPanel: React.FC<BuildPanelProps> = ({ builds, setBuilds }) => {
         newBuild.setName(newBuild.name + " Copy");
         // Add the new build to the builds list
         setBuilds([...builds, newBuild]);
+    }
+
+    function handleImportBuilds(importedBuilds: Build[], clearExisting: boolean) {
+        if (clearExisting) {
+            setBuilds(importedBuilds);
+        } else {
+            setBuilds([...builds, ...importedBuilds]);
+        }
     }
 
     return (
@@ -120,42 +148,151 @@ const BuildPanel: React.FC<BuildPanelProps> = ({ builds, setBuilds }) => {
                     </div>
 
                     <h3>Items:</h3>
-                    <ul>
+                    <div className="items-grid">
                         {build.items.map((item, idx) => (
-                            <li key={idx} className="item-entry">
-                                <div className="item-info">
-                                    <div className="item-header">
-                                        <div className="item-name">{item.name}</div>
-                                        <div className="item-cost">{item.cost}g</div>
-                                    </div>
-                                    <div className="item-stats">
-                                        <span className="item-ad">AD: {item.AD}</span>
-                                        <span className="item-crit">
-                                            Crit: {(item.critChance * 100).toFixed(0)}%
-                                        </span>
-                                        <span className="item-armorPen">
-                                            Armor Pen:{" "}
-                                            {(item.armorPenetration * 100).toFixed(0)}%
-                                        </span>
-                                        <span className="item-lethality">
-                                            Lethality: {item.lethality}
-                                        </span>
-                                        {item.infinityEdgeBonus && (
-                                            <span className="item-IE">
-                                                +40% Crit Damage
-                                            </span>
-                                        )}
-                                    </div>
+                            <div key={idx} className="item-slot">
+                                <div className="item-image-container">
+                                    <img
+                                        src={
+                                            item.imagePath ||
+                                            "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yNCAzNkMzMC42MjcgMzYgMzYgMzAuNjI3IDM2IDI0QzM2IDE3LjM3MyAzMC42MjcgMTIgMjQgMTJDMTcuMzczIDEyIDEyIDE3LjM3MyAxMiAyNEMxMiAzMC42MjcgMTcuMzczIDM2IDI0IDM2WiIgZmlsbD0iI0U1RTdFQiIvPgo8cGF0aCBkPSJNMjQgMjhDMjUuMTA0NiAyOCAyNiAyNy4xMDQ2IDI2IDI2QzI2IDI0Ljg5NTQgMjUuMTA0NiAyNCAyNCAyNEMyMi44OTU0IDI0IDIyIDI0Ljg5NTQgMjIgMjZDMjIgMjcuMTA0NiAyMi44OTU0IDI4IDI0IDI4WiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4K"
+                                        }
+                                        alt={item.name}
+                                        className="item-image"
+                                        data-tooltip-id={`item-tooltip-${buildIndex}-${idx}`}
+                                        onError={(e) => {
+                                            e.currentTarget.src =
+                                                "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yNCAzNkMzMC42MjcgMzYgMzYgMzAuNjI3IDM2IDI0QzM2IDE3LjM3MyAzMC42MjcgMTIgMjQgMTJDMTcuMzczIDEyIDEyIDE3LjM3MyAxMiAyNEMxMiAzMC42MjcgMTcuMzczIDM2IDI0IDM2WiIgZmlsbD0iI0U1RTdFQiIvPgo8cGF0aCBkPSJNMjQgMjhDMjUuMTA0NiAyOCAyNiAyNy4xMDQ2IDI2IDI2QzI2IDI0Ljg5NTQgMjUuMTA0NiAyNCAyNCAyNEMyMi44OTU0IDI0IDIyIDI0Ljg5NTQgMjIgMjZDMjIgMjcuMTA0NiAyMi44OTU0IDI4IDI0IDI4WiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4K";
+                                        }}
+                                    />
+                                    <Tooltip
+                                        id={`item-tooltip-${buildIndex}-${idx}`}
+                                        place="top-start"
+                                        variant="light"
+                                        border="1px solid var(--border-light)"
+                                        offset={10}
+                                        positionStrategy="fixed"
+                                        opacity={1}
+                                        style={{
+                                            backgroundColor:
+                                                "var(--bg-primary) !important",
+                                            color: "var(--text-primary) !important",
+                                            borderRadius: "var(--radius)",
+                                            padding: "8px",
+                                            fontSize: "12px",
+                                            maxWidth: "250px",
+                                            zIndex: 10000,
+                                            opacity: "1 !important",
+                                            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                marginBottom: "6px",
+                                                borderBottom:
+                                                    "1px solid var(--border-light)",
+                                                paddingBottom: "4px",
+                                            }}
+                                        >
+                                            <div
+                                                style={{
+                                                    fontWeight: "600",
+                                                    fontSize: "13px",
+                                                    color: "var(--text-primary)",
+                                                }}
+                                            >
+                                                {item.name}
+                                            </div>
+                                            <div
+                                                style={{
+                                                    fontSize: "12px",
+                                                    color: "#B8860B",
+                                                    fontWeight: "500",
+                                                }}
+                                            >
+                                                {item.cost}g
+                                            </div>
+                                        </div>
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                gap: "2px",
+                                            }}
+                                        >
+                                            {item.AD > 0 && (
+                                                <div
+                                                    style={{
+                                                        fontSize: "11px",
+                                                        color: "var(--text-secondary)",
+                                                        padding: "2px 0",
+                                                    }}
+                                                >
+                                                    AD: {item.AD}
+                                                </div>
+                                            )}
+                                            {item.critChance > 0 && (
+                                                <div
+                                                    style={{
+                                                        fontSize: "11px",
+                                                        color: "var(--text-secondary)",
+                                                        padding: "2px 0",
+                                                    }}
+                                                >
+                                                    Crit:{" "}
+                                                    {(item.critChance * 100).toFixed(0)}%
+                                                </div>
+                                            )}
+                                            {item.armorPenetration > 0 && (
+                                                <div
+                                                    style={{
+                                                        fontSize: "11px",
+                                                        color: "var(--text-secondary)",
+                                                        padding: "2px 0",
+                                                    }}
+                                                >
+                                                    Armor Pen:{" "}
+                                                    {(
+                                                        item.armorPenetration * 100
+                                                    ).toFixed(0)}
+                                                    %
+                                                </div>
+                                            )}
+                                            {item.lethality > 0 && (
+                                                <div
+                                                    style={{
+                                                        fontSize: "11px",
+                                                        color: "var(--text-secondary)",
+                                                        padding: "2px 0",
+                                                    }}
+                                                >
+                                                    Lethality: {item.lethality}
+                                                </div>
+                                            )}
+                                            {item.infinityEdgeBonus && (
+                                                <div
+                                                    style={{
+                                                        fontSize: "11px",
+                                                        color: "var(--text-secondary)",
+                                                        padding: "2px 0",
+                                                    }}
+                                                >
+                                                    +40% Crit Damage
+                                                </div>
+                                            )}
+                                        </div>
+                                    </Tooltip>
                                 </div>
                                 <button
-                                    className="remove-button"
+                                    className="item-remove-button"
                                     onClick={() => onRemoveItem(buildIndex, idx)}
+                                    title="Remove item"
                                 >
-                                    Remove
+                                    ×
                                 </button>
-                            </li>
+                            </div>
                         ))}
-                    </ul>
+                    </div>
                     <Select
                         options={itemOptions}
                         value={null}
@@ -184,14 +321,52 @@ const BuildPanel: React.FC<BuildPanelProps> = ({ builds, setBuilds }) => {
                             {(build.critDamageModifier * 100).toFixed(0)}%
                         </p>
                         <p>
-                            <strong>Total Gold:</strong> {build.totalCost}
+                            <strong>Total Cost:</strong>{" "}
+                            <span style={{ color: "#B8860B" }}>{build.totalCost}g</span>
                         </p>
                     </div>
                 </div>
             ))}
-            <button className="add-build-button" onClick={onAddBuild}>
-                Add Build
-            </button>
+            <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                    className="add-build-button"
+                    onClick={onAddBuild}
+                    style={{ flex: 1 }}
+                >
+                    Add Build
+                </button>
+                <button
+                    className="share-button"
+                    onClick={() => setShowShareModal(true)}
+                    disabled={builds.length === 0}
+                    style={{ flex: 1 }}
+                >
+                    Share Builds
+                </button>
+                <button
+                    className="import-button"
+                    onClick={() => setShowImportModal(true)}
+                    style={{ flex: 1 }}
+                >
+                    Import Builds
+                </button>
+            </div>
+
+            {showShareModal && (
+                <ShareModal builds={builds} onClose={() => setShowShareModal(false)} />
+            )}
+            {showImportModal && (
+                <ImportModal
+                    onImport={handleImportBuilds}
+                    onClose={() => {
+                        setShowImportModal(false);
+                        if (urlImportBuilds && onUrlImportHandled) {
+                            onUrlImportHandled();
+                        }
+                    }}
+                    initialBuilds={urlImportBuilds || undefined}
+                />
+            )}
         </div>
     );
 };

@@ -57,11 +57,30 @@ function CalculatorPage() {
     const [stdDevMultiplier, setStdDevMultiplier] = useState(1);
     const [percentileRange, setPercentileRange] = useState(34); // ±34% for 1 std dev
     const [numAutoAttacks, setNumAutoAttacks] = useState(5); // Realistic for typical engagement
+    const [urlImportBuilds, setUrlImportBuilds] = useState<Build[] | null>(null);
     const step = 1;
 
     // Only run client-side code
     useEffect(() => {
         setIsClient(true);
+
+        // Check for URL hash with builds data
+        const hash = window.location.hash;
+        if (hash && hash.includes("builds=")) {
+            try {
+                const encoded = hash.split("builds=")[1];
+                const decoded = JSON.parse(atob(encoded));
+                const importedBuilds = decoded.map((b: any) => Build.fromJSON(b));
+                setUrlImportBuilds(importedBuilds);
+                // Clear hash after loading
+                window.history.replaceState(null, "", window.location.pathname);
+                // Don't return here - let localStorage load first, then URL imports will show modal
+            } catch (error) {
+                console.error("Error loading builds from URL:", error);
+            }
+        }
+
+        // Load from localStorage
         const savedState = localStorage.getItem("calculatorState");
         if (savedState) {
             try {
@@ -189,7 +208,12 @@ function CalculatorPage() {
                             Base AD: {champion.getAD(level).toFixed(2)}
                         </div>
                     </div>
-                    <BuildPanel builds={builds} setBuilds={setBuilds} />
+                    <BuildPanel
+                        builds={builds}
+                        setBuilds={setBuilds}
+                        urlImportBuilds={urlImportBuilds}
+                        onUrlImportHandled={() => setUrlImportBuilds(null)}
+                    />
                 </div>
 
                 {/* Right Column: Graph Section */}
