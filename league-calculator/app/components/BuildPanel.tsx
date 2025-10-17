@@ -64,67 +64,59 @@ const BuildPanel: React.FC<BuildPanelProps> = ({ builds, setBuilds }) => {
                             }}
                             value={build.name}
                         />
-                        <button
-                            className="duplicate-build-button"
-                            onClick={() => duplicateBuild(buildIndex)}
-                        >
-                            Duplicate Build
-                        </button>
-                        <button
-                            className="remove-build-button"
-                            onClick={() => onRemoveBuild(buildIndex)}
-                        >
-                            Remove Build
-                        </button>
+                        <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
+                            <button
+                                className="duplicate-build-button"
+                                onClick={() => duplicateBuild(buildIndex)}
+                            >
+                                Duplicate
+                            </button>
+                            <button
+                                className="remove-build-button"
+                                onClick={() => onRemoveBuild(buildIndex)}
+                            >
+                                Remove
+                            </button>
+                        </div>
                     </div>
 
                     {/* Bonus Stats Section */}
                     <div className="bonusStats">
-                        <div>
-                            <label>
-                                Bonus AD:{" "}
-                                <input
-                                    type="number"
-                                    value={build.bonusAD === 0 ? "" : build.bonusAD}
-                                    onChange={(e) => {
-                                        build.setBonusAD(+e.target.value);
-                                        setBuilds([...builds]);
-                                    }}
-                                />
-                            </label>
-                        </div>
-                        <div>
-                            <label>
-                                Bonus Lethality:{" "}
-                                <input
-                                    type="number"
-                                    value={
-                                        build.bonusLethality === 0
-                                            ? ""
-                                            : build.bonusLethality
-                                    }
-                                    onChange={(e) => {
-                                        build.setBonusLethality(+e.target.value);
-                                        setBuilds([...builds]);
-                                    }}
-                                />
-                            </label>
-                        </div>
-                        <div>
-                            <label>
-                                Bonus Crit:{" "}
-                                <input
-                                    type="number"
-                                    value={
-                                        build.bonusCrit === 0 ? "" : build.bonusCrit * 100
-                                    }
-                                    onChange={(e) => {
-                                        build.setBonusCrit(+e.target.value / 100);
-                                        setBuilds([...builds]);
-                                    }}
-                                />
-                            </label>
-                        </div>
+                        <label>
+                            Bonus AD
+                            <input
+                                type="number"
+                                value={build.bonusAD === 0 ? "" : build.bonusAD}
+                                onChange={(e) => {
+                                    build.setBonusAD(+e.target.value);
+                                    setBuilds([...builds]);
+                                }}
+                            />
+                        </label>
+                        <label>
+                            Bonus Lethality
+                            <input
+                                type="number"
+                                value={
+                                    build.bonusLethality === 0 ? "" : build.bonusLethality
+                                }
+                                onChange={(e) => {
+                                    build.setBonusLethality(+e.target.value);
+                                    setBuilds([...builds]);
+                                }}
+                            />
+                        </label>
+                        <label>
+                            Bonus Crit
+                            <input
+                                type="number"
+                                value={build.bonusCrit === 0 ? "" : build.bonusCrit * 100}
+                                onChange={(e) => {
+                                    build.setBonusCrit(+e.target.value / 100);
+                                    setBuilds([...builds]);
+                                }}
+                            />
+                        </label>
                     </div>
 
                     <h3>Items:</h3>
@@ -173,6 +165,14 @@ const BuildPanel: React.FC<BuildPanelProps> = ({ builds, setBuilds }) => {
                             if (e) {
                                 onAddItem(buildIndex, e.value);
                             }
+                        }}
+                        menuPortalTarget={
+                            typeof document !== "undefined" ? document.body : null
+                        }
+                        menuPosition="fixed"
+                        styles={{
+                            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                            menu: (base) => ({ ...base, zIndex: 9999 }),
                         }}
                     />
                     <div className="itemList">
