@@ -1,5 +1,8 @@
 import cassiopeia as cass
 
+maps = cass.get_maps(region="NA")
+map_lookup = {int(m.id): m.name for m in maps}
+
 all_items = cass.get_items(region="NA")
 
 relevant_stats = [
@@ -13,6 +16,7 @@ item_defs = []
 for item in all_items:
     if not any(m.id == 11 for m in item.maps):
         continue
+
     stats = item.stats  # ItemStatsData
     data = {
         "name": item.name,
@@ -53,6 +57,10 @@ for item in all_items:
 
     # Only add items that have at least one relevant stat
     if hassomething:
+        # print(f"Processing: {item.name}")
+        # map_ids = [m.id for m in item.maps]
+        # map_names = [map_lookup.get(mid, f"Unknown({mid})") for mid in map_ids]
+        # print(f"  Maps: {map_names}")
         item_defs.append(data)
 
 # not in ddragon for some reason
