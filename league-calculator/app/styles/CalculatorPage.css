@@ -187,7 +187,8 @@ input[type="text"]:focus {
 }
 
 /* Button Group */
-.buildHeader > div {
+.buildHeader > div,
+.build-header-buttons {
     display: flex;
     gap: 6px;
     flex-shrink: 0;
@@ -366,8 +367,9 @@ input[type="text"]:focus {
 }
 
 .item-slot:hover {
-    border-color: var(--border-medium);
-    transform: scale(1.05);
+    border-color: var(--danger);
+    background-color: rgba(220, 38, 38, 0.1);
+    cursor: pointer;
 }
 
 .item-image-container {
@@ -380,39 +382,20 @@ input[type="text"]:focus {
 }
 
 .item-image {
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
     object-fit: contain;
     border-radius: 2px;
 }
 
-.item-remove-button {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    width: 20px;
-    height: 20px;
-    background-color: var(--danger);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: bold;
+/* Build Actions */
+.build-actions {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s ease;
-    opacity: 0;
+    gap: 8px;
 }
 
-.item-slot:hover .item-remove-button {
-    opacity: 1;
-}
-
-.item-remove-button:hover {
-    background-color: var(--danger-hover);
-    transform: scale(1.1);
+.build-action-button {
+    flex: 1;
 }
 
 .add-build-button {
@@ -425,7 +408,6 @@ input[type="text"]:focus {
     font-size: 13px;
     font-weight: 500;
     transition: background-color 0.15s ease;
-    width: 100%;
 }
 
 .add-build-button:hover {
@@ -443,7 +425,6 @@ input[type="text"]:focus {
     font-size: 13px;
     font-weight: 500;
     transition: all 0.15s ease;
-    width: 100%;
 }
 
 .share-button:hover:not(:disabled),
