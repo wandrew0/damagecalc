@@ -30,11 +30,13 @@ const ImportModal: React.FC<ImportModalProps> = ({
 
         try {
             const decoded = JSON.parse(atob(importCode.trim()));
-            const builds = decoded.map((b: any) => Build.fromJSON(b));
+            const builds = decoded.map((b: Record<string, unknown>) =>
+                Build.fromJSON(b as Parameters<typeof Build.fromJSON>[0])
+            );
             setParsedBuilds(builds);
-            setSelectedIndices(new Set(builds.map((_, i) => i)));
+            setSelectedIndices(new Set(builds.map((_: Build, i: number) => i)));
             setError("");
-        } catch (err) {
+        } catch {
             setError("Invalid builds code. Please check and try again.");
             setParsedBuilds(null);
         }
