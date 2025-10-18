@@ -80,6 +80,19 @@ input[type="text"] {
     transition: border-color 0.15s ease;
     font-size: 13px;
     color: var(--text-primary);
+    /* Mobile touch optimization */
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+}
+
+/* Mobile input optimization */
+@media (max-width: 768px) {
+    input[type="number"],
+    input[type="text"] {
+        padding: 10px 12px;
+        font-size: 16px; /* Prevents zoom on iOS */
+        border-radius: 6px;
+    }
 }
 
 input[type="number"]:hover,
@@ -242,6 +255,12 @@ input[type="text"]:focus {
     font-weight: 500;
     transition: all 0.15s ease;
     white-space: nowrap;
+    /* Mobile touch optimization */
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .duplicate-build-button:hover {
@@ -456,6 +475,53 @@ input[type="text"]:focus {
     padding: 20px;
     border-radius: var(--radius);
     border: 1px solid var(--border-light);
+    /* Ensure chart is responsive */
+    position: relative;
+    overflow: hidden;
+}
+
+/* Chart responsive container */
+.chartContainer canvas {
+    max-width: 100%;
+    height: auto !important;
+}
+
+/* Mobile chart optimizations */
+@media (max-width: 768px) {
+    .chartContainer {
+        position: relative;
+        width: 100%;
+        max-width: 100%;
+        min-height: 200px;
+        height: 200px;
+    }
+
+    .chartContainer canvas {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: 100%;
+        object-fit: contain;
+    }
+
+    /* Ensure chart container doesn't overflow */
+    .chartContainer > div {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    /* Force chart to be responsive */
+    .chartContainer * {
+        max-width: 100% !important;
+    }
+}
+
+/* Extra small mobile screens */
+@media (max-width: 480px) {
+    .chartContainer {
+        min-height: 180px;
+        height: 180px;
+        padding: 2px;
+    }
 }
 
 /* Armor Range - Inline */
@@ -552,6 +618,20 @@ input[type="text"]:focus {
 .buildPanel p strong {
     color: var(--text-primary);
     font-weight: 600;
+}
+
+/* Mobile build stats optimization */
+@media (max-width: 768px) {
+    .buildPanel p {
+        font-size: 10px;
+        margin: 4px 0 2px 0;
+        line-height: 1.3;
+    }
+
+    .buildPanel h3 {
+        font-size: 11px;
+        margin: 8px 0 6px 0;
+    }
 }
 
 /* Scrollbar Styling */
@@ -791,14 +871,260 @@ input[type="text"]:focus {
     border-color: var(--border-medium);
 }
 
-/* Responsive adjustments */
-@media (max-width: 1024px) {
+/* Mobile-First Responsive Design */
+
+/* Mobile styles (default) */
+@media (max-width: 768px) {
+    .appContainer {
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+    }
+
+    .headerContainer {
+        padding: 8px 12px;
+    }
+
+    .headerTop h1 {
+        font-size: 14px;
+    }
+
+    .reset-all-button {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+
+    .mainContent {
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px;
+        overflow: visible;
+    }
+
+    .leftColumn {
+        flex: none;
+        width: 100%;
+        max-height: none;
+        overflow: visible;
+        padding-right: 0;
+    }
+
+    .globalSettings {
+        padding: 8px;
+        margin-bottom: 4px;
+    }
+
+    .globalSettings label {
+        font-size: 11px;
+    }
+
+    .champ-stats {
+        margin-left: 8px;
+        font-size: 11px;
+    }
+
+    /* Build Panel Mobile Optimizations */
+    .buildPanel {
+        padding: 8px;
+        margin-bottom: 6px;
+    }
+
+    .buildHeader {
+        flex-direction: row;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 6px;
+    }
+
+    .buildName {
+        font-size: 13px;
+        margin-bottom: 0;
+        flex: 1;
+    }
+
+    .build-header-buttons {
+        gap: 4px;
+    }
+
+    .bonusStats {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        margin-bottom: 8px;
+        padding: 6px 0;
+    }
+
+    .bonusStats label {
+        font-size: 10px;
+    }
+
+    .bonusStats input {
+        font-size: 11px;
+        padding: 6px;
+    }
+
+    /* Items Grid Mobile */
+    .items-grid {
+        grid-template-columns: repeat(6, 1fr);
+        gap: 4px;
+        margin-bottom: 8px;
+    }
+
+    .item-slot {
+        min-height: 50px;
+    }
+
+    .item-image {
+        width: 32px;
+        height: 32px;
+    }
+
+    /* Build Actions Mobile */
+    .build-actions {
+        flex-direction: row;
+        gap: 4px;
+        flex-wrap: wrap;
+    }
+
+    .build-action-button {
+        padding: 6px 8px;
+        font-size: 11px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* Graph Section Mobile */
+    .graphSection {
+        flex: none;
+        width: 100%;
+        overflow: visible;
+    }
+
+    .chartContainer {
+        min-height: 250px;
+        height: 250px;
+        padding: 4px;
+        margin-bottom: 8px;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    /* Armor Range Mobile */
+    .armorRangeContainer {
+        flex-direction: row;
+        gap: 8px;
+        margin-bottom: 6px;
+        flex-wrap: wrap;
+    }
+
+    .armorInputLabel {
+        font-size: 11px;
+        flex: 1;
+        min-width: 120px;
+    }
+
+    .armorInput {
+        width: 100%;
+        max-width: 80px;
+        font-size: 11px;
+        padding: 4px 6px;
+    }
+
+    /* Margin Controls Mobile */
+    .marginControls {
+        flex-direction: row;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .marginTypeLabel {
+        font-size: 11px;
+        white-space: nowrap;
+    }
+
+    .marginTypeSelect {
+        width: 60px;
+        font-size: 11px;
+        padding: 4px 6px;
+    }
+
+    /* Modal Mobile */
+    .modal-overlay {
+        padding: 10px;
+    }
+
+    .modal-content {
+        max-width: 100%;
+        max-height: 90vh;
+    }
+
+    .modal-header {
+        padding: 12px 16px;
+    }
+
+    .modal-header h2 {
+        font-size: 16px;
+    }
+
+    .modal-body {
+        padding: 16px;
+    }
+
+    .modal-footer {
+        padding: 12px 16px;
+        flex-direction: column;
+    }
+
+    .modal-button-primary,
+    .modal-button-secondary {
+        width: 100%;
+        margin-bottom: 8px;
+    }
+
+    /* Build Select Mobile */
+    .build-select-item {
+        padding: 8px;
+    }
+
+    .build-select-item span:nth-child(2) {
+        font-size: 13px;
+    }
+
+    .build-summary {
+        font-size: 11px;
+    }
+}
+
+/* Tablet styles */
+@media (min-width: 769px) and (max-width: 1024px) {
     .mainContent {
         flex-direction: column;
     }
 
     .leftColumn {
         flex: 0 0 auto;
-        max-height: 40vh;
+        max-height: 50vh;
+    }
+
+    .chartContainer {
+        min-height: 500px;
+        height: 500px;
+    }
+}
+
+/* Desktop styles */
+@media (min-width: 1025px) {
+    .mainContent {
+        flex-direction: row;
+    }
+
+    .leftColumn {
+        flex: 0 0 420px;
+        max-height: none;
+    }
+
+    .chartContainer {
+        min-height: 600px;
+        height: 600px;
     }
 }
