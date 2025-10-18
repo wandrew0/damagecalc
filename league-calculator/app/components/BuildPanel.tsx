@@ -20,25 +20,33 @@ const itemOptions = ALL_ITEMS.map((item) => ({
 interface BuildPanelProps {
     builds: Build[];
     setBuilds: React.Dispatch<React.SetStateAction<Build[]>>;
+    championLevel?: number;
     urlImportBuilds?: Build[] | null;
+    urlImportChampionLevel?: number | null;
     onUrlImportHandled?: () => void;
+    onChampionLevelImport?: (level: number) => void;
+    autoImported?: boolean;
 }
 
 const BuildPanel: React.FC<BuildPanelProps> = ({
     builds,
     setBuilds,
+    championLevel,
     urlImportBuilds,
+    urlImportChampionLevel,
     onUrlImportHandled,
+    onChampionLevelImport,
+    autoImported,
 }) => {
     const [showShareModal, setShowShareModal] = useState(false);
     const [showImportModal, setShowImportModal] = useState(false);
 
-    // Auto-open import modal if there are URL imports
+    // Auto-open import modal if there are URL imports (but not if auto-imported)
     React.useEffect(() => {
-        if (urlImportBuilds && urlImportBuilds.length > 0) {
+        if (urlImportBuilds && urlImportBuilds.length > 0 && !autoImported) {
             setShowImportModal(true);
         }
-    }, [urlImportBuilds]);
+    }, [urlImportBuilds, autoImported]);
 
     function onAddBuild() {
         const newBuild = new Build();
@@ -72,11 +80,20 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
         setBuilds([...builds, newBuild]);
     }
 
-    function handleImportBuilds(importedBuilds: Build[], clearExisting: boolean) {
+    function handleImportBuilds(
+        importedBuilds: Build[],
+        clearExisting: boolean,
+        importedChampionLevel?: number
+    ) {
         if (clearExisting) {
             setBuilds(importedBuilds);
         } else {
             setBuilds([...builds, ...importedBuilds]);
+        }
+
+        // Handle champion level import
+        if (importedChampionLevel && onChampionLevelImport) {
+            onChampionLevelImport(importedChampionLevel);
         }
     }
 
@@ -350,7 +367,11 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
             </div>
 
             {showShareModal && (
-                <ShareModal builds={builds} onClose={() => setShowShareModal(false)} />
+                <ShareModal
+                    builds={builds}
+                    championLevel={championLevel}
+                    onClose={() => setShowShareModal(false)}
+                />
             )}
             {showImportModal && (
                 <ImportModal
@@ -362,6 +383,8 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                         }
                     }}
                     initialBuilds={urlImportBuilds || undefined}
+                    initialChampionLevel={urlImportChampionLevel || undefined}
+                    isUrlImport={!!urlImportBuilds}
                 />
             )}
         </div>

@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { Build } from "../classes/Build";
+import { encodeBuilds } from "../utils/encoder";
 
 interface ShareModalProps {
     builds: Build[];
+    championLevel?: number;
     onClose: () => void;
 }
 
-const ShareModal: React.FC<ShareModalProps> = ({ builds, onClose }) => {
+const ShareModal: React.FC<ShareModalProps> = ({ builds, championLevel, onClose }) => {
     const [selectedIndices, setSelectedIndices] = useState<Set<number>>(
         new Set(builds.map((_, i) => i))
     );
@@ -27,7 +29,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ builds, onClose }) => {
         }
 
         const selectedBuilds = builds.filter((_, i) => selectedIndices.has(i));
-        const encoded = btoa(JSON.stringify(selectedBuilds.map((b) => b.toJSON())));
+        const encoded = encodeBuilds(selectedBuilds, championLevel);
         navigator.clipboard.writeText(encoded);
         onClose();
     };
@@ -38,7 +40,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ builds, onClose }) => {
         }
 
         const selectedBuilds = builds.filter((_, i) => selectedIndices.has(i));
-        const encoded = btoa(JSON.stringify(selectedBuilds.map((b) => b.toJSON())));
+        const encoded = encodeBuilds(selectedBuilds, championLevel);
         const url = `${window.location.origin}${window.location.pathname}#builds=${encoded}`;
         navigator.clipboard.writeText(url);
         onClose();

@@ -1,16 +1,21 @@
 import React, { useState } from "react";
 import { Build } from "../classes/Build";
+import { decodeBuilds, decodeBuildsLegacy } from "../utils/encoder";
 
 interface ImportModalProps {
-    onImport: (builds: Build[], clearExisting: boolean) => void;
+    onImport: (builds: Build[], clearExisting: boolean, championLevel?: number) => void;
     onClose: () => void;
     initialBuilds?: Build[];
+    initialChampionLevel?: number;
+    isUrlImport?: boolean;
 }
 
 const ImportModal: React.FC<ImportModalProps> = ({
     onImport,
     onClose,
     initialBuilds,
+    initialChampionLevel,
+    isUrlImport = false,
 }) => {
     const [importCode, setImportCode] = useState("");
     const [parsedBuilds, setParsedBuilds] = useState<Build[] | null>(
@@ -21,24 +26,47 @@ const ImportModal: React.FC<ImportModalProps> = ({
     );
     const [clearExisting, setClearExisting] = useState(false);
     const [error, setError] = useState("");
+    const [importedChampionLevel, setImportedChampionLevel] = useState<
+        number | undefined
+    >(initialChampionLevel);
+    const [importChampionLevel, setImportChampionLevel] = useState(true);
 
-    const handleParse = () => {
-        if (!importCode.trim()) {
+    const handleParse = (code?: string) => {
+        const codeToParse =
+            code || (typeof importCode === "string" ? importCode : "") || "";
+        if (!codeToParse.trim()) {
             setError("Please paste a builds code");
             return;
         }
 
         try {
-            const decoded = JSON.parse(atob(importCode.trim()));
-            const builds = decoded.map((b: Record<string, unknown>) =>
-                Build.fromJSON(b as Parameters<typeof Build.fromJSON>[0])
-            );
-            setParsedBuilds(builds);
-            setSelectedIndices(new Set(builds.map((_: Build, i: number) => i)));
-            setError("");
+            // Try new format first, fallback to legacy
+            try {
+                const { builds, championLevel } = decodeBuilds(codeToParse.trim());
+                setParsedBuilds(builds);
+                setImportedChampionLevel(championLevel);
+                setSelectedIndices(new Set(builds.map((_: Build, i: number) => i)));
+                setError("");
+            } catch {
+                // Fallback to legacy format
+                const { builds, championLevel } = decodeBuildsLegacy(codeToParse.trim());
+                setParsedBuilds(builds);
+                setImportedChampionLevel(championLevel);
+                setSelectedIndices(new Set(builds.map((_: Build, i: number) => i)));
+                setError("");
+            }
         } catch {
             setError("Invalid builds code. Please check and try again.");
             setParsedBuilds(null);
+        }
+    };
+
+    const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+        const pastedText = e.clipboardData.getData("text");
+        if (pastedText.trim()) {
+            setImportCode(pastedText);
+            // Auto-parse on paste
+            handleParse(pastedText);
         }
     };
 
@@ -58,7 +86,11 @@ const ImportModal: React.FC<ImportModalProps> = ({
         }
 
         const selectedBuilds = parsedBuilds.filter((_, i) => selectedIndices.has(i));
-        onImport(selectedBuilds, clearExisting);
+        onImport(
+            selectedBuilds,
+            clearExisting,
+            importChampionLevel ? importedChampionLevel : undefined
+        );
         onClose();
     };
 
@@ -79,6 +111,7 @@ const ImportModal: React.FC<ImportModalProps> = ({
                                 className="import-textarea"
                                 value={importCode}
                                 onChange={(e) => setImportCode(e.target.value)}
+                                onPaste={handlePaste}
                                 placeholder="Paste builds code here..."
                                 rows={5}
                             />
@@ -87,6 +120,20 @@ const ImportModal: React.FC<ImportModalProps> = ({
                     ) : (
                         <>
                             <p>Select builds to import:</p>
+                            {importedChampionLevel && (
+                                <label className="clear-builds-checkbox">
+                                    <input
+                                        type="checkbox"
+                                        checked={importChampionLevel}
+                                        onChange={(e) =>
+                                            setImportChampionLevel(e.target.checked)
+                                        }
+                                    />
+                                    <span>
+                                        Import champion level ({importedChampionLevel})
+                                    </span>
+                                </label>
+                            )}
                             <label className="clear-builds-checkbox">
                                 <input
                                     type="checkbox"
@@ -120,7 +167,7 @@ const ImportModal: React.FC<ImportModalProps> = ({
                     {!parsedBuilds ? (
                         <>
                             <button
-                                onClick={handleParse}
+                                onClick={() => handleParse()}
                                 className="modal-button-primary"
                             >
                                 Parse Code
@@ -137,15 +184,17 @@ const ImportModal: React.FC<ImportModalProps> = ({
                             >
                                 Import Selected
                             </button>
-                            <button
-                                onClick={() => {
-                                    setParsedBuilds(null);
-                                    setError("");
-                                }}
-                                className="modal-button-secondary"
-                            >
-                                Back
-                            </button>
+                            {isUrlImport && (
+                                <button
+                                    onClick={() => {
+                                        setParsedBuilds(null);
+                                        setError("");
+                                    }}
+                                    className="modal-button-secondary"
+                                >
+                                    Back
+                                </button>
+                            )}
                         </>
                     )}
                 </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import "../styles/CalculatorPage.css";
 
 import { Champion } from "../classes/Champion";
@@ -9,6 +9,7 @@ import { Item } from "../classes/Item";
 
 import BuildPanel from "../components/BuildPanel";
 import DamageChart from "../components/DamageChart";
+import { decodeBuilds, decodeBuildsLegacy } from "../utils/encoder";
 
 function serializeBuilds(builds: Build[]) {
     return builds.map((b) => b.toJSON());
@@ -58,31 +59,98 @@ function CalculatorPage() {
     const [percentileRange, setPercentileRange] = useState(34); // ±34% for 1 std dev
     const [numAutoAttacks, setNumAutoAttacks] = useState(5); // Realistic for typical engagement
     const [urlImportBuilds, setUrlImportBuilds] = useState<Build[] | null>(null);
+    const [urlImportChampionLevel, setUrlImportChampionLevel] = useState<number | null>(
+        null
+    );
+    const [autoImported, setAutoImported] = useState(false);
+    const autoImportedRef = useRef(false);
     const step = 1;
 
     // Only run client-side code
     useEffect(() => {
         setIsClient(true);
 
-        // Check for URL hash with builds data
-        const hash = window.location.hash;
-        if (hash && hash.includes("builds=")) {
-            try {
-                const encoded = hash.split("builds=")[1];
-                const decoded = JSON.parse(atob(encoded));
-                const importedBuilds = decoded.map((b: Record<string, unknown>) =>
-                    Build.fromJSON(b as Parameters<typeof Build.fromJSON>[0])
-                );
-                setUrlImportBuilds(importedBuilds);
-                // Clear hash after loading
-                window.history.replaceState(null, "", window.location.pathname);
-                // Don't return here - let localStorage load first, then URL imports will show modal
-            } catch {
-                console.error("Error loading builds from URL");
-            }
-        }
+        // Handle hash changes
+        const handleHashChange = () => {
+            const hash = window.location.hash;
+            if (hash && hash.includes("builds=")) {
+                try {
+                    const encoded = decodeURIComponent(hash.split("builds=")[1]);
 
-        // Load from localStorage
+                    // Try new format first, fallback to legacy
+                    try {
+                        const { builds: importedBuilds, championLevel: importedLevel } =
+                            decodeBuilds(encoded);
+
+                        // Check if we should auto-import (user has no builds)
+                        const savedState = localStorage.getItem("calculatorState");
+                        let hasExistingBuilds = false;
+                        if (savedState) {
+                            try {
+                                const { builds: savedBuilds } = JSON.parse(savedState);
+                                hasExistingBuilds = savedBuilds && savedBuilds.length > 0;
+                            } catch (error) {
+                                console.error("Error parsing saved state:", error);
+                            }
+                        }
+
+                        if (!hasExistingBuilds) {
+                            setBuilds(importedBuilds);
+                            if (importedLevel) {
+                                setLevel(importedLevel);
+                            }
+                            setAutoImported(true);
+                            autoImportedRef.current = true;
+                        } else {
+                            setUrlImportBuilds(importedBuilds);
+                            setUrlImportChampionLevel(importedLevel || null);
+                        }
+                    } catch (error) {
+                        console.log("New format failed, trying legacy format:", error);
+                        // Fallback to legacy format
+                        const { builds: importedBuilds, championLevel: importedLevel } =
+                            decodeBuildsLegacy(encoded);
+
+                        // Check if we should auto-import (user has no builds)
+                        const savedState = localStorage.getItem("calculatorState");
+                        let hasExistingBuilds = false;
+                        if (savedState) {
+                            try {
+                                const { builds: savedBuilds } = JSON.parse(savedState);
+                                hasExistingBuilds = savedBuilds && savedBuilds.length > 0;
+                            } catch (error) {
+                                console.error("Error parsing saved state:", error);
+                            }
+                        }
+
+                        if (!hasExistingBuilds) {
+                            setBuilds(importedBuilds);
+                            if (importedLevel) {
+                                setLevel(importedLevel);
+                            }
+                            setAutoImported(true);
+                            autoImportedRef.current = true;
+                        } else {
+                            setUrlImportBuilds(importedBuilds);
+                            setUrlImportChampionLevel(importedLevel || null);
+                        }
+                    }
+
+                    // Clear hash after loading
+                    window.history.replaceState(null, "", window.location.pathname);
+                } catch (error) {
+                    console.error("Error loading builds from URL:", error);
+                }
+            }
+        };
+
+        // Listen for hash changes
+        window.addEventListener("hashchange", handleHashChange);
+
+        // Also check initial hash
+        handleHashChange();
+
+        // Load from localStorage (but don't overwrite if auto-import happened)
         const savedState = localStorage.getItem("calculatorState");
         if (savedState) {
             try {
@@ -95,9 +163,15 @@ function CalculatorPage() {
                     percentileRange: savedPercentile,
                     numAutoAttacks: savedNumAutoAttacks,
                 } = JSON.parse(savedState);
-                if (level) setLevel(level);
+                // Only load level if we didn't auto-import from URL
+                if (level && !autoImportedRef.current) {
+                    setLevel(level);
+                }
                 if (armorRange) setArmorRange(armorRange);
-                if (savedBuilds) setBuilds(deserializeBuilds(savedBuilds));
+                // Only load builds if we didn't auto-import from URL
+                if (savedBuilds && !autoImportedRef.current) {
+                    setBuilds(deserializeBuilds(savedBuilds));
+                }
                 if (savedShowMargin !== undefined) setShowMargin(savedShowMargin);
                 if (savedStdDev) setStdDevMultiplier(savedStdDev);
                 if (savedPercentile) setPercentileRange(savedPercentile);
@@ -106,6 +180,11 @@ function CalculatorPage() {
                 console.error("Error loading saved state:", error);
             }
         }
+
+        // Cleanup event listener
+        return () => {
+            window.removeEventListener("hashchange", handleHashChange);
+        };
     }, []);
 
     // Save state to localStorage whenever level, builds, or armorRange changes.
@@ -213,8 +292,17 @@ function CalculatorPage() {
                     <BuildPanel
                         builds={builds}
                         setBuilds={setBuilds}
+                        championLevel={level}
                         urlImportBuilds={urlImportBuilds}
-                        onUrlImportHandled={() => setUrlImportBuilds(null)}
+                        urlImportChampionLevel={urlImportChampionLevel}
+                        autoImported={autoImported}
+                        onUrlImportHandled={() => {
+                            setUrlImportBuilds(null);
+                            setUrlImportChampionLevel(null);
+                        }}
+                        onChampionLevelImport={(importedLevel) => {
+                            setLevel(importedLevel);
+                        }}
                     />
                 </div>
 
