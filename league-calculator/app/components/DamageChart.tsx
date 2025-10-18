@@ -36,6 +36,7 @@ interface DamageChartProps {
     showMargin: boolean;
     stdDevMultiplier: number;
     numAutoAttacks: number;
+    disableAnimation?: boolean;
 }
 
 const DamageChart: React.FC<DamageChartProps> = ({
@@ -47,6 +48,7 @@ const DamageChart: React.FC<DamageChartProps> = ({
     showMargin,
     stdDevMultiplier,
     numAutoAttacks,
+    disableAnimation = false,
 }) => {
     // Calculate max Y value for fixed axis range
     const maxYValue = useMemo(() => {
@@ -213,9 +215,11 @@ const DamageChart: React.FC<DamageChartProps> = ({
                 options={{
                     responsive: true,
                     maintainAspectRatio: false,
-                    animation: {
-                        duration: 300,
-                    },
+                    animation: disableAnimation
+                        ? false
+                        : {
+                              duration: 300,
+                          },
                     interaction: {
                         mode: "index",
                         intersect: false,

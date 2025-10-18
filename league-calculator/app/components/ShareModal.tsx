@@ -30,19 +30,20 @@ const ShareModal: React.FC<ShareModalProps> = ({ builds, championLevel, onClose 
 
         const selectedBuilds = builds.filter((_, i) => selectedIndices.has(i));
         const encoded = encodeBuilds(selectedBuilds, championLevel);
-        navigator.clipboard.writeText(encoded);
+        const urlEncoded = encodeURIComponent(encoded);
+        const url = `${window.location.origin}${window.location.pathname}#builds=${urlEncoded}`;
+        navigator.clipboard.writeText(url);
         onClose();
     };
 
-    const handleCopyURL = () => {
+    const handleCopyRawData = () => {
         if (selectedIndices.size === 0) {
             return;
         }
 
         const selectedBuilds = builds.filter((_, i) => selectedIndices.has(i));
         const encoded = encodeBuilds(selectedBuilds, championLevel);
-        const url = `${window.location.origin}${window.location.pathname}#builds=${encoded}`;
-        navigator.clipboard.writeText(url);
+        navigator.clipboard.writeText(encoded);
         onClose();
     };
 
@@ -81,10 +82,13 @@ const ShareModal: React.FC<ShareModalProps> = ({ builds, championLevel, onClose 
                         onClick={handleCopyToClipboard}
                         className="modal-button-primary"
                     >
-                        Copy Code
-                    </button>
-                    <button onClick={handleCopyURL} className="modal-button-primary">
                         Copy URL
+                    </button>
+                    <button
+                        onClick={handleCopyRawData}
+                        className="modal-button-secondary"
+                    >
+                        Copy Code
                     </button>
                     <button onClick={onClose} className="modal-button-secondary">
                         Cancel
