@@ -220,6 +220,17 @@ function CalculatorPage() {
 
                 {/* Right Column: Graph Section */}
                 <div className="graphSection">
+                    <DamageChart
+                        builds={builds}
+                        champion={champion}
+                        level={level}
+                        armorRange={armorRange}
+                        step={step}
+                        showMargin={showMargin}
+                        stdDevMultiplier={stdDevMultiplier}
+                        numAutoAttacks={numAutoAttacks}
+                    />
+
                     <div className="globalSettings">
                         <div className="armorRangeContainer">
                             <label className="armorInputLabel">
@@ -317,17 +328,6 @@ function CalculatorPage() {
                             )}
                         </div>
                     </div>
-
-                    <DamageChart
-                        builds={builds}
-                        champion={champion}
-                        level={level}
-                        armorRange={armorRange}
-                        step={step}
-                        showMargin={showMargin}
-                        stdDevMultiplier={stdDevMultiplier}
-                        numAutoAttacks={numAutoAttacks}
-                    />
                 </div>
             </div>
         </div>
