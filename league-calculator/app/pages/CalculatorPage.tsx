@@ -62,13 +62,43 @@ function CalculatorPage() {
     const [urlImportChampionLevel, setUrlImportChampionLevel] = useState<number | null>(
         null
     );
-    const [autoImported, setAutoImported] = useState(false);
     const autoImportedRef = useRef(false);
     const step = 1;
 
     // Only run client-side code
     useEffect(() => {
         setIsClient(true);
+
+        // Helper function to check if user has existing builds
+        const hasExistingBuildsInStorage = (): boolean => {
+            const savedState = localStorage.getItem("calculatorState");
+            if (!savedState) return false;
+
+            try {
+                const { builds: savedBuilds } = JSON.parse(savedState);
+                return savedBuilds && savedBuilds.length > 0;
+            } catch (error) {
+                console.error("Error parsing saved state:", error);
+                return false;
+            }
+        };
+
+        // Helper function to handle imported builds
+        const handleImportedBuilds = (
+            importedBuilds: Build[],
+            importedLevel?: number
+        ) => {
+            if (!hasExistingBuildsInStorage()) {
+                setBuilds(importedBuilds);
+                if (importedLevel) {
+                    setLevel(importedLevel);
+                }
+                autoImportedRef.current = true;
+            } else {
+                setUrlImportBuilds(importedBuilds);
+                setUrlImportChampionLevel(importedLevel || null);
+            }
+        };
 
         // Handle hash changes
         const handleHashChange = () => {
@@ -81,59 +111,12 @@ function CalculatorPage() {
                     try {
                         const { builds: importedBuilds, championLevel: importedLevel } =
                             decodeBuilds(encoded);
-
-                        // Check if we should auto-import (user has no builds)
-                        const savedState = localStorage.getItem("calculatorState");
-                        let hasExistingBuilds = false;
-                        if (savedState) {
-                            try {
-                                const { builds: savedBuilds } = JSON.parse(savedState);
-                                hasExistingBuilds = savedBuilds && savedBuilds.length > 0;
-                            } catch (error) {
-                                console.error("Error parsing saved state:", error);
-                            }
-                        }
-
-                        if (!hasExistingBuilds) {
-                            setBuilds(importedBuilds);
-                            if (importedLevel) {
-                                setLevel(importedLevel);
-                            }
-                            setAutoImported(true);
-                            autoImportedRef.current = true;
-                        } else {
-                            setUrlImportBuilds(importedBuilds);
-                            setUrlImportChampionLevel(importedLevel || null);
-                        }
+                        handleImportedBuilds(importedBuilds, importedLevel);
                     } catch (error) {
                         console.log("New format failed, trying legacy format:", error);
-                        // Fallback to legacy format
                         const { builds: importedBuilds, championLevel: importedLevel } =
                             decodeBuildsLegacy(encoded);
-
-                        // Check if we should auto-import (user has no builds)
-                        const savedState = localStorage.getItem("calculatorState");
-                        let hasExistingBuilds = false;
-                        if (savedState) {
-                            try {
-                                const { builds: savedBuilds } = JSON.parse(savedState);
-                                hasExistingBuilds = savedBuilds && savedBuilds.length > 0;
-                            } catch (error) {
-                                console.error("Error parsing saved state:", error);
-                            }
-                        }
-
-                        if (!hasExistingBuilds) {
-                            setBuilds(importedBuilds);
-                            if (importedLevel) {
-                                setLevel(importedLevel);
-                            }
-                            setAutoImported(true);
-                            autoImportedRef.current = true;
-                        } else {
-                            setUrlImportBuilds(importedBuilds);
-                            setUrlImportChampionLevel(importedLevel || null);
-                        }
+                        handleImportedBuilds(importedBuilds, importedLevel);
                     }
 
                     // Clear hash after loading
@@ -295,7 +278,7 @@ function CalculatorPage() {
                         championLevel={level}
                         urlImportBuilds={urlImportBuilds}
                         urlImportChampionLevel={urlImportChampionLevel}
-                        autoImported={autoImported}
+                        autoImported={autoImportedRef.current}
                         onUrlImportHandled={() => {
                             setUrlImportBuilds(null);
                             setUrlImportChampionLevel(null);
