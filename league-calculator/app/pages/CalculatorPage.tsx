@@ -62,8 +62,103 @@ function CalculatorPage() {
     const [urlImportChampionLevel, setUrlImportChampionLevel] = useState<number | null>(
         null
     );
+    const [disableChartAnimation, setDisableChartAnimation] = useState(false);
     const autoImportedRef = useRef(false);
+    const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const previousBuildsRef = useRef<Build[]>([]);
     const step = 1;
+
+    // Helper function to compare items by content, not order
+    const compareItems = (items1: Item[], items2: Item[]): boolean => {
+        if (items1.length !== items2.length) return false;
+
+        // Create sorted copies for comparison to handle reordering
+        const sorted1 = [...items1].sort((a, b) => a.name.localeCompare(b.name));
+        const sorted2 = [...items2].sort((a, b) => a.name.localeCompare(b.name));
+
+        return sorted1.every((item1, index) => {
+            const item2 = sorted2[index];
+            return (
+                item1.name === item2.name &&
+                item1.cost === item2.cost &&
+                item1.AD === item2.AD &&
+                item1.critChance === item2.critChance &&
+                item1.infinityEdgeBonus === item2.infinityEdgeBonus &&
+                item1.lethality === item2.lethality &&
+                item1.armorPenetration === item2.armorPenetration &&
+                JSON.stringify(item1.aliases) === JSON.stringify(item2.aliases) &&
+                item1.imagePath === item2.imagePath
+            );
+        });
+    };
+
+    // Helper function to compare builds (excluding names)
+    const compareBuildsExcludingNames = (build1: Build, build2: Build): boolean => {
+        return (
+            build1.items.length === build2.items.length &&
+            compareItems(build1.items, build2.items) &&
+            build1.critChance === build2.critChance &&
+            build1.critDamageModifier === build2.critDamageModifier &&
+            build1.AD === build2.AD &&
+            build1.armorPenetration === build2.armorPenetration &&
+            build1.lethality === build2.lethality &&
+            build1.totalCost === build2.totalCost &&
+            build1.bonusAD === build2.bonusAD &&
+            build1.bonusLethality === build2.bonusLethality &&
+            build1.bonusCrit === build2.bonusCrit
+        );
+    };
+
+    // Custom setBuilds function that detects name-only changes
+    const setBuildsWithAnimationControl = (newBuilds: React.SetStateAction<Build[]>) => {
+        const resolvedBuilds =
+            typeof newBuilds === "function"
+                ? newBuilds(previousBuildsRef.current)
+                : newBuilds;
+
+        // Check if only names changed by comparing all properties except names
+        const onlyNamesChanged =
+            previousBuildsRef.current.length === resolvedBuilds.length &&
+            previousBuildsRef.current.every((oldBuild, index) => {
+                const newBuild = resolvedBuilds[index];
+                if (!newBuild) return false;
+
+                // Compare all properties except name
+                return compareBuildsExcludingNames(oldBuild, newBuild);
+            });
+
+        if (onlyNamesChanged) {
+            // Clear any existing timeout to prevent race conditions
+            if (animationTimeoutRef.current) {
+                clearTimeout(animationTimeoutRef.current);
+            }
+
+            setDisableChartAnimation(true);
+            // Reset animation control after a short delay
+            animationTimeoutRef.current = setTimeout(() => {
+                setDisableChartAnimation(false);
+                animationTimeoutRef.current = null;
+            }, 100);
+        }
+
+        // Update the ref with the new builds before setting state
+        previousBuildsRef.current = resolvedBuilds;
+        setBuilds(newBuilds);
+    };
+
+    // Sync ref with builds state
+    useEffect(() => {
+        previousBuildsRef.current = builds;
+    }, [builds]);
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (animationTimeoutRef.current) {
+                clearTimeout(animationTimeoutRef.current);
+            }
+        };
+    }, []);
 
     // Only run client-side code
     useEffect(() => {
@@ -274,7 +369,7 @@ function CalculatorPage() {
                     </div>
                     <BuildPanel
                         builds={builds}
-                        setBuilds={setBuilds}
+                        setBuilds={setBuildsWithAnimationControl}
                         championLevel={level}
                         urlImportBuilds={urlImportBuilds}
                         urlImportChampionLevel={urlImportChampionLevel}
@@ -300,6 +395,7 @@ function CalculatorPage() {
                         showMargin={showMargin}
                         stdDevMultiplier={stdDevMultiplier}
                         numAutoAttacks={numAutoAttacks}
+                        disableAnimation={disableChartAnimation}
                     />
 
                     <div className="globalSettings">
