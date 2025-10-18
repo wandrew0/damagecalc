@@ -1,13 +1,13 @@
 "use client";
 
-import { Build } from "../classes/Build";
-import { Item } from "../classes/Item";
-import { ALL_ITEMS } from "../data/Items";
+import { Build } from "@/app/classes/Build";
+import { Item } from "@/app/classes/Item";
+import { ALL_ITEMS } from "@/app/data/Items";
 
 // Cassiopeia-generated item IDs are required
 
 // Load Cassiopeia-generated item IDs (required)
-import { ITEM_IDS } from "../data/item-ids";
+import { ITEM_IDS } from "@/app/data/item-ids";
 
 // Validate the imported data
 if (!ITEM_IDS || Object.keys(ITEM_IDS).length === 0) {
