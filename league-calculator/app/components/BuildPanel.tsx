@@ -185,9 +185,6 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                                         height={52}
                                         className="item-image"
                                         data-tooltip-id={`item-tooltip-${buildIndex}-${idx}`}
-                                        onError={() => {
-                                            // Handle error by using fallback image
-                                        }}
                                     />
                                     <Tooltip
                                         id={`item-tooltip-${buildIndex}-${idx}`}

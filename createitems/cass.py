@@ -1,3 +1,11 @@
+"""
+Fetches League of Legends items using Cassiopeia and generates TypeScript item definitions.
+
+This script automatically deduplicates items with the same name by keeping only the one
+with the lowest item ID. This prevents duplicate entries from special game modes or 
+temporary variants introduced by Riot.
+"""
+
 import cassiopeia as cass
 import requests
 import os
@@ -44,7 +52,9 @@ relevant_stats = [
 
 arptag = "ArmorPenetration"
 
-item_defs = []
+# Dictionary to track items by name and keep only the one with the lowest ID
+items_by_name = {}
+
 for item in all_items:
     if not any(m.id == 11 for m in item.maps):
         continue
@@ -98,7 +108,7 @@ for item in all_items:
         image_url = item.image.url
         
         # Debug: Print image properties for the first few items
-        if len(item_defs) < 3:
+        if len(items_by_name) < 3:
             print(f"\nImage data for {item.name}:")
             print(f"  URL: {item.image.url}")
             print(f"  Width: {getattr(item.image, 'width', 'N/A')}")
@@ -113,7 +123,23 @@ for item in all_items:
         
         download_image(image_url, filename)
         data["image_path"] = f"/images/items/{filename}"
-        item_defs.append(data)
+        data["item_id"] = int(item.id)
+        
+        # Check if we already have this item name
+        item_name = item.name
+        if item_name in items_by_name:
+            # Keep the one with the lower ID (likely the original, not a mode-specific variant)
+            existing_id = items_by_name[item_name]["item_id"]
+            if data["item_id"] < existing_id:
+                print(f"Replacing duplicate '{item_name}': ID {existing_id} -> {data['item_id']} (keeping lower ID)")
+                items_by_name[item_name] = data
+            else:
+                print(f"Skipping duplicate '{item_name}': ID {data['item_id']} (keeping existing ID {existing_id})")
+        else:
+            items_by_name[item_name] = data
+
+# Convert dictionary to list
+item_defs = list(items_by_name.values())
 
 # not in ddragon for some reason
 for it in item_defs:
@@ -139,17 +165,9 @@ with open(Path("../league-calculator/app/data/Items.ts"), "w", encoding="utf-8")
         )
     f.write("];\n")
 
-# Generate item ID mapping for encoder
+# Generate item ID mapping for encoder (using already deduplicated items)
 print("\nGenerating item ID mapping...")
-item_id_mapping = {}
-for item in all_items:
-    if not any(m.id == 11 for m in item.maps):
-        continue
-    
-    # Check if this item is in our item_defs
-    item_name = item.name
-    if any(def_item["name"] == item_name for def_item in item_defs):
-        item_id_mapping[item_name] = int(item.id)
+item_id_mapping = {item["name"]: item["item_id"] for item in item_defs}
 
 # Create TypeScript version directly in the league-calculator app directory
 ts_output_path = Path("../league-calculator/app/data/item-ids.ts")
