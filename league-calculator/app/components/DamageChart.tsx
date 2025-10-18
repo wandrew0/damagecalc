@@ -106,7 +106,20 @@ const DamageChart: React.FC<DamageChartProps> = ({
         }
 
         // Create datasets
-        const datasets: any[] = [];
+        const datasets: Array<{
+            label: string;
+            data: number[];
+            borderColor: string;
+            backgroundColor: string;
+            fill?: boolean | number;
+            tension?: number;
+            pointRadius?: number;
+            pointHoverRadius?: number;
+            pointHitRadius?: number;
+            borderWidth?: number;
+            hidden?: boolean;
+            order?: number;
+        }> = [];
 
         if (showMargin) {
             // When showing margin, create three datasets per build: upper bound, lower bound, main line

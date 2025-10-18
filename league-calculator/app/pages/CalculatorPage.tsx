@@ -70,13 +70,15 @@ function CalculatorPage() {
             try {
                 const encoded = hash.split("builds=")[1];
                 const decoded = JSON.parse(atob(encoded));
-                const importedBuilds = decoded.map((b: any) => Build.fromJSON(b));
+                const importedBuilds = decoded.map((b: Record<string, unknown>) =>
+                    Build.fromJSON(b as Parameters<typeof Build.fromJSON>[0])
+                );
                 setUrlImportBuilds(importedBuilds);
                 // Clear hash after loading
                 window.history.replaceState(null, "", window.location.pathname);
                 // Don't return here - let localStorage load first, then URL imports will show modal
-            } catch (error) {
-                console.error("Error loading builds from URL:", error);
+            } catch {
+                console.error("Error loading builds from URL");
             }
         }
 
