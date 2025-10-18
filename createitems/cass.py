@@ -12,8 +12,10 @@ all_items = cass.get_items(region="NA")
 # Create data directory and images subdirectory
 data_dir = Path("data")
 data_dir.mkdir(exist_ok=True)
-images_dir = data_dir / "items"
-images_dir.mkdir(exist_ok=True)
+
+# Download images directly to league-calculator public directory
+images_dir = Path("../league-calculator/public/images/items")
+images_dir.mkdir(parents=True, exist_ok=True)
 
 def download_image(url, filename, max_retries=3):
     """Download an image from URL and save it to the images directory with retry logic"""
@@ -122,8 +124,8 @@ for it in item_defs:
     elif it["name"] == "Mortal Reminder":
         it["aliases"].append("lw")
 
-# Emit your TypeScript file
-with open(data_dir / "Items.ts", "w", encoding="utf-8") as f:
+# Emit your TypeScript file directly to league-calculator
+with open(Path("../league-calculator/app/data/Items.ts"), "w", encoding="utf-8") as f:
     f.write('import { Item } from "../classes/Item";\n\nexport const ALL_ITEMS = [\n')
     for it in item_defs:
         f.write(
@@ -136,3 +138,29 @@ with open(data_dir / "Items.ts", "w", encoding="utf-8") as f:
             "),\n"
         )
     f.write("];\n")
+
+# Generate item ID mapping for encoder
+print("\nGenerating item ID mapping...")
+item_id_mapping = {}
+for item in all_items:
+    if not any(m.id == 11 for m in item.maps):
+        continue
+    
+    # Check if this item is in our item_defs
+    item_name = item.name
+    if any(def_item["name"] == item_name for def_item in item_defs):
+        item_id_mapping[item_name] = int(item.id)
+
+# Create TypeScript version directly in the league-calculator app directory
+ts_output_path = Path("../league-calculator/app/data/item-ids.ts")
+with open(ts_output_path, "w", encoding="utf-8") as f:
+    f.write("// Auto-generated item ID mapping from Cassiopeia\n")
+    f.write("export const ITEM_IDS: { [key: string]: number } = {\n")
+    for name, item_id in item_id_mapping.items():
+        f.write(f'    "{name}": {item_id},\n')
+    f.write("};\n")
+
+print(f"Generated mapping for {len(item_id_mapping)} items")
+print(f"Item ID mapping saved to {ts_output_path}")
+print(f"Items.ts updated in league-calculator/app/data/")
+print(f"Item images downloaded to league-calculator/public/images/items/")
