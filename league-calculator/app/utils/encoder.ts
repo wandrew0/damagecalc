@@ -7,23 +7,16 @@ import { ALL_ITEMS } from "../data/Items";
 // Cassiopeia-generated item IDs are required
 
 // Load Cassiopeia-generated item IDs (required)
-let ITEM_IDS: { [key: string]: number };
+import { ITEM_IDS } from "../data/item-ids";
 
-try {
-    // This loads the Cassiopeia-generated item IDs
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { ITEM_IDS: cassiopeiaIds } = require("../data/item-ids");
-    if (!cassiopeiaIds || Object.keys(cassiopeiaIds).length === 0) {
-        throw new Error("No Cassiopeia data found");
-    }
-    ITEM_IDS = cassiopeiaIds;
-    console.log("Loaded Cassiopeia item IDs for encoding");
-} catch (error) {
-    console.error("Failed to load Cassiopeia item IDs:", error);
+// Validate the imported data
+if (!ITEM_IDS || Object.keys(ITEM_IDS).length === 0) {
     throw new Error(
         "Cassiopeia item IDs are required. Please run 'python createitems/cass.py' to generate them."
     );
 }
+
+console.log("Loaded Cassiopeia item IDs for encoding");
 
 const ID_TO_ITEM: { [key: number]: string } = Object.fromEntries(
     Object.entries(ITEM_IDS).map(([name, id]) => [id, name])
