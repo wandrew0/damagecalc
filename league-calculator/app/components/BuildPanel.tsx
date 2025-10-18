@@ -156,9 +156,21 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                             Bonus Crit
                             <input
                                 type="number"
-                                value={build.bonusCrit === 0 ? "" : build.bonusCrit * 100}
+                                value={
+                                    build.bonusCrit === 0
+                                        ? ""
+                                        : Math.round(build.bonusCrit * 100)
+                                }
                                 onChange={(e) => {
-                                    build.setBonusCrit(+e.target.value / 100);
+                                    const inputValue = e.target.value;
+                                    if (inputValue === "") {
+                                        build.setBonusCrit(0);
+                                    } else {
+                                        const intValue = parseInt(inputValue, 10);
+                                        if (!isNaN(intValue)) {
+                                            build.setBonusCrit(intValue / 100);
+                                        }
+                                    }
                                     setBuilds([...builds]);
                                 }}
                             />
