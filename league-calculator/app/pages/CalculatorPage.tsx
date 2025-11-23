@@ -9,42 +9,34 @@ import { Item } from "../classes/Item";
 
 import BuildPanel from "../components/BuildPanel";
 import DamageChart from "../components/DamageChart";
+import Navigation from "../components/Navigation";
 import { decodeBuilds, decodeBuildsLegacy } from "../utils/encoder";
+import {
+    getAbsoluteFocusAD,
+    getGatheringStormAD,
+    getTotalAD,
+} from "../classes/Calculator";
 
 function serializeBuilds(builds: Build[]) {
     return builds.map((b) => b.toJSON());
 }
 
-function deserializeBuilds(
-    json: {
-        items: Item[];
-        critChance: number;
-        critDamageModifier: number;
-        AD: number;
-        armorPenetration: number;
-        lethality: number;
-        totalCost: number;
-        bonusAD: number;
-        bonusLethality: number;
-        bonusCrit: number;
-        name: string;
-    }[]
-) {
-    return json.map(
-        (b: {
-            items: Item[];
-            critChance: number;
-            critDamageModifier: number;
-            AD: number;
-            armorPenetration: number;
-            lethality: number;
-            totalCost: number;
-            bonusAD: number;
-            bonusLethality: number;
-            bonusCrit: number;
-            name: string;
-        }) => Build.fromJSON(b)
-    );
+interface BuildJSON {
+    items: Item[];
+    critChance: number;
+    critDamageModifier: number;
+    AD: number;
+    armorPenetration: number;
+    lethality: number;
+    totalCost: number;
+    bonusAD: number;
+    bonusLethality: number;
+    bonusCrit: number;
+    name: string;
+}
+
+function deserializeBuilds(json: BuildJSON[]) {
+    return json.map((b) => Build.fromJSON(b));
 }
 
 function CalculatorPage() {
@@ -58,10 +50,18 @@ function CalculatorPage() {
     const [stdDevMultiplier, setStdDevMultiplier] = useState(1);
     const [percentileRange, setPercentileRange] = useState(34); // ±34% for 1 std dev
     const [numAutoAttacks, setNumAutoAttacks] = useState(5); // Realistic for typical engagement
+    const [absoluteFocus, setAbsoluteFocus] = useState(false);
+    const [gatheringStormMinutes, setGatheringStormMinutes] = useState(0);
     const [urlImportBuilds, setUrlImportBuilds] = useState<Build[] | null>(null);
     const [urlImportChampionLevel, setUrlImportChampionLevel] = useState<number | null>(
         null
     );
+    const [urlImportAbsoluteFocus, setUrlImportAbsoluteFocus] = useState<boolean | null>(
+        null
+    );
+    const [urlImportGatheringStormMinutes, setUrlImportGatheringStormMinutes] = useState<
+        number | null
+    >(null);
     const [disableChartAnimation, setDisableChartAnimation] = useState(false);
     const autoImportedRef = useRef(false);
     const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -204,9 +204,21 @@ function CalculatorPage() {
 
                     // Try new format first, fallback to legacy
                     try {
-                        const { builds: importedBuilds, championLevel: importedLevel } =
-                            decodeBuilds(encoded);
+                        const {
+                            builds: importedBuilds,
+                            championLevel: importedLevel,
+                            absoluteFocus: importedAbsoluteFocus,
+                            gatheringStormMinutes: importedGatheringStormMinutes,
+                        } = decodeBuilds(encoded);
                         handleImportedBuilds(importedBuilds, importedLevel);
+                        if (importedAbsoluteFocus !== undefined) {
+                            setUrlImportAbsoluteFocus(importedAbsoluteFocus);
+                        }
+                        if (importedGatheringStormMinutes !== undefined) {
+                            setUrlImportGatheringStormMinutes(
+                                importedGatheringStormMinutes
+                            );
+                        }
                     } catch (error) {
                         console.log("New format failed, trying legacy format:", error);
                         const { builds: importedBuilds, championLevel: importedLevel } =
@@ -240,6 +252,8 @@ function CalculatorPage() {
                     stdDevMultiplier: savedStdDev,
                     percentileRange: savedPercentile,
                     numAutoAttacks: savedNumAutoAttacks,
+                    absoluteFocus: savedAbsoluteFocus,
+                    gatheringStormMinutes: savedGatheringStormMinutes,
                 } = JSON.parse(savedState);
                 // Only load level if we didn't auto-import from URL
                 if (level && !autoImportedRef.current) {
@@ -254,6 +268,10 @@ function CalculatorPage() {
                 if (savedStdDev) setStdDevMultiplier(savedStdDev);
                 if (savedPercentile) setPercentileRange(savedPercentile);
                 if (savedNumAutoAttacks) setNumAutoAttacks(savedNumAutoAttacks);
+                if (savedAbsoluteFocus !== undefined)
+                    setAbsoluteFocus(savedAbsoluteFocus);
+                if (savedGatheringStormMinutes !== undefined)
+                    setGatheringStormMinutes(savedGatheringStormMinutes);
             } catch (error) {
                 console.error("Error loading saved state:", error);
             }
@@ -276,6 +294,8 @@ function CalculatorPage() {
                 stdDevMultiplier,
                 percentileRange,
                 numAutoAttacks,
+                absoluteFocus,
+                gatheringStormMinutes,
             };
             localStorage.setItem("calculatorState", JSON.stringify(stateToSave));
         }
@@ -287,6 +307,8 @@ function CalculatorPage() {
         stdDevMultiplier,
         percentileRange,
         numAutoAttacks,
+        absoluteFocus,
+        gatheringStormMinutes,
         isClient,
     ]);
 
@@ -304,6 +326,8 @@ function CalculatorPage() {
         setStdDevMultiplier(1);
         setPercentileRange(34);
         setNumAutoAttacks(5);
+        setAbsoluteFocus(false);
+        setGatheringStormMinutes(0);
         localStorage.removeItem("calculatorState");
     }
 
@@ -341,10 +365,15 @@ function CalculatorPage() {
         <div className="appContainer">
             <div className="headerContainer">
                 <div className="headerTop">
-                    <h1>Aphelios Damage Calculator</h1>
-                    <button className="reset-all-button" onClick={handleResetAll}>
-                        Reset All
-                    </button>
+                    <div className="headerTitleRow">
+                        <Navigation className="header-nav" />
+                        <h1>Aphelios Damage Calculator</h1>
+                    </div>
+                    <div className="headerActions">
+                        <button className="reset-all-button" onClick={handleResetAll}>
+                            Reset All
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -354,32 +383,156 @@ function CalculatorPage() {
                     <div className="globalSettings">
                         <label>
                             Level:{" "}
-                            <input
-                                type="number"
-                                min={1}
-                                max={18}
-                                value={level}
-                                onChange={(e) => handleLevelChange(+e.target.value)}
-                                onFocus={(e) => e.target.select()}
-                            />
+                            <div className="numberInputGroup">
+                                <button
+                                    type="button"
+                                    className="numberInputButton"
+                                    onClick={() =>
+                                        handleLevelChange(Math.max(1, level - 1))
+                                    }
+                                    aria-label="Decrease level"
+                                >
+                                    −
+                                </button>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    max={18}
+                                    value={level}
+                                    onChange={(e) => handleLevelChange(+e.target.value)}
+                                    onFocus={(e) => e.target.select()}
+                                    className="numberInput"
+                                />
+                                <button
+                                    type="button"
+                                    className="numberInputButton"
+                                    onClick={() =>
+                                        handleLevelChange(Math.min(18, level + 1))
+                                    }
+                                    aria-label="Increase level"
+                                >
+                                    +
+                                </button>
+                            </div>
                         </label>
                         <div className="champ-stats">
                             Base AD: {champion.getAD(level).toFixed(2)}
+                        </div>
+                        <div className="runeSettings">
+                            <div className="runeRow">
+                                <label className="runeCheckboxLabel">
+                                    Absolute Focus
+                                    <input
+                                        type="checkbox"
+                                        checked={absoluteFocus}
+                                        onChange={(e) =>
+                                            setAbsoluteFocus(e.target.checked)
+                                        }
+                                    />
+                                </label>
+                                <span
+                                    className={`runeADValue ${
+                                        absoluteFocus
+                                            ? "runeADValueActive"
+                                            : "runeADValueInactive"
+                                    }`}
+                                >
+                                    (+{getAbsoluteFocusAD(level).toFixed(1)} AD)
+                                </span>
+                            </div>
+                            <div className="runeRow">
+                                <label className="runeInputLabel">
+                                    Gathering Storm (minutes):
+                                    <div className="numberInputGroup">
+                                        <button
+                                            type="button"
+                                            className="numberInputButton"
+                                            onClick={() => {
+                                                setGatheringStormMinutes(
+                                                    Math.max(
+                                                        0,
+                                                        gatheringStormMinutes - 10
+                                                    )
+                                                );
+                                            }}
+                                            aria-label="Decrease minutes"
+                                        >
+                                            −
+                                        </button>
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            step={10}
+                                            value={gatheringStormMinutes}
+                                            onChange={(e) => {
+                                                const value = Math.max(
+                                                    0,
+                                                    Number(e.target.value)
+                                                );
+                                                // Round to nearest 10
+                                                setGatheringStormMinutes(
+                                                    Math.round(value / 10) * 10
+                                                );
+                                            }}
+                                            onFocus={(e) => e.target.select()}
+                                            className="numberInput"
+                                        />
+                                        <button
+                                            type="button"
+                                            className="numberInputButton"
+                                            onClick={() => {
+                                                setGatheringStormMinutes(
+                                                    gatheringStormMinutes + 10
+                                                );
+                                            }}
+                                            aria-label="Increase minutes"
+                                        >
+                                            +
+                                        </button>
+                                    </div>
+                                </label>
+                                <span
+                                    className={`runeADValue ${
+                                        gatheringStormMinutes > 0
+                                            ? "runeADValueActive"
+                                            : "runeADValueInactive"
+                                    }`}
+                                >
+                                    (+
+                                    {getGatheringStormAD(gatheringStormMinutes).toFixed(
+                                        1
+                                    )}{" "}
+                                    AD)
+                                </span>
+                            </div>
                         </div>
                     </div>
                     <BuildPanel
                         builds={builds}
                         setBuilds={setBuildsWithAnimationControl}
                         championLevel={level}
+                        champion={champion}
+                        absoluteFocus={absoluteFocus}
+                        gatheringStormMinutes={gatheringStormMinutes}
                         urlImportBuilds={urlImportBuilds}
                         urlImportChampionLevel={urlImportChampionLevel}
+                        urlImportAbsoluteFocus={urlImportAbsoluteFocus}
+                        urlImportGatheringStormMinutes={urlImportGatheringStormMinutes}
                         autoImported={autoImportedRef.current}
                         onUrlImportHandled={() => {
                             setUrlImportBuilds(null);
                             setUrlImportChampionLevel(null);
+                            setUrlImportAbsoluteFocus(null);
+                            setUrlImportGatheringStormMinutes(null);
                         }}
                         onChampionLevelImport={(importedLevel) => {
                             setLevel(importedLevel);
+                        }}
+                        onAbsoluteFocusImport={(importedAbsoluteFocus) => {
+                            setAbsoluteFocus(importedAbsoluteFocus);
+                        }}
+                        onGatheringStormImport={(importedMinutes) => {
+                            setGatheringStormMinutes(importedMinutes);
                         }}
                     />
                 </div>
@@ -395,6 +548,8 @@ function CalculatorPage() {
                         showMargin={showMargin}
                         stdDevMultiplier={stdDevMultiplier}
                         numAutoAttacks={numAutoAttacks}
+                        absoluteFocus={absoluteFocus}
+                        gatheringStormMinutes={gatheringStormMinutes}
                         disableAnimation={disableChartAnimation}
                     />
 
@@ -402,28 +557,87 @@ function CalculatorPage() {
                         <div className="armorRangeContainer">
                             <label className="armorInputLabel">
                                 Armor Range Start:
-                                <input
-                                    className="armorInput"
-                                    type="number"
-                                    value={armorRange[0]}
-                                    onChange={(e) =>
-                                        setArmorRange(([, end]) => [+e.target.value, end])
-                                    }
-                                />
+                                <div className="numberInputGroup">
+                                    <button
+                                        type="button"
+                                        className="numberInputButton"
+                                        onClick={() =>
+                                            setArmorRange(([, end]) => [
+                                                Math.max(0, armorRange[0] - 10),
+                                                end,
+                                            ])
+                                        }
+                                        aria-label="Decrease armor start"
+                                    >
+                                        −
+                                    </button>
+                                    <input
+                                        className="armorInput numberInput"
+                                        type="number"
+                                        value={armorRange[0]}
+                                        onChange={(e) =>
+                                            setArmorRange(([, end]) => [
+                                                +e.target.value,
+                                                end,
+                                            ])
+                                        }
+                                    />
+                                    <button
+                                        type="button"
+                                        className="numberInputButton"
+                                        onClick={() =>
+                                            setArmorRange(([, end]) => [
+                                                armorRange[0] + 10,
+                                                end,
+                                            ])
+                                        }
+                                        aria-label="Increase armor start"
+                                    >
+                                        +
+                                    </button>
+                                </div>
                             </label>
                             <label className="armorInputLabel">
                                 Armor Range End:
-                                <input
-                                    className="armorInput"
-                                    type="number"
-                                    value={armorRange[1]}
-                                    onChange={(e) =>
-                                        setArmorRange(([start]) => [
-                                            start,
-                                            +e.target.value,
-                                        ])
-                                    }
-                                />
+                                <div className="numberInputGroup">
+                                    <button
+                                        type="button"
+                                        className="numberInputButton"
+                                        onClick={() =>
+                                            setArmorRange(([start]) => [
+                                                start,
+                                                Math.max(0, armorRange[1] - 10),
+                                            ])
+                                        }
+                                        aria-label="Decrease armor end"
+                                    >
+                                        −
+                                    </button>
+                                    <input
+                                        className="armorInput numberInput"
+                                        type="number"
+                                        value={armorRange[1]}
+                                        onChange={(e) =>
+                                            setArmorRange(([start]) => [
+                                                start,
+                                                +e.target.value,
+                                            ])
+                                        }
+                                    />
+                                    <button
+                                        type="button"
+                                        className="numberInputButton"
+                                        onClick={() =>
+                                            setArmorRange(([start]) => [
+                                                start,
+                                                armorRange[1] + 10,
+                                            ])
+                                        }
+                                        aria-label="Increase armor end"
+                                    >
+                                        +
+                                    </button>
+                                </div>
                             </label>
                         </div>
 

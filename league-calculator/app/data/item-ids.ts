@@ -73,5 +73,3 @@ export const ITEM_IDS: { [key: string]: number } = {
     "Voltaic Cyclosword": 6699,
     "Opportunity": 6701,
 };
-
-

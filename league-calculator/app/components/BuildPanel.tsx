@@ -4,9 +4,11 @@ import Select from "react-select";
 import { Tooltip } from "react-tooltip";
 import { Build } from "../classes/Build";
 import { Item } from "../classes/Item";
+import { Champion } from "../classes/Champion";
 import { ALL_ITEMS } from "../data/Items";
 import ShareModal from "./ShareModal";
 import ImportModal from "./ImportModal";
+import { getTotalAD } from "../classes/Calculator";
 
 // sort items by AD and crit
 ALL_ITEMS.sort((a, b) => b.AD - a.AD || b.critChance - a.critChance);
@@ -21,10 +23,17 @@ interface BuildPanelProps {
     builds: Build[];
     setBuilds: React.Dispatch<React.SetStateAction<Build[]>>;
     championLevel?: number;
+    champion?: Champion;
+    absoluteFocus?: boolean;
+    gatheringStormMinutes?: number;
     urlImportBuilds?: Build[] | null;
     urlImportChampionLevel?: number | null;
+    urlImportAbsoluteFocus?: boolean | null;
+    urlImportGatheringStormMinutes?: number | null;
     onUrlImportHandled?: () => void;
     onChampionLevelImport?: (level: number) => void;
+    onAbsoluteFocusImport?: (absoluteFocus: boolean) => void;
+    onGatheringStormImport?: (minutes: number) => void;
     autoImported?: boolean;
 }
 
@@ -32,10 +41,17 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
     builds,
     setBuilds,
     championLevel,
+    champion,
+    absoluteFocus = false,
+    gatheringStormMinutes = 0,
     urlImportBuilds,
     urlImportChampionLevel,
+    urlImportAbsoluteFocus,
+    urlImportGatheringStormMinutes,
     onUrlImportHandled,
     onChampionLevelImport,
+    onAbsoluteFocusImport,
+    onGatheringStormImport,
     autoImported,
 }) => {
     const [showShareModal, setShowShareModal] = useState(false);
@@ -83,7 +99,9 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
     function handleImportBuilds(
         importedBuilds: Build[],
         clearExisting: boolean,
-        importedChampionLevel?: number
+        importedChampionLevel?: number,
+        importedAbsoluteFocus?: boolean,
+        importedGatheringStormMinutes?: number
     ) {
         if (clearExisting) {
             setBuilds(importedBuilds);
@@ -92,8 +110,17 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
         }
 
         // Handle champion level import
-        if (importedChampionLevel && onChampionLevelImport) {
+        if (importedChampionLevel !== undefined && onChampionLevelImport) {
             onChampionLevelImport(importedChampionLevel);
+        }
+
+        // Handle rune imports
+        if (importedAbsoluteFocus !== undefined && onAbsoluteFocusImport) {
+            onAbsoluteFocusImport(importedAbsoluteFocus);
+        }
+
+        if (importedGatheringStormMinutes !== undefined && onGatheringStormImport) {
+            onGatheringStormImport(importedGatheringStormMinutes);
         }
     }
 
@@ -346,6 +373,18 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                             {build.lethality} | Crit Damage:{" "}
                             {(build.critDamageModifier * 100).toFixed(0)}%
                         </p>
+                        {champion && championLevel && (
+                            <p>
+                                <strong>Total AD:</strong>{" "}
+                                {getTotalAD(
+                                    champion,
+                                    championLevel,
+                                    build,
+                                    absoluteFocus,
+                                    gatheringStormMinutes
+                                ).toFixed(1)}
+                            </p>
+                        )}
                         <p>
                             <strong>Total Cost:</strong>{" "}
                             <span style={{ color: "#B8860B" }}>{build.totalCost}g</span>
@@ -379,6 +418,8 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                 <ShareModal
                     builds={builds}
                     championLevel={championLevel}
+                    absoluteFocus={absoluteFocus}
+                    gatheringStormMinutes={gatheringStormMinutes}
                     onClose={() => setShowShareModal(false)}
                 />
             )}
@@ -393,6 +434,18 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                     }}
                     initialBuilds={urlImportBuilds || undefined}
                     initialChampionLevel={urlImportChampionLevel || undefined}
+                    initialAbsoluteFocus={
+                        urlImportAbsoluteFocus !== null &&
+                        urlImportAbsoluteFocus !== undefined
+                            ? urlImportAbsoluteFocus
+                            : undefined
+                    }
+                    initialGatheringStormMinutes={
+                        urlImportGatheringStormMinutes !== null &&
+                        urlImportGatheringStormMinutes !== undefined
+                            ? urlImportGatheringStormMinutes
+                            : undefined
+                    }
                     isUrlImport={!!urlImportBuilds}
                 />
             )}

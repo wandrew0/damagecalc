@@ -1,0 +1,438 @@
+.collector-analysis {
+    height: 100%;
+    overflow: hidden;
+}
+
+.analysis-intro {
+    /* Removed specific container styles as it's now part of the layout */
+    width: 100%;
+}
+
+.analysis-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    height: 100%;
+    padding: 16px;
+    overflow: hidden;
+}
+
+.explanation-column {
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100%;
+}
+
+.calculator-column {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100%;
+}
+
+/* Thin scrollbars */
+.explanation-column::-webkit-scrollbar,
+.calculator-column::-webkit-scrollbar {
+    width: 6px;
+}
+
+.explanation-column::-webkit-scrollbar-track,
+.calculator-column::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.explanation-column::-webkit-scrollbar-thumb,
+.calculator-column::-webkit-scrollbar-thumb {
+    background: #d4d4d4;
+    border-radius: 3px;
+}
+
+.explanation-column::-webkit-scrollbar-thumb:hover,
+.calculator-column::-webkit-scrollbar-thumb:hover {
+    background: #a3a3a3;
+}
+
+@media (max-width: 1024px) {
+    .analysis-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+        overflow: visible;
+    }
+    
+    .explanation-column,
+    .calculator-column {
+        overflow: visible;
+        padding-right: 0;
+    }
+}
+
+/* Controls Section */
+.controls-section {
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    padding: 24px;
+}
+
+.controls-section h2,
+.results-section h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 20px 0;
+    color: var(--text-primary);
+}
+
+.control-group {
+    margin-bottom: 24px;
+}
+
+.control-group label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.label-row label {
+    margin-bottom: 0;
+}
+
+.number-input {
+    width: 80px;
+    padding: 4px 8px;
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+    text-align: right;
+    /* Hide spin buttons for cleaner look */
+    -moz-appearance: textfield;
+}
+
+.number-input::-webkit-outer-spin-button,
+.number-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.number-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background-color: var(--bg-primary);
+}
+
+.number-input-container {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.input-suffix {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.control-group input[type="range"] {
+    width: 100%;
+    margin: 8px 0;
+    accent-color: var(--accent);
+}
+
+.range-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-tertiary);
+}
+
+.variable-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-light);
+}
+
+.stat-box {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.stat-value.case-1 {
+    color: #2563eb; /* Blue for case 1 */
+}
+
+.stat-value.case-2 {
+    color: #9333ea; /* Purple for case 2 */
+}
+
+/* Results Section */
+.results-section {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.result-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    padding: 24px;
+}
+
+.big-stat {
+    margin-bottom: 24px;
+}
+
+.big-stat .stat-value {
+    display: block;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 8px 0;
+}
+
+.big-stat .stat-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.detailed-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.stat-row span:last-child {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.writeup-section,
+.controls-section,
+.results-section,
+.math-explanation {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.formula-block {
+    width: 100%;
+    max-width: 100%;
+}
+
+.concept-viz-single {
+    margin: 24px 0;
+    width: 100%;
+}
+
+@keyframes slideArrow {
+    0%, 100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    50% {
+        transform: translateX(10px);
+        opacity: 0.6;
+    }
+}
+
+.auto-damage-arrow {
+    animation: slideArrow 2s ease-in-out infinite;
+}
+
+.concept-case {
+    background-color: var(--bg-secondary);
+    padding: 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-light);
+}
+
+.concept-case h4 {
+    margin: 0 0 12px 0;
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.concept-svg {
+    width: 100%;
+    height: auto;
+}
+
+.case-text {
+    margin-top: 20px;
+}
+
+.writeup-section {
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    padding: 24px;
+}
+
+.writeup-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+    color: var(--text-primary);
+}
+
+.writeup-section h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 20px 0 12px 0;
+    color: var(--text-primary);
+}
+
+.writeup-section p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+/* Standard Math Formatting */
+.math-var {
+    font-family: 'Times New Roman', Times, serif;
+    font-style: italic;
+    font-weight: 500;
+    padding: 0 2px;
+}
+
+.math-inline {
+    font-family: 'Courier New', monospace;
+    background-color: rgba(0,0,0,0.04);
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 0.9em;
+    vertical-align: middle;
+}
+
+.formula-block {
+    background-color: var(--bg-secondary);
+    padding: 16px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    margin: 16px 0;
+    border: 1px solid var(--border-light);
+    text-align: center;
+    font-weight: 500;
+    line-height: 1.8;
+}
+
+.formula-derivation {
+    background-color: rgba(0,0,0,0.02);
+    padding: 16px;
+    border-radius: 4px;
+    margin: 16px 0;
+    border-left: 3px solid var(--border-medium);
+}
+
+.formula-derivation p {
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.formula-derivation ul {
+    margin: 8px 0;
+    padding-left: 20px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.formula-derivation li {
+    margin-bottom: 6px;
+    font-family: 'Courier New', monospace;
+}
+
+.cases-explanation {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px dashed var(--border-light);
+}
+
+.math-explanation {
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    padding: 24px;
+}
+
+.math-explanation h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+    color: var(--text-primary);
+}
+
+.formula-box {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.formula {
+    font-family: 'Courier New', monospace;
+    background-color: var(--bg-secondary);
+    padding: 12px;
+    border-radius: 4px;
+    margin: 12px 0;
+    line-height: 1.5;
+    border: 1px solid var(--border-light);
+}
+
+.formula-note {
+    font-size: 13px;
+    margin-top: 12px;
+    font-style: italic;
+}
+
+/* Visualization Section */
+.visualization-section {
+    border-top: 1px solid var(--border-light);
+    padding-top: 32px;
+}
+
+.visualization-section h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 20px 0;
+    color: var(--text-primary);
+}
