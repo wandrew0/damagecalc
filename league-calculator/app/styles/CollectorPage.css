@@ -1,12 +1,23 @@
 .collector-page-wrapper {
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
 }
 
 .collector-page {
     flex: 1;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+    .collector-page-wrapper {
+        height: auto;
+        min-height: 100vh;
+    }
+    
+    .collector-page {
+        overflow: visible;
+    }
 }
 

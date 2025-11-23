@@ -9,6 +9,7 @@ import {
     Title,
     Tooltip,
     Legend,
+    TooltipItem,
 } from "chart.js";
 import {
     calculateCollectorEfficiency,
@@ -123,10 +124,10 @@ export default function CollectorEfficiencyChart({
             },
             tooltip: {
                 callbacks: {
-                    title: (context) => {
-                        return `Damage Share: ${Math.round(Number(context[0].label))}`;
+                    title: (context: TooltipItem<"line">[]) => {
+                        return `Damage Share: ${Math.round(context[0].parsed.x)}`;
                     },
-                    label: (context) => {
+                    label: (context: TooltipItem<"line">) => {
                         return `${context.dataset.label}: ${context.parsed.y.toFixed(
                             2
                         )}%`;

@@ -3,6 +3,13 @@
     overflow: hidden;
 }
 
+@media (max-width: 768px) {
+    .collector-analysis {
+        height: auto;
+        overflow: visible;
+    }
+}
+
 .analysis-intro {
     /* Removed specific container styles as it's now part of the layout */
     width: 100%;
@@ -54,7 +61,121 @@
     background: #a3a3a3;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
+    .analysis-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+        overflow: visible;
+        padding: 8px;
+        gap: 16px;
+    }
+    
+    .explanation-column,
+    .calculator-column {
+        overflow: visible;
+        height: auto;
+        padding-right: 0;
+    }
+    
+    .writeup-section,
+    .controls-section,
+    .result-card {
+        padding: 16px;
+    }
+    
+    .variable-summary {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    /* Make sure charts and content fit on mobile */
+    .chart-section {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Adjust font sizes for mobile */
+    .writeup-section h3 {
+        font-size: 14px;
+    }
+    
+    .writeup-section h4 {
+        font-size: 13px;
+    }
+    
+    .writeup-section p {
+        font-size: 13px;
+    }
+    
+    /* Ensure formula blocks don't overflow */
+    .formula-block,
+    .formula-derivation {
+        font-size: 11px;
+        padding: 12px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .math-inline {
+        font-size: 0.85em;
+    }
+    
+    /* Make concept visualizations fit */
+    .concept-viz-single {
+        margin: 16px 0;
+    }
+    
+    .concept-svg {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    /* Adjust chart height for mobile */
+    .chart-wrapper {
+        width: 100% !important;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .chart-container {
+        min-height: 300px;
+        height: 300px !important;
+        width: 100% !important;
+    }
+    
+    /* Make inputs more touch-friendly */
+    .number-input {
+        font-size: 16px; /* Prevents zoom on iOS */
+        padding: 8px 12px;
+        width: 90px;
+    }
+    
+    input[type="range"] {
+        height: 44px; /* Larger tap target */
+        margin: 12px 0;
+    }
+    
+    /* Adjust label sizes for mobile */
+    .label-row label {
+        font-size: 13px;
+    }
+    
+    .stat-box {
+        min-width: 0; /* Allow flexbox to shrink */
+    }
+    
+    .stat-label {
+        font-size: 11px;
+    }
+    
+    .stat-value {
+        font-size: 14px;
+        word-break: break-word;
+    }
+}
+
+/* Also keep tablet breakpoint */
+@media (min-width: 769px) and (max-width: 1024px) {
     .analysis-layout {
         grid-template-columns: 1fr;
         height: auto;
@@ -64,6 +185,7 @@
     .explanation-column,
     .calculator-column {
         overflow: visible;
+        height: auto;
         padding-right: 0;
     }
 }
@@ -86,6 +208,12 @@
 
 .control-group {
     margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+    .control-group {
+        margin-bottom: 20px;
+    }
 }
 
 .control-group label {
@@ -250,17 +378,24 @@
 .results-section,
 .math-explanation {
     width: 100%;
+    max-width: 100%;
     box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 .formula-block {
     width: 100%;
     max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .concept-viz-single {
     margin: 24px 0;
     width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 @keyframes slideArrow {
@@ -387,6 +522,13 @@
     margin-top: 24px;
     padding-top: 24px;
     border-top: 1px dashed var(--border-light);
+}
+
+@media (max-width: 768px) {
+    .cases-explanation {
+        margin-top: 16px;
+        padding-top: 16px;
+    }
 }
 
 .math-explanation {
