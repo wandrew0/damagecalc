@@ -43,6 +43,11 @@ export default function CollectorAnalysis() {
     const threshold = 0.05 * maxHp;
     const isOverkillCase = autoDamage > threshold;
 
+    // Prevent flash of default content by hiding until loaded
+    if (!isLoaded) {
+        return null;
+    }
+
     return (
         <div className="collector-analysis">
             <div className="analysis-layout">
@@ -51,11 +56,11 @@ export default function CollectorAnalysis() {
                     <div className="writeup-section">
                         <h3>Model</h3>
                         <p>
-                            Collector's base stats suck, and its main benefit is of course
-                            its passive. Sometimes when we don't go Collector, we wonder
+                            Collector&apos;s base stats suck, and its main benefit is of course
+                            its passive. Sometimes when we don&apos;t go Collector, we wonder
                             if the missing execute would have secured a kill. However,
                             other times when we go Collector, we wonder if the extra
-                            damage from IE or LDR would have been better. It's incredibly
+                            damage from IE or LDR would have been better. It&apos;s incredibly
                             difficult to quantify the value of this execute, but this is
                             an attempt to do so using averages (disclaimer at the bottom).
                             This model calculates the average % damage increase that
@@ -75,8 +80,8 @@ export default function CollectorAnalysis() {
                             </span>{" "}
                             per auto attack (for simplicity).
                             <br />
-                            4. Uniformly random HP distribution in the range of "Next Auto
-                            Will Kill" (between <span className="math-inline">
+                            4. Uniformly random HP distribution in the range of &quot;Next Auto
+                            Will Kill&quot; (between <span className="math-inline">
                                 0.05H
                             </span>{" "}
                             and <span className="math-inline">0.05H + A</span>).
@@ -87,7 +92,7 @@ export default function CollectorAnalysis() {
                             In the best case, Collector only needs to deal{" "}
                             <span className="math-inline">(I - 0.05)H</span> damage, while
                             other builds must deal <span className="math-inline">IH</span>
-                            . However, we don't always land the enemy exactly on the 5%
+                            . However, we don&apos;t always land the enemy exactly on the 5%
                             threshold. The last auto leaves them somewhere between 0 and{" "}
                             <span className="math-inline">0.05H</span>.
                         </p>
@@ -141,7 +146,7 @@ export default function CollectorAnalysis() {
                                 <CollectorConceptViz caseNumber="2" />
                                 <p>
                                     When <span className="math-inline">A &gt; 0.05H</span>
-                                    , the lethal auto might "overkill" the execute
+                                    , the lethal auto might &quot;overkill&quot; the execute
                                     threshold (landing below 0 HP directly), in which case
                                     the execute deals 0 damage.
                                 </p>
@@ -158,10 +163,10 @@ export default function CollectorAnalysis() {
                                 </p>
                                 <p>
                                     The lethal auto range is length{" "}
-                                    <span className="math-var">A</span>. The "Execute
-                                    Window" is length{" "}
+                                    <span className="math-var">A</span>. The &quot;Execute
+                                    Window&quot; is length{" "}
                                     <span className="math-inline">0.05H</span>. The
-                                    "Overkill Window" is remaining length{" "}
+                                    &quot;Overkill Window&quot; is remaining length{" "}
                                     <span className="math-inline">A - 0.05H</span>.
                                 </p>
                                 <div className="formula-derivation">
@@ -226,7 +231,7 @@ export default function CollectorAnalysis() {
                                 <strong>Note on Teamplay:</strong> In practice,{" "}
                                 <span className="math-inline">I &times; H</span>{" "}
                                 represents the total damage <em>you</em> need to
-                                contribute, not the target's initial HP. If the enemy
+                                contribute, not the target&apos;s initial HP. If the enemy
                                 starts at 100% HP and teammates damage the target, this
                                 reduces your <span className="math-var">I</span> below
                                 100%. However, the model assumes that teammates do not
@@ -244,7 +249,7 @@ export default function CollectorAnalysis() {
                                     introduce variance (higher or lower damage). You also
                                     can and should deliberately last hit kills as ADC when
                                     possible, overriding the random distribution modeled
-                                    here. If you're able to time your last auto to bring
+                                    here. If you&apos;re able to time your last auto to bring
                                     the target to exactly 5% HP with Collector, Collector
                                     becomes the most efficient.
                                 </li>
