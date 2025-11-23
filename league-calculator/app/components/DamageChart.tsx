@@ -237,7 +237,7 @@ const DamageChart: React.FC<DamageChartProps> = ({
                 style={{ position: "relative", height: "100%" }}
                 onMouseLeave={() => {
                     if (comparisonTooltipRef.current) {
-                        (comparisonTooltipRef.current.style as any).opacity = 0;
+                        comparisonTooltipRef.current.style.opacity = "0";
                     }
                 }}
             >
@@ -255,12 +255,12 @@ const DamageChart: React.FC<DamageChartProps> = ({
                             mode: "index",
                             intersect: false,
                         },
-                        onHover: (event, activeElements, chart) => {
+                        onHover: (event, activeElements) => {
                             const tooltipEl = comparisonTooltipRef.current;
                             if (!tooltipEl) return;
 
                             if (activeElements.length === 0 || builds.length === 0) {
-                                (tooltipEl.style as any).opacity = 0;
+                                tooltipEl.style.opacity = "0";
                                 return;
                             }
 
@@ -354,7 +354,7 @@ const DamageChart: React.FC<DamageChartProps> = ({
                             });
 
                             tooltipEl.innerHTML = innerHtml;
-                            (tooltipEl.style as any).opacity = 1;
+                            tooltipEl.style.opacity = "1";
                         },
                         plugins: {
                             legend: {

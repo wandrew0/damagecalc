@@ -123,10 +123,10 @@ export default function CollectorEfficiencyChart({
             },
             tooltip: {
                 callbacks: {
-                    title: (context: any) => {
-                        return `Damage Share: ${Math.round(context[0].label)}`;
+                    title: (context) => {
+                        return `Damage Share: ${Math.round(Number(context[0].label))}`;
                     },
-                    label: (context: any) => {
+                    label: (context) => {
                         return `${context.dataset.label}: ${context.parsed.y.toFixed(
                             2
                         )}%`;

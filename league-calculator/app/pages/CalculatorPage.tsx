@@ -14,7 +14,6 @@ import { decodeBuilds, decodeBuildsLegacy } from "../utils/encoder";
 import {
     getAbsoluteFocusAD,
     getGatheringStormAD,
-    getTotalAD,
 } from "../classes/Calculator";
 
 function serializeBuilds(builds: Build[]) {
