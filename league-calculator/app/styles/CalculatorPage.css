@@ -45,6 +45,19 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    min-height: 40px;
+}
+
+.headerTitleRow {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    flex: 1;
+    min-width: 0;
 }
 
 .headerTop h1 {
@@ -52,7 +65,17 @@ body {
     font-size: 18px;
     font-weight: 600;
     color: var(--text-primary);
+    text-align: right;
 }
+
+.headerActions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: 40px;
+}
+
+/* Removed unused styles */
 
 .reset-all-button {
     background-color: var(--accent);
@@ -83,15 +106,37 @@ input[type="text"] {
     /* Mobile touch optimization */
     -webkit-appearance: none;
     -moz-appearance: textfield;
+    appearance: textfield;
+    box-sizing: border-box;
+    height: 32px;
 }
 
-/* Mobile input optimization */
-@media (max-width: 768px) {
+.numberInput {
+    height: 32px;
+}
+
+/* Mobile input optimization - up to 1024px (mobile/tablet) */
+@media (max-width: 1024px) {
     input[type="number"],
     input[type="text"] {
         padding: 10px 12px;
         font-size: 16px; /* Prevents zoom on iOS */
         border-radius: 6px;
+        height: 44px; /* Match mobile button height */
+    }
+
+    .numberInputButton {
+        width: 44px;
+        min-width: 44px; /* Minimum touch target size */
+        height: 44px;
+        font-size: 20px;
+        display: inline-flex; /* Show buttons on mobile */
+    }
+
+    .numberInput {
+        font-size: 16px; /* Prevents zoom on iOS */
+        padding: 10px 8px;
+        height: 44px; /* Match mobile button height */
     }
 }
 
@@ -104,6 +149,44 @@ input[type="number"]:focus,
 input[type="text"]:focus {
     outline: none;
     border-color: var(--accent);
+}
+
+/* Number Input Group with Increment/Decrement Buttons */
+.numberInputGroup {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    vertical-align: middle;
+}
+
+.numberInput {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+}
+
+.numberInputButton {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    display: inline-flex; /* Show by default (mobile-first) */
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1;
+    padding: 0;
+    margin: 0;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
+    flex-shrink: 0;
 }
 
 /* Main Content Layout */
@@ -146,6 +229,75 @@ input[type="text"]:focus {
     margin-left: 16px;
     color: var(--text-tertiary);
     font-size: 13px;
+}
+
+/* Rune Settings */
+.runeSettings {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-light);
+}
+
+.runeRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.runeCheckboxLabel {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--text-secondary);
+    flex: 1;
+}
+
+.runeCheckboxLabel input[type="checkbox"] {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+}
+
+.runeADValue {
+    font-size: 11px;
+    font-weight: 400;
+    white-space: nowrap;
+    min-width: 70px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.runeADValueActive {
+    color: var(--text-secondary);
+}
+
+.runeADValueInactive {
+    color: var(--text-tertiary);
+    opacity: 0.6;
+}
+
+.runeInputLabel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    flex: 1;
+    min-width: 0;
+}
+
+.runeInputLabel input[type="number"] {
+    width: 100px;
+    min-width: 100px;
+    flex-shrink: 0;
 }
 
 /* Build Panel Container */
@@ -534,6 +686,7 @@ input[type="text"]:focus {
 
 .armorInputLabel {
     display: flex;
+    flex-direction: row;
     align-items: center;
     gap: 8px;
     font-size: 13px;
@@ -542,7 +695,8 @@ input[type="text"]:focus {
 }
 
 .armorInput {
-    width: 80px;
+    width: auto;
+    min-width: 80px;
 }
 
 /* Margin of Error - Ultra Minimal */
@@ -623,13 +777,13 @@ input[type="text"]:focus {
 /* Mobile build stats optimization */
 @media (max-width: 768px) {
     .buildPanel p {
-        font-size: 10px;
+        font-size: 12px;
         margin: 4px 0 2px 0;
         line-height: 1.3;
     }
 
     .buildPanel h3 {
-        font-size: 11px;
+        font-size: 14px;
         margin: 8px 0 6px 0;
     }
 }
@@ -891,7 +1045,7 @@ input[type="text"]:focus {
 
     .reset-all-button {
         padding: 4px 8px;
-        font-size: 11px;
+        font-size: 13px;
     }
 
     .mainContent {
@@ -915,12 +1069,50 @@ input[type="text"]:focus {
     }
 
     .globalSettings label {
-        font-size: 11px;
+        font-size: 14px;
     }
 
     .champ-stats {
         margin-left: 8px;
-        font-size: 11px;
+        font-size: 13px;
+    }
+
+    .runeSettings {
+        gap: 8px;
+        margin-top: 8px;
+        padding-top: 8px;
+    }
+
+    .runeCheckboxLabel {
+        font-size: 14px;
+    }
+
+    .runeInputLabel {
+        font-size: 14px;
+    }
+
+    .runeRow {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .runeInputLabel {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+    }
+
+    .runeInputLabel input[type="number"] {
+        max-width: 100px;
+        font-size: 14px;
+        padding: 4px 6px;
+        width: auto;
+    }
+
+    .runeADValue {
+        font-size: 12px;
     }
 
     /* Build Panel Mobile Optimizations */
@@ -937,7 +1129,7 @@ input[type="text"]:focus {
     }
 
     .buildName {
-        font-size: 13px;
+        font-size: 15px;
         margin-bottom: 0;
         flex: 1;
     }
@@ -954,11 +1146,11 @@ input[type="text"]:focus {
     }
 
     .bonusStats label {
-        font-size: 10px;
+        font-size: 12px;
     }
 
     .bonusStats input {
-        font-size: 11px;
+        font-size: 14px;
         padding: 6px;
     }
 
@@ -1009,7 +1201,7 @@ input[type="text"]:focus {
 
     .build-action-button {
         padding: 6px 8px;
-        font-size: 11px;
+        font-size: 13px;
         flex: 1;
         min-width: 0;
     }
@@ -1039,15 +1231,17 @@ input[type="text"]:focus {
     }
 
     .armorInputLabel {
-        font-size: 11px;
+        font-size: 13px;
         flex: 1;
         min-width: 120px;
+        flex-direction: column;
+        align-items: flex-start;
     }
 
     .armorInput {
         width: 100%;
         max-width: 80px;
-        font-size: 11px;
+        font-size: 14px;
         padding: 4px 6px;
     }
 
@@ -1060,13 +1254,13 @@ input[type="text"]:focus {
     }
 
     .marginTypeLabel {
-        font-size: 11px;
+        font-size: 13px;
         white-space: nowrap;
     }
 
     .marginTypeSelect {
         width: 60px;
-        font-size: 11px;
+        font-size: 13px;
         padding: 4px 6px;
     }
 
@@ -1144,6 +1338,26 @@ input[type="text"]:focus {
     .chartContainer {
         min-height: 600px;
         height: 600px;
+    }
+
+    /* Desktop rune settings - keep row by row but better spacing */
+    .runeRow {
+        align-items: center;
+    }
+
+    /* Hide buttons on desktop (1025px and above) */
+    .numberInputGroup .numberInputButton {
+        display: none;
+    }
+
+    /* On desktop, numberInputGroup should just be the input */
+    .numberInputGroup {
+        display: inline-flex;
+    }
+
+    .numberInputGroup .numberInput {
+        width: auto;
+        min-width: 80px;
     }
 
     /* Desktop items - fixed size, no scaling */

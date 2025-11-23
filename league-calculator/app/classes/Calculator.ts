@@ -4,6 +4,63 @@ import { Champion } from "./Champion";
 import { Build } from "./Build";
 
 /**
+ * Calculate Absolute Focus AD bonus
+ * Formula: 18 + (level - 1) * 12/17, giving 18 AD at level 1 and 30 AD at level 18
+ */
+export function getAbsoluteFocusAD(champLevel: number): number {
+    return 18 + (champLevel - 1) * (12 / 17);
+}
+
+/**
+ * Calculate Gathering Storm AD bonus
+ * Formula: 2.4 * m * (m - 1) where m = 1 + (1 per 10 minutes of game time)
+ */
+export function getGatheringStormAD(minutes: number): number {
+    const m = 1 + minutes / 10;
+    return 2.4 * m * (m - 1);
+}
+
+/**
+ * Calculate total AD including rune bonuses
+ */
+export function getTotalAD(
+    champ: Champion,
+    champLevel: number,
+    build: Build,
+    absoluteFocus: boolean = false,
+    gatheringStormMinutes: number = 0
+): number {
+    let AD = champ.getAD(champLevel) + build.AD;
+
+    // Apply rune bonuses
+    if (absoluteFocus) {
+        AD += getAbsoluteFocusAD(champLevel);
+    }
+    if (gatheringStormMinutes > 0) {
+        AD += getGatheringStormAD(gatheringStormMinutes);
+    }
+
+    return AD;
+}
+
+/**
+ * Calculate maximum possible damage (crit damage at armor=0)
+ * Useful for determining chart Y-axis range
+ */
+export function calculateMaxDamage(
+    champ: Champion,
+    champLevel: number,
+    build: Build,
+    absoluteFocus: boolean = false,
+    gatheringStormMinutes: number = 0
+): number {
+    const AD = getTotalAD(champ, champLevel, build, absoluteFocus, gatheringStormMinutes);
+    // At armor=0, armorModifier = 100/100 = 1
+    // Maximum damage is crit damage
+    return AD * build.critDamageModifier;
+}
+
+/**
  * Simplified physical auto-attack formula:
  * Damage = AD * [(1 - critChance) + critChance * critDamageModifier] * (100 / (100 + armor))
  */
@@ -11,10 +68,13 @@ export function calculateSingleAutoDamage(
     champ: Champion,
     targetArmor: number,
     champLevel: number,
-    build: Build
+    build: Build,
+    absoluteFocus: boolean = false,
+    gatheringStormMinutes: number = 0
 ): number {
     const crit = build.critChance;
-    const AD = champ.getAD(champLevel) + build.AD;
+    const AD = getTotalAD(champ, champLevel, build, absoluteFocus, gatheringStormMinutes);
+
     targetArmor *= 1 - build.armorPenetration;
     targetArmor -= build.lethality;
     const armorModifier = 100 / (100 + Math.max(0, targetArmor));
@@ -38,10 +98,13 @@ export function calculateDamageWithMargin(
     champLevel: number,
     build: Build,
     stdDevMultiplier: number,
-    numAutoAttacks: number = 1
+    numAutoAttacks: number = 1,
+    absoluteFocus: boolean = false,
+    gatheringStormMinutes: number = 0
 ): DamageRange {
     const crit = build.critChance;
-    const AD = champ.getAD(champLevel) + build.AD;
+    const AD = getTotalAD(champ, champLevel, build, absoluteFocus, gatheringStormMinutes);
+
     let effectiveArmor = targetArmor * (1 - build.armorPenetration) - build.lethality;
     effectiveArmor = Math.max(0, effectiveArmor);
     const armorModifier = 100 / (100 + effectiveArmor);

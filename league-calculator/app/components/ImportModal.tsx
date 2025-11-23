@@ -3,10 +3,18 @@ import { Build } from "../classes/Build";
 import { decodeBuilds, decodeBuildsLegacy } from "../utils/encoder";
 
 interface ImportModalProps {
-    onImport: (builds: Build[], clearExisting: boolean, championLevel?: number) => void;
+    onImport: (
+        builds: Build[],
+        clearExisting: boolean,
+        championLevel?: number,
+        absoluteFocus?: boolean,
+        gatheringStormMinutes?: number
+    ) => void;
     onClose: () => void;
     initialBuilds?: Build[];
     initialChampionLevel?: number;
+    initialAbsoluteFocus?: boolean;
+    initialGatheringStormMinutes?: number;
     isUrlImport?: boolean;
 }
 
@@ -15,6 +23,8 @@ const ImportModal: React.FC<ImportModalProps> = ({
     onClose,
     initialBuilds,
     initialChampionLevel,
+    initialAbsoluteFocus,
+    initialGatheringStormMinutes,
     isUrlImport = false,
 }) => {
     const [importCode, setImportCode] = useState("");
@@ -30,6 +40,14 @@ const ImportModal: React.FC<ImportModalProps> = ({
         number | undefined
     >(initialChampionLevel);
     const [importChampionLevel, setImportChampionLevel] = useState(true);
+    const [importedAbsoluteFocus, setImportedAbsoluteFocus] = useState<
+        boolean | undefined
+    >(initialAbsoluteFocus);
+    const [importAbsoluteFocus, setImportAbsoluteFocus] = useState(true);
+    const [importedGatheringStormMinutes, setImportedGatheringStormMinutes] = useState<
+        number | undefined
+    >(initialGatheringStormMinutes);
+    const [importGatheringStorm, setImportGatheringStorm] = useState(true);
 
     const handleParse = (code?: string) => {
         const codeToParse =
@@ -42,9 +60,12 @@ const ImportModal: React.FC<ImportModalProps> = ({
         try {
             // Try new format first, fallback to legacy
             try {
-                const { builds, championLevel } = decodeBuilds(codeToParse.trim());
+                const { builds, championLevel, absoluteFocus, gatheringStormMinutes } =
+                    decodeBuilds(codeToParse.trim());
                 setParsedBuilds(builds);
                 setImportedChampionLevel(championLevel);
+                setImportedAbsoluteFocus(absoluteFocus);
+                setImportedGatheringStormMinutes(gatheringStormMinutes);
                 setSelectedIndices(new Set(builds.map((_: Build, i: number) => i)));
                 setError("");
             } catch {
@@ -52,6 +73,8 @@ const ImportModal: React.FC<ImportModalProps> = ({
                 const { builds, championLevel } = decodeBuildsLegacy(codeToParse.trim());
                 setParsedBuilds(builds);
                 setImportedChampionLevel(championLevel);
+                setImportedAbsoluteFocus(undefined);
+                setImportedGatheringStormMinutes(undefined);
                 setSelectedIndices(new Set(builds.map((_: Build, i: number) => i)));
                 setError("");
             }
@@ -89,7 +112,9 @@ const ImportModal: React.FC<ImportModalProps> = ({
         onImport(
             selectedBuilds,
             clearExisting,
-            importChampionLevel ? importedChampionLevel : undefined
+            importChampionLevel ? importedChampionLevel : undefined,
+            importAbsoluteFocus ? importedAbsoluteFocus : undefined,
+            importGatheringStorm ? importedGatheringStormMinutes : undefined
         );
         onClose();
     };
@@ -120,7 +145,7 @@ const ImportModal: React.FC<ImportModalProps> = ({
                     ) : (
                         <>
                             <p>Select builds to import:</p>
-                            {importedChampionLevel && (
+                            {importedChampionLevel !== undefined && (
                                 <label className="clear-builds-checkbox">
                                     <input
                                         type="checkbox"
@@ -131,6 +156,36 @@ const ImportModal: React.FC<ImportModalProps> = ({
                                     />
                                     <span>
                                         Import champion level ({importedChampionLevel})
+                                    </span>
+                                </label>
+                            )}
+                            {importedAbsoluteFocus !== undefined && (
+                                <label className="clear-builds-checkbox">
+                                    <input
+                                        type="checkbox"
+                                        checked={importAbsoluteFocus}
+                                        onChange={(e) =>
+                                            setImportAbsoluteFocus(e.target.checked)
+                                        }
+                                    />
+                                    <span>
+                                        Import Absolute Focus (
+                                        {importedAbsoluteFocus ? "enabled" : "disabled"})
+                                    </span>
+                                </label>
+                            )}
+                            {importedGatheringStormMinutes !== undefined && (
+                                <label className="clear-builds-checkbox">
+                                    <input
+                                        type="checkbox"
+                                        checked={importGatheringStorm}
+                                        onChange={(e) =>
+                                            setImportGatheringStorm(e.target.checked)
+                                        }
+                                    />
+                                    <span>
+                                        Import Gathering Storm (
+                                        {importedGatheringStormMinutes} minutes)
                                     </span>
                                 </label>
                             )}

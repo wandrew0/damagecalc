@@ -1,0 +1,12 @@
+.collector-page-wrapper {
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.collector-page {
+    flex: 1;
+    overflow: hidden;
+}
+

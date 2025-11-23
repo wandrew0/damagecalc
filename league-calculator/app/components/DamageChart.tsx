@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useRef } from "react";
 import { Line } from "react-chartjs-2";
 import {
     Chart as ChartJS,
@@ -15,6 +15,7 @@ import { Champion } from "../classes/Champion";
 import {
     calculateSingleAutoDamage,
     calculateDamageWithMargin,
+    calculateMaxDamage,
 } from "../classes/Calculator";
 
 ChartJS.register(
@@ -36,6 +37,8 @@ interface DamageChartProps {
     showMargin: boolean;
     stdDevMultiplier: number;
     numAutoAttacks: number;
+    absoluteFocus?: boolean;
+    gatheringStormMinutes?: number;
     disableAnimation?: boolean;
 }
 
@@ -48,24 +51,33 @@ const DamageChart: React.FC<DamageChartProps> = ({
     showMargin,
     stdDevMultiplier,
     numAutoAttacks,
+    absoluteFocus = false,
+    gatheringStormMinutes = 0,
     disableAnimation = false,
 }) => {
+    // Ref for the custom comparison tooltip
+    const comparisonTooltipRef = useRef<HTMLDivElement | null>(null);
+
     // Calculate max Y value for fixed axis range
     const maxYValue = useMemo(() => {
         if (builds.length === 0) return 100;
 
-        // Find max damage at armor=0 (highest damage point) across all builds
+        // Find max damage (crit damage at armor=0) across all builds using Calculator
         let maxDamage = 0;
         builds.forEach((build) => {
-            const AD = champion.getAD(level) + build.AD;
-            const armorModifier = 100 / 100; // armor=0
-            const critDamage = AD * build.critDamageModifier * armorModifier;
-            maxDamage = Math.max(maxDamage, critDamage);
+            const maxBuildDamage = calculateMaxDamage(
+                champion,
+                level,
+                build,
+                absoluteFocus,
+                gatheringStormMinutes
+            );
+            maxDamage = Math.max(maxDamage, maxBuildDamage);
         });
 
         // Add 10% padding to the top
         return maxDamage * 1.1;
-    }, [builds, champion, level]);
+    }, [builds, champion, level, absoluteFocus, gatheringStormMinutes]);
 
     // Memoize calculations to ensure they recalculate when dependencies change
     const chartData = useMemo(() => {
@@ -73,7 +85,14 @@ const DamageChart: React.FC<DamageChartProps> = ({
         function getDamageDataForBuild(build: Build) {
             const results = [] as { armor: number; damage: number }[];
             for (let armor = armorRange[0]; armor <= armorRange[1]; armor += step) {
-                const dmg = calculateSingleAutoDamage(champion, armor, level, build);
+                const dmg = calculateSingleAutoDamage(
+                    champion,
+                    armor,
+                    level,
+                    build,
+                    absoluteFocus,
+                    gatheringStormMinutes
+                );
                 results.push({ armor, damage: dmg });
             }
             return results;
@@ -94,7 +113,9 @@ const DamageChart: React.FC<DamageChartProps> = ({
                     level,
                     build,
                     stdDevMultiplier,
-                    numAutoAttacks
+                    numAutoAttacks,
+                    absoluteFocus,
+                    gatheringStormMinutes
                 );
                 results.push({ armor, ...range });
             }
@@ -206,91 +227,222 @@ const DamageChart: React.FC<DamageChartProps> = ({
         showMargin,
         stdDevMultiplier,
         numAutoAttacks,
+        absoluteFocus,
+        gatheringStormMinutes,
     ]);
 
     return (
-        <div className="chartContainer">
-            <Line
-                data={chartData}
-                options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: disableAnimation
-                        ? false
-                        : {
-                              duration: 300,
-                          },
-                    interaction: {
-                        mode: "index",
-                        intersect: false,
-                    },
-                    plugins: {
-                        legend: {
-                            position: "bottom",
-                            labels: {
+        <div className="chartContainer" style={{ position: "relative" }}>
+            <div
+                style={{ position: "relative", height: "100%" }}
+                onMouseLeave={() => {
+                    if (comparisonTooltipRef.current) {
+                        (comparisonTooltipRef.current.style as any).opacity = 0;
+                    }
+                }}
+            >
+                <Line
+                    data={chartData}
+                    options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: disableAnimation
+                            ? false
+                            : {
+                                  duration: 300,
+                              },
+                        interaction: {
+                            mode: "index",
+                            intersect: false,
+                        },
+                        onHover: (event, activeElements, chart) => {
+                            const tooltipEl = comparisonTooltipRef.current;
+                            if (!tooltipEl) return;
+
+                            if (activeElements.length === 0 || builds.length === 0) {
+                                (tooltipEl.style as any).opacity = 0;
+                                return;
+                            }
+
+                            const dataIndex = activeElements[0].index;
+                            const armor = armorRange[0] + dataIndex * step;
+
+                            // Calculate damage for each build at this armor value
+                            const buildDamages: Array<{
+                                name: string;
+                                damage: number;
+                                color: string;
+                            }> = [];
+
+                            builds.forEach((build, index) => {
+                                let damage: number;
+                                if (showMargin) {
+                                    const range = calculateDamageWithMargin(
+                                        champion,
+                                        armor,
+                                        level,
+                                        build,
+                                        stdDevMultiplier,
+                                        numAutoAttacks,
+                                        absoluteFocus,
+                                        gatheringStormMinutes
+                                    );
+                                    damage = range.expected;
+                                } else {
+                                    damage = calculateSingleAutoDamage(
+                                        champion,
+                                        armor,
+                                        level,
+                                        build,
+                                        absoluteFocus,
+                                        gatheringStormMinutes
+                                    );
+                                }
+
+                                buildDamages.push({
+                                    name: build.name,
+                                    damage,
+                                    color: `hsl(${index * 100}, 70%, 50%)`,
+                                });
+                            });
+
+                            // Find lowest damage
+                            const lowestDamage = Math.min(
+                                ...buildDamages.map((b) => b.damage)
+                            );
+
+                            // Calculate percentage differences and sort by damage (descending)
+                            const comparisons = buildDamages
+                                .map((bd) => ({
+                                    buildName: bd.name,
+                                    damage: bd.damage,
+                                    percentDiff:
+                                        ((bd.damage - lowestDamage) / lowestDamage) * 100,
+                                    color: bd.color,
+                                }))
+                                .sort((a, b) => b.damage - a.damage);
+
+                            // Build HTML content
+                            let innerHtml = `
+                            <div style="font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.3); padding-bottom: 6px;">
+                                At ${armor} Armor
+                            </div>
+                        `;
+
+                            comparisons.forEach((comp) => {
+                                innerHtml += `
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; gap: 16px;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <div style="width: 12px; height: 12px; background-color: ${
+                                            comp.color
+                                        }; border-radius: 2px; flex-shrink: 0;"></div>
+                                        <span style="font-size: 13px;">${
+                                            comp.buildName
+                                        }</span>
+                                    </div>
+                                    <span style="font-weight: bold; color: ${
+                                        comp.percentDiff === 0 ? "#888" : "#4ade80"
+                                    }; font-size: 13px; white-space: nowrap;">
+                                        ${
+                                            comp.percentDiff === 0
+                                                ? "baseline"
+                                                : `+${comp.percentDiff.toFixed(1)}%`
+                                        }
+                                    </span>
+                                </div>
+                            `;
+                            });
+
+                            tooltipEl.innerHTML = innerHtml;
+                            (tooltipEl.style as any).opacity = 1;
+                        },
+                        plugins: {
+                            legend: {
+                                position: "bottom",
+                                labels: {
+                                    filter: (item) => {
+                                        // Hide upper/lower bound labels from legend
+                                        return (
+                                            !item.text.includes("(upper)") &&
+                                            !item.text.includes("(lower)")
+                                        );
+                                    },
+                                },
+                            },
+                            title: {
+                                display: true,
+                                text: "Single-Auto Damage vs. Armor",
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: (context) => {
+                                        const label = context.dataset.label || "";
+                                        if (
+                                            label.includes("(upper)") ||
+                                            label.includes("(lower)")
+                                        ) {
+                                            return ""; // Don't show tooltip for bounds
+                                        }
+                                        return `${label}: ${context.parsed.y.toFixed(2)}`;
+                                    },
+                                },
                                 filter: (item) => {
-                                    // Hide upper/lower bound labels from legend
+                                    // Only show tooltip for main lines
+                                    const label = item.dataset.label || "";
                                     return (
-                                        !item.text.includes("(upper)") &&
-                                        !item.text.includes("(lower)")
+                                        !label.includes("(upper)") &&
+                                        !label.includes("(lower)")
                                     );
                                 },
                             },
                         },
-                        title: {
-                            display: true,
-                            text: "Single-Auto Damage vs. Armor",
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: (context) => {
-                                    const label = context.dataset.label || "";
-                                    if (
-                                        label.includes("(upper)") ||
-                                        label.includes("(lower)")
-                                    ) {
-                                        return ""; // Don't show tooltip for bounds
-                                    }
-                                    return `${label}: ${context.parsed.y.toFixed(2)}`;
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: "Target Armor",
                                 },
                             },
-                            filter: (item) => {
-                                // Only show tooltip for main lines
-                                const label = item.dataset.label || "";
-                                return (
-                                    !label.includes("(upper)") &&
-                                    !label.includes("(lower)")
-                                );
-                            },
-                        },
-                    },
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: "Target Armor",
-                            },
-                        },
-                        y: {
-                            beginAtZero: true,
-                            max: maxYValue,
-                            title: {
-                                display: true,
-                                text: "Expected Damage per Auto",
-                            },
-                            ticks: {
-                                callback: function (value, index, ticks) {
-                                    // Hide the last (top) tick label
-                                    if (index === ticks.length - 1) {
-                                        return "";
-                                    }
-                                    return value;
+                            y: {
+                                beginAtZero: true,
+                                max: maxYValue,
+                                title: {
+                                    display: true,
+                                    text: "Expected Damage per Auto",
+                                },
+                                ticks: {
+                                    callback: function (value, index, ticks) {
+                                        // Hide the last (top) tick label
+                                        if (index === ticks.length - 1) {
+                                            return "";
+                                        }
+                                        return value;
+                                    },
                                 },
                             },
                         },
-                    },
-                }}
-            />
+                    }}
+                />
+                <div
+                    ref={comparisonTooltipRef}
+                    style={{
+                        position: "absolute",
+                        top: "10px",
+                        right: "10px",
+                        backgroundColor: "rgba(0, 0, 0, 0.85)",
+                        color: "white",
+                        padding: "12px 16px",
+                        borderRadius: "6px",
+                        fontSize: "14px",
+                        zIndex: 1000,
+                        pointerEvents: "none",
+                        minWidth: "200px",
+                        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.3)",
+                        opacity: 0,
+                        transition: "opacity 0.15s ease-in-out",
+                    }}
+                ></div>
+            </div>
         </div>
     );
 };

@@ -38,9 +38,19 @@ interface CompressedData {
     v: number; // version
     l?: number; // champion level
     b: CompressedBuild[]; // builds
+    r?: {
+        // runes
+        af?: boolean; // absolute focus
+        gs?: number; // gathering storm minutes
+    };
 }
 
-export function encodeBuilds(builds: Build[], championLevel?: number): string {
+export function encodeBuilds(
+    builds: Build[],
+    championLevel?: number,
+    absoluteFocus?: boolean,
+    gatheringStormMinutes?: number
+): string {
     const compressedBuilds: CompressedBuild[] = builds.map((build) => ({
         n: build.name,
         i: build.items.map((item) => ITEM_IDS[item.name] || 0),
@@ -53,6 +63,17 @@ export function encodeBuilds(builds: Build[], championLevel?: number): string {
         b: compressedBuilds,
     };
 
+    // Add rune data if provided
+    if (absoluteFocus !== undefined || gatheringStormMinutes !== undefined) {
+        data.r = {};
+        if (absoluteFocus !== undefined) {
+            data.r.af = absoluteFocus;
+        }
+        if (gatheringStormMinutes !== undefined) {
+            data.r.gs = gatheringStormMinutes;
+        }
+    }
+
     // Convert to compact JSON (no base64 encoding)
     return JSON.stringify(data);
 }
@@ -60,6 +81,8 @@ export function encodeBuilds(builds: Build[], championLevel?: number): string {
 export function decodeBuilds(encoded: string): {
     builds: Build[];
     championLevel?: number;
+    absoluteFocus?: boolean;
+    gatheringStormMinutes?: number;
 } {
     try {
         const data: CompressedData = JSON.parse(encoded);
@@ -98,6 +121,8 @@ export function decodeBuilds(encoded: string): {
         return {
             builds,
             championLevel: data.l,
+            absoluteFocus: data.r?.af,
+            gatheringStormMinutes: data.r?.gs,
         };
     } catch (error) {
         console.error("Error decoding builds:", error);

@@ -5,10 +5,18 @@ import { encodeBuilds } from "../utils/encoder";
 interface ShareModalProps {
     builds: Build[];
     championLevel?: number;
+    absoluteFocus?: boolean;
+    gatheringStormMinutes?: number;
     onClose: () => void;
 }
 
-const ShareModal: React.FC<ShareModalProps> = ({ builds, championLevel, onClose }) => {
+const ShareModal: React.FC<ShareModalProps> = ({
+    builds,
+    championLevel,
+    absoluteFocus,
+    gatheringStormMinutes,
+    onClose,
+}) => {
     const [selectedIndices, setSelectedIndices] = useState<Set<number>>(
         new Set(builds.map((_, i) => i))
     );
@@ -29,7 +37,12 @@ const ShareModal: React.FC<ShareModalProps> = ({ builds, championLevel, onClose 
         }
 
         const selectedBuilds = builds.filter((_, i) => selectedIndices.has(i));
-        const encoded = encodeBuilds(selectedBuilds, championLevel);
+        const encoded = encodeBuilds(
+            selectedBuilds,
+            championLevel,
+            absoluteFocus,
+            gatheringStormMinutes
+        );
         const urlEncoded = encodeURIComponent(encoded);
         const url = `${window.location.origin}${window.location.pathname}#builds=${urlEncoded}`;
         navigator.clipboard.writeText(url);
@@ -42,7 +55,12 @@ const ShareModal: React.FC<ShareModalProps> = ({ builds, championLevel, onClose 
         }
 
         const selectedBuilds = builds.filter((_, i) => selectedIndices.has(i));
-        const encoded = encodeBuilds(selectedBuilds, championLevel);
+        const encoded = encodeBuilds(
+            selectedBuilds,
+            championLevel,
+            absoluteFocus,
+            gatheringStormMinutes
+        );
         navigator.clipboard.writeText(encoded);
         onClose();
     };

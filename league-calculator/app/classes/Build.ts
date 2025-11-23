@@ -53,8 +53,9 @@ export class Build {
     }
 
     update() {
-        this.critChance =
-            this.items.reduce((acc, it) => acc + it.critChance, 0) + this.bonusCrit;
+        this.critChance = Math.max(0, Math.min(1,
+            this.items.reduce((acc, it) => acc + it.critChance, 0) + this.bonusCrit
+        ));
         this.AD = this.items.reduce((acc, it) => acc + it.AD, 0) + this.bonusAD;
         this.lethality =
             this.items.reduce((acc, it) => acc + it.lethality, 0) + this.bonusLethality;
@@ -112,7 +113,7 @@ export class Build {
     }) {
         const build = new Build();
         build.items = json.items.map((it) => Item.fromJSON(it));
-        build.critChance = json.critChance;
+        build.critChance = Math.max(0, Math.min(1, json.critChance));
         build.critDamageModifier = json.critDamageModifier;
         build.AD = json.AD;
         build.armorPenetration = json.armorPenetration;
