@@ -5,10 +5,10 @@ import { Build } from "./Build";
 
 /**
  * Calculate Absolute Focus AD bonus
- * Formula: 18 + (level - 1) * 12/17, giving 18 AD at level 1 and 30 AD at level 18
+ * Formula: 1.8 + 16.2 ÷ 17 × (level − 1), giving 1.8 AD at level 1 and 18 AD at level 18
  */
 export function getAbsoluteFocusAD(champLevel: number): number {
-    return 18 + (champLevel - 1) * (12 / 17);
+    return 1.8 + (16.2 / 17) * (champLevel - 1);
 }
 
 /**
