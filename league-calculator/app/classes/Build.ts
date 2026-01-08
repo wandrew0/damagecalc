@@ -113,16 +113,14 @@ export class Build {
     }) {
         const build = new Build();
         build.items = json.items.map((it) => Item.fromJSON(it));
-        build.critChance = Math.max(0, Math.min(1, json.critChance));
-        build.critDamageModifier = json.critDamageModifier;
-        build.AD = json.AD;
-        build.armorPenetration = json.armorPenetration;
-        build.lethality = json.lethality;
-        build.totalCost = json.totalCost;
+        // Don't use saved critDamageModifier - it may be from an old season
+        // Instead, set bonus values and call update() to recalculate everything
         build.bonusAD = json.bonusAD;
         build.bonusLethality = json.bonusLethality;
         build.bonusCrit = json.bonusCrit;
         build.name = json.name;
+        // Recalculate all stats including critDamageModifier based on current season values
+        build.update();
         return build;
     }
 }
