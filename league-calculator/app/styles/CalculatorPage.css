@@ -761,6 +761,179 @@ input[type="text"]:focus {
     border-color: var(--accent);
 }
 
+/* Target Bonus HP Slider for LDR Giant Slayer */
+.targetBonusHPContainer {
+    padding: 12px 0;
+    border-top: 1px solid var(--border-light);
+}
+
+.targetBonusHPSingleLine {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    flex-wrap: nowrap;
+}
+
+.targetBonusHPTitle {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.tooltipIcon {
+    cursor: help;
+    color: var(--text-tertiary);
+    font-size: 14px;
+    position: relative;
+}
+
+.tooltipIcon:hover {
+    color: var(--text-secondary);
+}
+
+.singleSlider {
+    flex: 1;
+    min-width: 80px;
+}
+
+.targetBonusHPSlider {
+    flex: 1;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--border-light);
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.targetBonusHPSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+.targetBonusHPSlider::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+}
+
+.targetBonusHPSlider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: none;
+}
+
+.targetBonusHPInput {
+    width: 70px;
+    text-align: center;
+}
+
+.targetBonusHPUnit {
+    color: var(--text-tertiary);
+    font-size: 12px;
+    min-width: 20px;
+}
+
+.giantSlayerBonus {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-weight: 400;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.rangeModeCheckbox {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-weight: 400;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.rangeModeCheckbox input[type="checkbox"] {
+    cursor: pointer;
+    width: 12px;
+    height: 12px;
+    accent-color: var(--accent);
+    margin: 0;
+}
+
+.rangeInput {
+    width: 45px !important;
+    flex-shrink: 0;
+}
+
+.dualSliderContainer {
+    flex: 1;
+    position: relative;
+    height: 20px;
+    min-width: 80px;
+}
+
+.dualSliderContainer .dualSlider {
+    position: absolute;
+    width: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    background: transparent;
+}
+
+.dualSliderContainer .dualSlider::-webkit-slider-thumb {
+    pointer-events: auto;
+}
+
+.dualSliderContainer .dualSlider::-moz-range-thumb {
+    pointer-events: auto;
+}
+
+/* First slider shows the track */
+.dualSliderContainer .dualSlider:first-child {
+    background: var(--border-light);
+}
+
+/* Second slider has transparent track */
+.dualSliderContainer .dualSlider:last-child {
+    background: transparent;
+}
+
+/* Mobile Target Bonus HP */
+@media (max-width: 1024px) {
+    .targetBonusHPContainer {
+        padding: 8px 0;
+    }
+
+    .targetBonusHPLabel {
+        font-size: 14px;
+    }
+
+    .targetBonusHPSliderRow {
+        gap: 8px;
+    }
+
+    .targetBonusHPInput {
+        width: 80px;
+        font-size: 16px;
+        padding: 8px;
+    }
+}
+
 /* Build Stats Summary - Minimal */
 .buildPanel p {
     font-size: 12px;

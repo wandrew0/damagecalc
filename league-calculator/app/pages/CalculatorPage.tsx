@@ -51,6 +51,9 @@ function CalculatorPage() {
     const [numAutoAttacks, setNumAutoAttacks] = useState(5); // Realistic for typical engagement
     const [absoluteFocus, setAbsoluteFocus] = useState(false);
     const [gatheringStormMinutes, setGatheringStormMinutes] = useState(0);
+    const [targetBonusHP, setTargetBonusHP] = useState(0); // For LDR Giant Slayer calculation
+    const [targetBonusHPRangeMode, setTargetBonusHPRangeMode] = useState(false); // Toggle for range mode
+    const [targetBonusHPMax, setTargetBonusHPMax] = useState(1500); // Max value for range mode
     const [urlImportBuilds, setUrlImportBuilds] = useState<Build[] | null>(null);
     const [urlImportChampionLevel, setUrlImportChampionLevel] = useState<number | null>(
         null
@@ -253,6 +256,9 @@ function CalculatorPage() {
                     numAutoAttacks: savedNumAutoAttacks,
                     absoluteFocus: savedAbsoluteFocus,
                     gatheringStormMinutes: savedGatheringStormMinutes,
+                    targetBonusHP: savedTargetBonusHP,
+                    targetBonusHPRangeMode: savedTargetBonusHPRangeMode,
+                    targetBonusHPMax: savedTargetBonusHPMax,
                 } = JSON.parse(savedState);
                 // Only load level if we didn't auto-import from URL
                 if (level && !autoImportedRef.current) {
@@ -271,6 +277,12 @@ function CalculatorPage() {
                     setAbsoluteFocus(savedAbsoluteFocus);
                 if (savedGatheringStormMinutes !== undefined)
                     setGatheringStormMinutes(savedGatheringStormMinutes);
+                if (savedTargetBonusHP !== undefined)
+                    setTargetBonusHP(savedTargetBonusHP);
+                if (savedTargetBonusHPRangeMode !== undefined)
+                    setTargetBonusHPRangeMode(savedTargetBonusHPRangeMode);
+                if (savedTargetBonusHPMax !== undefined)
+                    setTargetBonusHPMax(savedTargetBonusHPMax);
             } catch (error) {
                 console.error("Error loading saved state:", error);
             }
@@ -295,6 +307,9 @@ function CalculatorPage() {
                 numAutoAttacks,
                 absoluteFocus,
                 gatheringStormMinutes,
+                targetBonusHP,
+                targetBonusHPRangeMode,
+                targetBonusHPMax,
             };
             localStorage.setItem("calculatorState", JSON.stringify(stateToSave));
         }
@@ -308,6 +323,9 @@ function CalculatorPage() {
         numAutoAttacks,
         absoluteFocus,
         gatheringStormMinutes,
+        targetBonusHP,
+        targetBonusHPRangeMode,
+        targetBonusHPMax,
         isClient,
     ]);
 
@@ -327,36 +345,40 @@ function CalculatorPage() {
         setNumAutoAttacks(5);
         setAbsoluteFocus(false);
         setGatheringStormMinutes(0);
+        setTargetBonusHP(0);
+        setTargetBonusHPRangeMode(false);
+        setTargetBonusHPMax(1500);
         localStorage.removeItem("calculatorState");
     }
 
+    // Margin of error functions - hidden for now, LDR damage variance is more important
     // Convert std dev to approximate percentile range
-    function stdDevToPercentile(stdDev: number): number {
-        // For normal distribution approximation
-        // 1σ ≈ 68% CI → ±34%
-        // 2σ ≈ 95% CI → ±47.5%
-        // 3σ ≈ 99.7% CI → ±49.85%
-        const percentage = (1 - Math.exp((-stdDev * stdDev) / 2)) * 50;
-        return Math.round(percentage);
-    }
+    // function stdDevToPercentile(stdDev: number): number {
+    //     // For normal distribution approximation
+    //     // 1σ ≈ 68% CI → ±34%
+    //     // 2σ ≈ 95% CI → ±47.5%
+    //     // 3σ ≈ 99.7% CI → ±49.85%
+    //     const percentage = (1 - Math.exp((-stdDev * stdDev) / 2)) * 50;
+    //     return Math.round(percentage);
+    // }
 
-    // Convert percentile range to approximate std dev
-    function percentileToStdDev(percentile: number): number {
-        // Inverse of above - approximate
-        const ratio = percentile / 50;
-        const stdDev = Math.sqrt(-2 * Math.log(1 - ratio));
-        return stdDev;
-    }
+    // // Convert percentile range to approximate std dev
+    // function percentileToStdDev(percentile: number): number {
+    //     // Inverse of above - approximate
+    //     const ratio = percentile / 50;
+    //     const stdDev = Math.sqrt(-2 * Math.log(1 - ratio));
+    //     return stdDev;
+    // }
 
-    function handleStdDevChange(newStdDev: number) {
-        setStdDevMultiplier(newStdDev);
-        setPercentileRange(stdDevToPercentile(newStdDev));
-    }
+    // function handleStdDevChange(newStdDev: number) {
+    //     setStdDevMultiplier(newStdDev);
+    //     setPercentileRange(stdDevToPercentile(newStdDev));
+    // }
 
-    function handlePercentileChange(newPercentile: number) {
-        setPercentileRange(newPercentile);
-        setStdDevMultiplier(percentileToStdDev(newPercentile));
-    }
+    // function handlePercentileChange(newPercentile: number) {
+    //     setPercentileRange(newPercentile);
+    //     setStdDevMultiplier(percentileToStdDev(newPercentile));
+    // }
 
     if (!isClient) return null;
 
@@ -549,6 +571,9 @@ function CalculatorPage() {
                         numAutoAttacks={numAutoAttacks}
                         absoluteFocus={absoluteFocus}
                         gatheringStormMinutes={gatheringStormMinutes}
+                        targetBonusHP={targetBonusHP}
+                        targetBonusHPRangeMode={targetBonusHPRangeMode}
+                        targetBonusHPMax={targetBonusHPMax}
                         disableAnimation={disableChartAnimation}
                     />
 
@@ -640,6 +665,107 @@ function CalculatorPage() {
                             </label>
                         </div>
 
+                        <div className="targetBonusHPContainer">
+                            <div className="targetBonusHPSingleLine">
+                                <span className="targetBonusHPTitle">
+                                    Target HP
+                                    <span className="tooltipIcon" title="HP items typically give 300-400 HP each. Giant Slayer deals up to 15% bonus physical damage based on target's bonus HP (max at 1500).">
+                                        ⓘ
+                                    </span>
+                                </span>
+                                <label className="rangeModeCheckbox" onClick={(e) => e.stopPropagation()}>
+                                    <input
+                                        type="checkbox"
+                                        checked={targetBonusHPRangeMode}
+                                        onChange={(e) => setTargetBonusHPRangeMode(e.target.checked)}
+                                    />
+                                    Range
+                                </label>
+                                {targetBonusHPRangeMode ? (
+                                    <>
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            max={1500}
+                                            value={targetBonusHP}
+                                            onChange={(e) => {
+                                                const newMin = Math.max(0, Math.min(1500, Number(e.target.value)));
+                                                setTargetBonusHP(Math.min(newMin, targetBonusHPMax));
+                                            }}
+                                            onFocus={(e) => e.target.select()}
+                                            className="targetBonusHPInput numberInput rangeInput"
+                                        />
+                                        <div className="dualSliderContainer">
+                                            <input
+                                                type="range"
+                                                min={0}
+                                                max={1500}
+                                                step={50}
+                                                value={targetBonusHP}
+                                                onChange={(e) => {
+                                                    const newMin = Number(e.target.value);
+                                                    setTargetBonusHP(Math.min(newMin, targetBonusHPMax));
+                                                }}
+                                                className="targetBonusHPSlider dualSlider"
+                                            />
+                                            <input
+                                                type="range"
+                                                min={0}
+                                                max={1500}
+                                                step={50}
+                                                value={targetBonusHPMax}
+                                                onChange={(e) => {
+                                                    const newMax = Number(e.target.value);
+                                                    setTargetBonusHPMax(Math.max(newMax, targetBonusHP));
+                                                }}
+                                                className="targetBonusHPSlider dualSlider"
+                                            />
+                                        </div>
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            max={1500}
+                                            value={targetBonusHPMax}
+                                            onChange={(e) => {
+                                                const newMax = Math.max(0, Math.min(1500, Number(e.target.value)));
+                                                setTargetBonusHPMax(Math.max(newMax, targetBonusHP));
+                                            }}
+                                            onFocus={(e) => e.target.select()}
+                                            className="targetBonusHPInput numberInput rangeInput"
+                                        />
+                                        <span className="giantSlayerBonus">
+                                            +{Math.min(15, (targetBonusHP / 1500) * 15).toFixed(1)}%–{Math.min(15, (targetBonusHPMax / 1500) * 15).toFixed(1)}%
+                                        </span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <input
+                                            type="range"
+                                            min={0}
+                                            max={1500}
+                                            step={50}
+                                            value={targetBonusHP}
+                                            onChange={(e) => setTargetBonusHP(Number(e.target.value))}
+                                            className="targetBonusHPSlider singleSlider"
+                                        />
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            max={1500}
+                                            value={targetBonusHP}
+                                            onChange={(e) => setTargetBonusHP(Math.max(0, Math.min(1500, Number(e.target.value))))}
+                                            onFocus={(e) => e.target.select()}
+                                            className="targetBonusHPInput numberInput rangeInput"
+                                        />
+                                        <span className="giantSlayerBonus">
+                                            +{Math.min(15, (targetBonusHP / 1500) * 15).toFixed(1)}%
+                                        </span>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Margin of error hidden for now - LDR damage variance is more important
                         <div className="marginErrorContainer">
                             <label className="marginCheckboxLabel">
                                 <input
@@ -707,6 +833,7 @@ function CalculatorPage() {
                                 </div>
                             )}
                         </div>
+                        */}
                     </div>
                 </div>
             </div>

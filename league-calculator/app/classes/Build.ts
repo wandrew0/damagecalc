@@ -5,7 +5,7 @@ import { Item } from "./Item";
 export class Build {
     items: Item[] = [];
     critChance: number = 0;
-    critDamageModifier: number = 1.75;
+    critDamageModifier: number = 2.0; // Season 16: base crit is now 200%
     AD: number = 0;
     armorPenetration: number = 0;
     lethality: number = 0;
@@ -65,9 +65,9 @@ export class Build {
         );
 
         if (this.items.some((it) => it.infinityEdgeBonus)) {
-            this.critDamageModifier = 2.15;
+            this.critDamageModifier = 2.30; // 200% base + 30% IE amp
         } else {
-            this.critDamageModifier = 1.75;
+            this.critDamageModifier = 2.0; // Season 16: base crit is now 200%
         }
 
         this.totalCost = this.items.reduce((acc, it) => acc + it.cost, 0);

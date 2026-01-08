@@ -98,6 +98,12 @@ for item in all_items:
         data[out_key] = value
 
     # Only add items that have at least one relevant stat
+    # Filter out ARAM items (Guardian's Blade, Guardian's Hammer)
+    if item.name.startswith("Guardian's"):
+        continue
+    # Filter out Arena items (6-digit IDs like Atma's Reckoning, Sword of the Divine, etc.)
+    if int(item.id) >= 100000:
+        continue
     if hassomething:
         # print(f"Processing: {item.name}")
         # map_ids = [m.id for m in item.maps]
