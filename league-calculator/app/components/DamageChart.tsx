@@ -14,6 +14,7 @@ import { Build } from "../classes/Build";
 import { Champion } from "../classes/Champion";
 import {
     calculateSingleAutoDamage,
+    DravenQConfig,
     // calculateDamageWithMargin, // COMMENTED OUT: Crit variance margin of error feature
     // calculateMaxDamage, // COMMENTED OUT: Was using 100% crit for Y-axis, now using expected damage
 } from "../classes/Calculator";
@@ -43,6 +44,7 @@ interface DamageChartProps {
     targetBonusHPRangeMode?: boolean;
     targetBonusHPMax?: number;
     disableAnimation?: boolean;
+    dravenQ?: DravenQConfig;
 }
 
 const DamageChart: React.FC<DamageChartProps> = ({
@@ -61,6 +63,7 @@ const DamageChart: React.FC<DamageChartProps> = ({
     targetBonusHPRangeMode = false,
     targetBonusHPMax = 1500,
     disableAnimation = false,
+    dravenQ = { enabled: false, qLevel: 1 },
 }) => {
     // Suppress unused variable warnings for commented-out crit variance feature
     void _showMargin;
@@ -86,14 +89,15 @@ const DamageChart: React.FC<DamageChartProps> = ({
                 build,
                 absoluteFocus,
                 gatheringStormMinutes,
-                hpForMaxCalc
+                hpForMaxCalc,
+                dravenQ
             );
             maxDamage = Math.max(maxDamage, expectedDamage);
         });
 
         // Add 10% padding to the top
         return maxDamage * 1.1;
-    }, [builds, champion, level, absoluteFocus, gatheringStormMinutes, targetBonusHP, targetBonusHPRangeMode, targetBonusHPMax]);
+    }, [builds, champion, level, absoluteFocus, gatheringStormMinutes, targetBonusHP, targetBonusHPRangeMode, targetBonusHPMax, dravenQ]);
 
     // Memoize calculations to ensure they recalculate when dependencies change
     const chartData = useMemo(() => {
@@ -108,7 +112,8 @@ const DamageChart: React.FC<DamageChartProps> = ({
                     build,
                     absoluteFocus,
                     gatheringStormMinutes,
-                    bonusHP
+                    bonusHP,
+                    dravenQ
                 );
                 results.push({ armor, damage: dmg });
             }
@@ -323,6 +328,7 @@ const DamageChart: React.FC<DamageChartProps> = ({
         targetBonusHP,
         targetBonusHPRangeMode,
         targetBonusHPMax,
+        dravenQ,
     ]);
 
     return (
@@ -389,7 +395,8 @@ const DamageChart: React.FC<DamageChartProps> = ({
                                             build,
                                             absoluteFocus,
                                             gatheringStormMinutes,
-                                            targetBonusHP
+                                            targetBonusHP,
+                                            dravenQ
                                         );
                                         const damageMax = calculateSingleAutoDamage(
                                             champion,
@@ -398,7 +405,8 @@ const DamageChart: React.FC<DamageChartProps> = ({
                                             build,
                                             absoluteFocus,
                                             gatheringStormMinutes,
-                                            targetBonusHPMax
+                                            targetBonusHPMax,
+                                            dravenQ
                                         );
                                         buildDamagesRange.push({
                                             name: build.name,
@@ -416,7 +424,8 @@ const DamageChart: React.FC<DamageChartProps> = ({
                                             build,
                                             absoluteFocus,
                                             gatheringStormMinutes,
-                                            0 // No bonus HP effect without LDR
+                                            0, // No bonus HP effect without LDR
+                                            dravenQ
                                         );
                                         buildDamagesRange.push({
                                             name: build.name,
@@ -506,7 +515,8 @@ const DamageChart: React.FC<DamageChartProps> = ({
                                         build,
                                         absoluteFocus,
                                         gatheringStormMinutes,
-                                        targetBonusHP
+                                        targetBonusHP,
+                                        dravenQ
                                     );
                                     // }
 

@@ -1,0 +1,51 @@
+import { Champion } from "../classes/Champion";
+
+export type ChampionId = "aphelios" | "draven";
+
+export interface ChampionData {
+    id: ChampionId;
+    name: string;
+    baseAD: number;
+    adGrowth: number;
+}
+
+export const CHAMPIONS: Record<ChampionId, ChampionData> = {
+    aphelios: {
+        id: "aphelios",
+        name: "Aphelios",
+        baseAD: 55,
+        adGrowth: 2.3,
+    },
+    draven: {
+        id: "draven",
+        name: "Draven",
+        baseAD: 62,
+        adGrowth: 3.0,
+    },
+};
+
+export function createChampion(id: ChampionId): Champion {
+    const data = CHAMPIONS[id];
+    return new Champion(data.name, data.baseAD, data.adGrowth);
+}
+
+// Draven Spinning Axe data
+// Bonus Physical Damage: 40 / 45 / 50 / 55 / 60 (+ 75 / 85 / 95 / 105 / 115% bonus AD)
+export const SPINNING_AXE = {
+    baseDamage: [40, 45, 50, 55, 60], // Q levels 1-5
+    bonusAdScaling: [0.75, 0.85, 0.95, 1.05, 1.15], // Q levels 1-5
+};
+
+/**
+ * Calculate Q level from champion level when maxing Q first.
+ * Standard skill order: Q at 1, W at 2, E at 3, Q at 4, Q at 5, R at 6, Q at 7, secondary at 8, Q at 9
+ * @param champLevel - Champion level (1-18)
+ * @returns Q ability level (1-5)
+ */
+export function getQRankFromChampLevel(champLevel: number): number {
+    if (champLevel >= 9) return 5;
+    if (champLevel >= 7) return 4;
+    if (champLevel >= 5) return 3;
+    if (champLevel >= 4) return 2;
+    return 1; // Levels 1-3
+}

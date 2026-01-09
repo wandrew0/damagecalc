@@ -3,7 +3,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import "../styles/CalculatorPage.css";
 
-import { Champion } from "../classes/Champion";
 import { Build } from "../classes/Build";
 import { Item } from "../classes/Item";
 
@@ -11,10 +10,13 @@ import BuildPanel from "../components/BuildPanel";
 import DamageChart from "../components/DamageChart";
 import Navigation from "../components/Navigation";
 import { decodeBuilds, decodeBuildsLegacy } from "../utils/encoder";
+import { getAbsoluteFocusAD, getGatheringStormAD } from "../classes/Calculator";
 import {
-    getAbsoluteFocusAD,
-    getGatheringStormAD,
-} from "../classes/Calculator";
+    ChampionId,
+    CHAMPIONS,
+    createChampion,
+    getQRankFromChampLevel,
+} from "../data/champions";
 
 function serializeBuilds(builds: Build[]) {
     return builds.map((b) => b.toJSON());
@@ -42,7 +44,8 @@ function CalculatorPage() {
     // Global state
     const [level, setLevel] = useState(1);
     const [builds, setBuilds] = useState<Build[]>([]);
-    const [champion] = useState(new Champion("Aphelios", 55, 2.3));
+    const [championId, setChampionId] = useState<ChampionId>("aphelios");
+    const [champion, setChampion] = useState(() => createChampion("aphelios"));
     const [armorRange, setArmorRange] = useState<[number, number]>([0, 200]);
     const [isClient, setIsClient] = useState(false);
     const [showMargin, setShowMargin] = useState(false);
@@ -54,6 +57,11 @@ function CalculatorPage() {
     const [targetBonusHP, setTargetBonusHP] = useState(0); // For LDR Giant Slayer calculation
     const [targetBonusHPRangeMode, setTargetBonusHPRangeMode] = useState(false); // Toggle for range mode
     const [targetBonusHPMax, setTargetBonusHPMax] = useState(1500); // Max value for range mode
+    // Draven Spinning Axe settings
+    const [dravenQEnabled, setDravenQEnabled] = useState(true); // Default on for Draven
+    const [dravenQLevel, setDravenQLevel] = useState(() => getQRankFromChampLevel(1)); // Linked to champion level by default
+    const [dravenQLevelLinked, setDravenQLevelLinked] = useState(true); // Whether Q level auto-updates with champion level
+    const [championPanelCompact, setChampionPanelCompact] = useState(false);
     const [urlImportBuilds, setUrlImportBuilds] = useState<Build[] | null>(null);
     const [urlImportChampionLevel, setUrlImportChampionLevel] = useState<number | null>(
         null
@@ -259,6 +267,11 @@ function CalculatorPage() {
                     targetBonusHP: savedTargetBonusHP,
                     targetBonusHPRangeMode: savedTargetBonusHPRangeMode,
                     targetBonusHPMax: savedTargetBonusHPMax,
+                    championId: savedChampionId,
+                    dravenQEnabled: savedDravenQEnabled,
+                    dravenQLevel: savedDravenQLevel,
+                    dravenQLevelLinked: savedDravenQLevelLinked,
+                    championPanelCompact: savedChampionPanelCompact,
                 } = JSON.parse(savedState);
                 // Only load level if we didn't auto-import from URL
                 if (level && !autoImportedRef.current) {
@@ -283,6 +296,22 @@ function CalculatorPage() {
                     setTargetBonusHPRangeMode(savedTargetBonusHPRangeMode);
                 if (savedTargetBonusHPMax !== undefined)
                     setTargetBonusHPMax(savedTargetBonusHPMax);
+                // Load champion
+                if (
+                    savedChampionId &&
+                    (savedChampionId === "aphelios" || savedChampionId === "draven")
+                ) {
+                    setChampionId(savedChampionId);
+                    setChampion(createChampion(savedChampionId));
+                }
+                // Load Draven Q settings
+                if (savedDravenQEnabled !== undefined)
+                    setDravenQEnabled(savedDravenQEnabled);
+                if (savedDravenQLevel !== undefined) setDravenQLevel(savedDravenQLevel);
+                if (savedDravenQLevelLinked !== undefined)
+                    setDravenQLevelLinked(savedDravenQLevelLinked);
+                if (savedChampionPanelCompact !== undefined)
+                    setChampionPanelCompact(savedChampionPanelCompact);
             } catch (error) {
                 console.error("Error loading saved state:", error);
             }
@@ -310,6 +339,11 @@ function CalculatorPage() {
                 targetBonusHP,
                 targetBonusHPRangeMode,
                 targetBonusHPMax,
+                championId,
+                dravenQEnabled,
+                dravenQLevel,
+                dravenQLevelLinked,
+                championPanelCompact,
             };
             localStorage.setItem("calculatorState", JSON.stringify(stateToSave));
         }
@@ -326,6 +360,11 @@ function CalculatorPage() {
         targetBonusHP,
         targetBonusHPRangeMode,
         targetBonusHPMax,
+        championId,
+        dravenQEnabled,
+        dravenQLevel,
+        dravenQLevelLinked,
+        championPanelCompact,
         isClient,
     ]);
 
@@ -333,6 +372,15 @@ function CalculatorPage() {
     function handleLevelChange(newLevel: number) {
         if (newLevel < 1 || newLevel > 18) return;
         setLevel(newLevel);
+        // Update Draven Q level if linked
+        if (dravenQLevelLinked) {
+            setDravenQLevel(getQRankFromChampLevel(newLevel));
+        }
+    }
+
+    function handleChampionChange(newChampionId: ChampionId) {
+        setChampionId(newChampionId);
+        setChampion(createChampion(newChampionId));
     }
 
     function handleResetAll() {
@@ -348,6 +396,12 @@ function CalculatorPage() {
         setTargetBonusHP(0);
         setTargetBonusHPRangeMode(false);
         setTargetBonusHPMax(1500);
+        setChampionId("aphelios");
+        setChampion(createChampion("aphelios"));
+        setDravenQEnabled(true);
+        setDravenQLevel(getQRankFromChampLevel(1)); // Reset to level 1 Q rank
+        setDravenQLevelLinked(true);
+        setChampionPanelCompact(false);
         localStorage.removeItem("calculatorState");
     }
 
@@ -388,7 +442,7 @@ function CalculatorPage() {
                 <div className="headerTop">
                     <div className="headerTitleRow">
                         <Navigation className="header-nav" />
-                        <h1>Aphelios Damage Calculator</h1>
+                        <h1>{CHAMPIONS[championId].name} Damage Calculator</h1>
                     </div>
                     <div className="headerActions">
                         <button className="reset-all-button" onClick={handleResetAll}>
@@ -401,45 +455,177 @@ function CalculatorPage() {
             <div className="mainContent">
                 {/* Left Column: Champion Settings + Build Panel */}
                 <div className="leftColumn">
-                    <div className="globalSettings">
-                        <label>
-                            Level:{" "}
-                            <div className="numberInputGroup">
-                                <button
-                                    type="button"
-                                    className="numberInputButton"
-                                    onClick={() =>
-                                        handleLevelChange(Math.max(1, level - 1))
-                                    }
-                                    aria-label="Decrease level"
+                    <div className={`globalSettings ${championPanelCompact ? "compact" : ""}`}>
+                        <div 
+                            className="championHeader"
+                            onClick={() => setChampionPanelCompact(!championPanelCompact)}
+                            title={championPanelCompact ? "Click to expand" : "Click to collapse"}
+                        >
+                            <div className="championSelector" onClick={(e) => e.stopPropagation()}>
+                                <select
+                                    value={championId}
+                                    onChange={(e) => handleChampionChange(e.target.value as ChampionId)}
+                                    className="championSelect"
                                 >
-                                    −
-                                </button>
-                                <input
-                                    type="number"
-                                    min={1}
-                                    max={18}
-                                    value={level}
-                                    onChange={(e) => handleLevelChange(+e.target.value)}
-                                    onFocus={(e) => e.target.select()}
-                                    className="numberInput"
-                                />
-                                <button
-                                    type="button"
-                                    className="numberInputButton"
-                                    onClick={() =>
-                                        handleLevelChange(Math.min(18, level + 1))
-                                    }
-                                    aria-label="Increase level"
-                                >
-                                    +
-                                </button>
+                                    <option value="aphelios">Aphelios</option>
+                                    <option value="draven">Draven</option>
+                                </select>
                             </div>
-                        </label>
-                        <div className="champ-stats">
-                            Base AD: {champion.getAD(level).toFixed(2)}
+                            {championPanelCompact && (
+                                <div className="compactControls" onClick={(e) => e.stopPropagation()}>
+                                    <label className="levelLabelCompact">
+                                        Lvl
+                                        <input
+                                            type="number"
+                                            min={1}
+                                            max={18}
+                                            value={level}
+                                            onChange={(e) => handleLevelChange(+e.target.value)}
+                                            onFocus={(e) => e.target.select()}
+                                            className="numberInputCompact"
+                                        />
+                                    </label>
+                                    {championId === "draven" && (
+                                        <label className="dravenCheckboxLabelCompact">
+                                            Axe
+                                            <input
+                                                type="checkbox"
+                                                checked={dravenQEnabled}
+                                                onChange={(e) => setDravenQEnabled(e.target.checked)}
+                                            />
+                                        </label>
+                                    )}
+                                    <label className="runeCheckboxLabelCompact">
+                                        AF
+                                        <input
+                                            type="checkbox"
+                                            checked={absoluteFocus}
+                                            onChange={(e) =>
+                                                setAbsoluteFocus(e.target.checked)
+                                            }
+                                        />
+                                    </label>
+                                    <label className="runeInputLabelCompact">
+                                        GS
+                                        <input
+                                            type="number"
+                                            step={10}
+                                            value={gatheringStormMinutes}
+                                            onChange={(e) => {
+                                                const value = Number(e.target.value) || 0;
+                                                setGatheringStormMinutes(value);
+                                            }}
+                                            onFocus={(e) => e.target.select()}
+                                            className="numberInputCompact"
+                                        />
+                                    </label>
+                                </div>
+                            )}
+                            <span className="compactIndicator">
+                                {championPanelCompact ? "▼" : "▲"}
+                            </span>
                         </div>
-                        <div className="runeSettings">
+                        {!championPanelCompact && (
+                            <div className="levelRow">
+                            <label className="levelLabel">
+                                Lvl
+                                <div className="numberInputGroup">
+                                    <button
+                                        type="button"
+                                        className="numberInputButton"
+                                        onClick={() =>
+                                            handleLevelChange(Math.max(1, level - 1))
+                                        }
+                                        aria-label="Decrease level"
+                                    >
+                                        −
+                                    </button>
+                                    <input
+                                        type="number"
+                                        min={1}
+                                        max={18}
+                                        value={level}
+                                        onChange={(e) =>
+                                            handleLevelChange(+e.target.value)
+                                        }
+                                        onFocus={(e) => e.target.select()}
+                                        className="numberInput"
+                                    />
+                                    <button
+                                        type="button"
+                                        className="numberInputButton"
+                                        onClick={() =>
+                                            handleLevelChange(Math.min(18, level + 1))
+                                        }
+                                        aria-label="Increase level"
+                                    >
+                                        +
+                                    </button>
+                                </div>
+                            </label>
+                            <span className="champ-stats">
+                                AD: {champion.getAD(level).toFixed(0)}
+                            </span>
+                            {/* Draven Spinning Axe settings - inline with level */}
+                            {championId === "draven" && (
+                                <>
+                                    <label className="dravenCheckboxLabel">
+                                        Axe
+                                        <input
+                                            type="checkbox"
+                                            checked={dravenQEnabled}
+                                            onChange={(e) =>
+                                                setDravenQEnabled(e.target.checked)
+                                            }
+                                        />
+                                    </label>
+                                    {dravenQEnabled && (
+                                        <>
+                                            <select
+                                                value={dravenQLevel}
+                                                onChange={(e) => {
+                                                    setDravenQLevel(
+                                                        Number(e.target.value)
+                                                    );
+                                                    setDravenQLevelLinked(false);
+                                                }}
+                                                className={`qLevelSelect ${
+                                                    dravenQLevelLinked ? "linked" : ""
+                                                }`}
+                                                disabled={dravenQLevelLinked}
+                                            >
+                                                {[1, 2, 3, 4, 5].map((lvl) => (
+                                                    <option key={lvl} value={lvl}>
+                                                        {lvl}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <button
+                                                type="button"
+                                                className={`linkToggle ${
+                                                    dravenQLevelLinked ? "linked" : ""
+                                                }`}
+                                                onClick={() => {
+                                                    const newLinked = !dravenQLevelLinked;
+                                                    setDravenQLevelLinked(newLinked);
+                                                    if (newLinked) {
+                                                        setDravenQLevel(
+                                                            getQRankFromChampLevel(level)
+                                                        );
+                                                    }
+                                                }}
+                                                title="Link Q level to champion level (max Q first)"
+                                            >
+                                                🔗
+                                            </button>
+                                        </>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                        )}
+                        {!championPanelCompact && (
+                            <div className="runeSettings">
                             <div className="runeRow">
                                 <label className="runeCheckboxLabel">
                                     Absolute Focus
@@ -527,6 +713,7 @@ function CalculatorPage() {
                                 </span>
                             </div>
                         </div>
+                        )}
                     </div>
                     <BuildPanel
                         builds={builds}
@@ -575,6 +762,10 @@ function CalculatorPage() {
                         targetBonusHPRangeMode={targetBonusHPRangeMode}
                         targetBonusHPMax={targetBonusHPMax}
                         disableAnimation={disableChartAnimation}
+                        dravenQ={{
+                            enabled: championId === "draven" && dravenQEnabled,
+                            qLevel: dravenQLevel,
+                        }}
                     />
 
                     <div className="globalSettings">
@@ -669,15 +860,23 @@ function CalculatorPage() {
                             <div className="targetBonusHPSingleLine">
                                 <span className="targetBonusHPTitle">
                                     Target HP
-                                    <span className="tooltipIcon" title="HP items typically give 300-400 HP each. Giant Slayer deals up to 15% bonus physical damage based on target's bonus HP (max at 1500).">
+                                    <span
+                                        className="tooltipIcon"
+                                        title="HP items typically give 300-400 HP each. Giant Slayer deals up to 15% bonus physical damage based on target's bonus HP (max at 1500)."
+                                    >
                                         ⓘ
                                     </span>
                                 </span>
-                                <label className="rangeModeCheckbox" onClick={(e) => e.stopPropagation()}>
+                                <label
+                                    className="rangeModeCheckbox"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
                                     <input
                                         type="checkbox"
                                         checked={targetBonusHPRangeMode}
-                                        onChange={(e) => setTargetBonusHPRangeMode(e.target.checked)}
+                                        onChange={(e) =>
+                                            setTargetBonusHPRangeMode(e.target.checked)
+                                        }
                                     />
                                     Range
                                 </label>
@@ -689,8 +888,13 @@ function CalculatorPage() {
                                             max={1500}
                                             value={targetBonusHP}
                                             onChange={(e) => {
-                                                const newMin = Math.max(0, Math.min(1500, Number(e.target.value)));
-                                                setTargetBonusHP(Math.min(newMin, targetBonusHPMax));
+                                                const newMin = Math.max(
+                                                    0,
+                                                    Math.min(1500, Number(e.target.value))
+                                                );
+                                                setTargetBonusHP(
+                                                    Math.min(newMin, targetBonusHPMax)
+                                                );
                                             }}
                                             onFocus={(e) => e.target.select()}
                                             className="targetBonusHPInput numberInput rangeInput"
@@ -704,7 +908,9 @@ function CalculatorPage() {
                                                 value={targetBonusHP}
                                                 onChange={(e) => {
                                                     const newMin = Number(e.target.value);
-                                                    setTargetBonusHP(Math.min(newMin, targetBonusHPMax));
+                                                    setTargetBonusHP(
+                                                        Math.min(newMin, targetBonusHPMax)
+                                                    );
                                                 }}
                                                 className="targetBonusHPSlider dualSlider"
                                             />
@@ -716,7 +922,9 @@ function CalculatorPage() {
                                                 value={targetBonusHPMax}
                                                 onChange={(e) => {
                                                     const newMax = Number(e.target.value);
-                                                    setTargetBonusHPMax(Math.max(newMax, targetBonusHP));
+                                                    setTargetBonusHPMax(
+                                                        Math.max(newMax, targetBonusHP)
+                                                    );
                                                 }}
                                                 className="targetBonusHPSlider dualSlider"
                                             />
@@ -727,14 +935,29 @@ function CalculatorPage() {
                                             max={1500}
                                             value={targetBonusHPMax}
                                             onChange={(e) => {
-                                                const newMax = Math.max(0, Math.min(1500, Number(e.target.value)));
-                                                setTargetBonusHPMax(Math.max(newMax, targetBonusHP));
+                                                const newMax = Math.max(
+                                                    0,
+                                                    Math.min(1500, Number(e.target.value))
+                                                );
+                                                setTargetBonusHPMax(
+                                                    Math.max(newMax, targetBonusHP)
+                                                );
                                             }}
                                             onFocus={(e) => e.target.select()}
                                             className="targetBonusHPInput numberInput rangeInput"
                                         />
                                         <span className="giantSlayerBonus">
-                                            +{Math.min(15, (targetBonusHP / 1500) * 15).toFixed(1)}%–{Math.min(15, (targetBonusHPMax / 1500) * 15).toFixed(1)}%
+                                            +
+                                            {Math.min(
+                                                15,
+                                                (targetBonusHP / 1500) * 15
+                                            ).toFixed(1)}
+                                            %–
+                                            {Math.min(
+                                                15,
+                                                (targetBonusHPMax / 1500) * 15
+                                            ).toFixed(1)}
+                                            %
                                         </span>
                                     </>
                                 ) : (
@@ -745,7 +968,9 @@ function CalculatorPage() {
                                             max={1500}
                                             step={50}
                                             value={targetBonusHP}
-                                            onChange={(e) => setTargetBonusHP(Number(e.target.value))}
+                                            onChange={(e) =>
+                                                setTargetBonusHP(Number(e.target.value))
+                                            }
                                             className="targetBonusHPSlider singleSlider"
                                         />
                                         <input
@@ -753,12 +978,27 @@ function CalculatorPage() {
                                             min={0}
                                             max={1500}
                                             value={targetBonusHP}
-                                            onChange={(e) => setTargetBonusHP(Math.max(0, Math.min(1500, Number(e.target.value))))}
+                                            onChange={(e) =>
+                                                setTargetBonusHP(
+                                                    Math.max(
+                                                        0,
+                                                        Math.min(
+                                                            1500,
+                                                            Number(e.target.value)
+                                                        )
+                                                    )
+                                                )
+                                            }
                                             onFocus={(e) => e.target.select()}
                                             className="targetBonusHPInput numberInput rangeInput"
                                         />
                                         <span className="giantSlayerBonus">
-                                            +{Math.min(15, (targetBonusHP / 1500) * 15).toFixed(1)}%
+                                            +
+                                            {Math.min(
+                                                15,
+                                                (targetBonusHP / 1500) * 15
+                                            ).toFixed(1)}
+                                            %
                                         </span>
                                     </>
                                 )}

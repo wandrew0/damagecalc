@@ -2,6 +2,7 @@
 
 import { Champion } from "./Champion";
 import { Build } from "./Build";
+import { SPINNING_AXE } from "../data/champions";
 
 /**
  * TODO: Hexoptics C44 - Distance-based damage amplifier
@@ -13,6 +14,20 @@ import { Build } from "./Build";
  */
 
 /**
+ * Draven Spinning Axe bonus damage
+ * Formula: 40/45/50/55/60 (+ 75/85/95/105/115% bonus AD)
+ * @param qLevel - Spinning Axe level (1-5)
+ * @param bonusAD - Bonus AD from items/runes (not base AD)
+ * @returns Bonus physical damage added to auto attack
+ */
+export function getSpinningAxeDamage(qLevel: number, bonusAD: number): number {
+    if (qLevel < 1 || qLevel > 5) return 0;
+    const baseDamage = SPINNING_AXE.baseDamage[qLevel - 1];
+    const scaling = SPINNING_AXE.bonusAdScaling[qLevel - 1];
+    return baseDamage + scaling * bonusAD;
+}
+
+/**
  * Calculate Giant Slayer bonus damage multiplier from Lord Dominik's Regards
  * Formula: Up to 15% bonus physical damage based on target's bonus HP (max at 1500 bonus HP)
  * @param targetBonusHP - The target's bonus HP from items/runes/abilities
@@ -21,12 +36,12 @@ import { Build } from "./Build";
  */
 export function getGiantSlayerMultiplier(targetBonusHP: number, build: Build): number {
     // Check if build has Lord Dominik's Regards
-    const hasLDR = build.items.some(item => item.name === "Lord Dominik's Regards");
+    const hasLDR = build.items.some((item) => item.name === "Lord Dominik's Regards");
     if (!hasLDR) return 1.0;
-    
+
     // Calculate bonus: 0% at 0 bonus HP, up to 15% at 1500+ bonus HP
     const bonusPercent = Math.min(15, (targetBonusHP / 1500) * 15);
-    return 1 + (bonusPercent / 100);
+    return 1 + bonusPercent / 100;
 }
 
 /**
@@ -40,9 +55,11 @@ export function getAbsoluteFocusAD(champLevel: number): number {
 /**
  * Calculate Gathering Storm AD bonus
  * Formula: 2.4 * m * (m - 1) where m = 1 + (1 per 10 minutes of game time)
+ * Clamps minutes to 0 minimum
  */
 export function getGatheringStormAD(minutes: number): number {
-    const m = 1 + minutes / 10;
+    const clampedMinutes = Math.max(0, minutes);
+    const m = 1 + clampedMinutes / 10;
     return 2.4 * m * (m - 1);
 }
 
@@ -56,16 +73,9 @@ export function getTotalAD(
     absoluteFocus: boolean = false,
     gatheringStormMinutes: number = 0
 ): number {
-    let AD = champ.getAD(champLevel) + build.AD;
-
-    // Apply rune bonuses
-    if (absoluteFocus) {
-        AD += getAbsoluteFocusAD(champLevel);
-    }
-    if (gatheringStormMinutes > 0) {
-        AD += getGatheringStormAD(gatheringStormMinutes);
-    }
-
+    const AD =
+        champ.getAD(champLevel) +
+        getBonusAD(champLevel, build, absoluteFocus, gatheringStormMinutes);
     return AD;
 }
 
@@ -89,8 +99,36 @@ export function calculateMaxDamage(
 }
 
 /**
+ * Draven Q configuration for damage calculations
+ */
+export interface DravenQConfig {
+    enabled: boolean;
+    qLevel: number; // 1-5
+}
+
+/**
+ * Calculate bonus AD (AD from items/runes, not base champion AD)
+ */
+export function getBonusAD(
+    champLevel: number,
+    build: Build,
+    absoluteFocus: boolean = false,
+    gatheringStormMinutes: number = 0
+): number {
+    let bonusAD = build.AD; // Item AD
+    if (absoluteFocus) {
+        bonusAD += getAbsoluteFocusAD(champLevel);
+    }
+    if (gatheringStormMinutes > 0) {
+        bonusAD += getGatheringStormAD(gatheringStormMinutes);
+    }
+    return bonusAD;
+}
+
+/**
  * Simplified physical auto-attack formula:
  * Damage = AD * [(1 - critChance) + critChance * critDamageModifier] * (100 / (100 + armor)) * giantSlayer
+ * For Draven with Spinning Axe: adds flat bonus damage that also crits
  */
 export function calculateSingleAutoDamage(
     champ: Champion,
@@ -99,17 +137,44 @@ export function calculateSingleAutoDamage(
     build: Build,
     absoluteFocus: boolean = false,
     gatheringStormMinutes: number = 0,
-    targetBonusHP: number = 0
+    targetBonusHP: number = 0,
+    dravenQ: DravenQConfig = { enabled: false, qLevel: 1 }
 ): number {
     const crit = build.critChance;
     const AD = getTotalAD(champ, champLevel, build, absoluteFocus, gatheringStormMinutes);
     const giantSlayerMultiplier = getGiantSlayerMultiplier(targetBonusHP, build);
 
-    targetArmor *= 1 - build.armorPenetration;
-    targetArmor -= build.lethality;
-    const armorModifier = 100 / (100 + Math.max(0, targetArmor));
+    let effectiveArmor = targetArmor * (1 - build.armorPenetration) - build.lethality;
+    effectiveArmor = Math.max(0, effectiveArmor);
+    const armorModifier = 100 / (100 + effectiveArmor);
 
-    return AD * (1 - crit + crit * build.critDamageModifier) * armorModifier * giantSlayerMultiplier;
+    // Base auto attack damage (with crit averaging)
+    let damage =
+        AD *
+        (1 - crit + crit * build.critDamageModifier) *
+        armorModifier *
+        giantSlayerMultiplier;
+
+    // Add Draven Spinning Axe damage if enabled
+    // Spinning Axe can crit, so it also uses the crit averaging formula
+    if (dravenQ.enabled && dravenQ.qLevel >= 1) {
+        const bonusAD = getBonusAD(
+            champLevel,
+            build,
+            absoluteFocus,
+            gatheringStormMinutes
+        );
+        const spinningAxeBase = getSpinningAxeDamage(dravenQ.qLevel, bonusAD);
+        // Spinning Axe damage can crit, applying the same crit modifier
+        const spinningAxeDamage =
+            spinningAxeBase *
+            (1 - crit + crit * build.critDamageModifier) *
+            armorModifier *
+            giantSlayerMultiplier;
+        damage += spinningAxeDamage;
+    }
+
+    return damage;
 }
 
 export interface DamageRange {
@@ -143,9 +208,13 @@ export function calculateDamageWithMargin(
 
     // Base damage values (including Giant Slayer)
     const nonCritDamage = AD * armorModifier * giantSlayerMultiplier;
-    const critDamage = AD * build.critDamageModifier * armorModifier * giantSlayerMultiplier;
+    const critDamage =
+        AD * build.critDamageModifier * armorModifier * giantSlayerMultiplier;
     const expectedDamage =
-        AD * (1 - crit + crit * build.critDamageModifier) * armorModifier * giantSlayerMultiplier;
+        AD *
+        (1 - crit + crit * build.critDamageModifier) *
+        armorModifier *
+        giantSlayerMultiplier;
 
     // Calculate margin
     let lower = expectedDamage;

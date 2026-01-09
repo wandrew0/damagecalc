@@ -216,6 +216,145 @@ input[type="text"]:focus {
     border: 1px solid var(--border-light);
 }
 
+.globalSettings.compact {
+    padding: 0;
+}
+
+.globalSettings.compact .championHeader {
+    margin: 0;
+    padding: 12px 16px;
+    border-bottom: none;
+    border-radius: var(--radius);
+}
+
+.championHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border-light);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    margin: -16px -16px 12px -16px;
+    padding: 12px 16px;
+    border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.championHeader:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.compactControls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.levelLabelCompact {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.numberInputCompact {
+    width: 36px;
+    padding: 4px 6px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    background-color: var(--bg-primary);
+    font-size: 13px;
+    color: var(--text-primary);
+    text-align: center;
+    -moz-appearance: textfield;
+}
+
+.numberInputCompact::-webkit-outer-spin-button,
+.numberInputCompact::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.numberInputCompact:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.dravenCheckboxLabelCompact {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.dravenCheckboxLabelCompact input[type="checkbox"] {
+    cursor: pointer;
+    width: 14px;
+    height: 14px;
+    accent-color: var(--accent);
+}
+
+.runeCheckboxLabelCompact {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.runeCheckboxLabelCompact input[type="checkbox"] {
+    cursor: pointer;
+    width: 14px;
+    height: 14px;
+    accent-color: var(--accent);
+}
+
+.runeInputLabelCompact {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.runeInputLabelCompact input[type="number"] {
+    width: 36px;
+    padding: 4px 6px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    background-color: var(--bg-primary);
+    font-size: 13px;
+    color: var(--text-primary);
+    text-align: center;
+    -moz-appearance: textfield;
+}
+
+.runeInputLabelCompact input[type="number"]::-webkit-outer-spin-button,
+.runeInputLabelCompact input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.compactIndicator {
+    color: var(--text-tertiary);
+    font-size: 10px;
+    margin-left: auto;
+    transition: color 0.15s ease;
+}
+
+.championHeader:hover .compactIndicator {
+    color: var(--text-secondary);
+}
+
 .globalSettings label {
     display: inline-flex;
     align-items: center;
@@ -226,9 +365,145 @@ input[type="text"]:focus {
 }
 
 .champ-stats {
-    margin-left: 16px;
     color: var(--text-tertiary);
     font-size: 13px;
+}
+
+/* Level Row - contains level control and Draven Q */
+.levelRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.levelLabel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* Champion Selector */
+.championSelector {
+    flex-shrink: 0;
+}
+
+.championSelect {
+    padding: 6px 10px;
+    padding-right: 28px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    background-color: var(--bg-primary);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    transition: all 0.15s ease;
+    width: auto;
+    min-width: 100px;
+    max-width: 110px;
+}
+
+.championSelect:hover {
+    background-color: var(--bg-secondary);
+    border-color: var(--accent);
+}
+
+.championSelect:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.championSelect option {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    padding: 10px 12px;
+    border: none;
+    outline: none;
+    border-radius: 0;
+}
+
+.championSelect option:hover,
+.championSelect option:focus,
+.championSelect option:checked {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+/* Draven Spinning Axe Settings */
+
+.dravenCheckboxLabel {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.dravenCheckboxLabel input[type="checkbox"] {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+}
+
+.qLevelSelect {
+    padding: 4px 8px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    background: var(--bg-primary);
+    font-size: 13px;
+    cursor: pointer;
+    min-width: 50px;
+}
+
+.qLevelSelect:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.qLevelSelect.linked,
+.qLevelSelect:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--bg-tertiary);
+}
+
+.linkToggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 6px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    background: var(--bg-tertiary);
+    font-size: 12px;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: all 0.15s ease;
+}
+
+.linkToggle:hover {
+    opacity: 0.8;
+    border-color: var(--border-medium);
+}
+
+.linkToggle.linked {
+    opacity: 1;
+    background: var(--accent);
+    border-color: var(--accent);
 }
 
 /* Rune Settings */
@@ -1246,7 +1521,6 @@ input[type="text"]:focus {
     }
 
     .champ-stats {
-        margin-left: 8px;
         font-size: 13px;
     }
 
