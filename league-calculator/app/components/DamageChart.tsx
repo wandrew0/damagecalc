@@ -245,7 +245,7 @@ const DamageChart: React.FC<DamageChartProps> = ({
                         tension: 0,
                         fill: false,
                         hidden: false,
-                        order: index * 2,
+                        order: index * 3,
                     });
 
                     // Lower bound (min HP - lower damage, fills UP to upper bound)
@@ -261,7 +261,19 @@ const DamageChart: React.FC<DamageChartProps> = ({
                         tension: 0,
                         fill: upperDatasetIndex, // Fill to the upper bound dataset
                         hidden: false,
-                        order: index * 2 + 1,
+                        order: index * 3 + 1,
+                    });
+
+                    // Legend-only entry (invisible line, just for showing build name in legend)
+                    datasets.push({
+                        label: `${build.name}`,
+                        data: [], // Empty data - won't render anything
+                        borderColor: color,
+                        backgroundColor: color,
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        hidden: false,
+                        order: index * 3 + 2,
                     });
                 } else {
                     // Build doesn't have LDR - single line (Giant Slayer doesn't apply)
@@ -597,6 +609,10 @@ const DamageChart: React.FC<DamageChartProps> = ({
                                         !label.includes("(upper)") &&
                                         !label.includes("(lower)")
                                     );
+                                },
+                                itemSort: (a, b) => {
+                                    // Sort by damage value (y) descending
+                                    return (b.parsed?.y ?? 0) - (a.parsed?.y ?? 0);
                                 },
                             },
                         },
