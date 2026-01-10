@@ -9,6 +9,7 @@ import { ALL_ITEMS } from "../data/Items";
 import ShareModal from "./ShareModal";
 import ImportModal from "./ImportModal";
 import { getTotalAD } from "../classes/Calculator";
+import type { ChampionId } from "../data/champions";
 
 // sort items by AD and crit
 ALL_ITEMS.sort((a, b) => b.AD - a.AD || b.critChance - a.critChance);
@@ -23,46 +24,68 @@ interface BuildPanelProps {
     builds: Build[];
     setBuilds: React.Dispatch<React.SetStateAction<Build[]>>;
     championLevel?: number;
+    championId?: ChampionId;
     champion?: Champion;
     absoluteFocus?: boolean;
     gatheringStormMinutes?: number;
+    dravenQEnabled?: boolean;
+    dravenQLevel?: number;
+    dravenQLevelLinked?: boolean;
     urlImportBuilds?: Build[] | null;
     urlImportChampionLevel?: number | null;
     urlImportAbsoluteFocus?: boolean | null;
     urlImportGatheringStormMinutes?: number | null;
+    urlImportChampionId?: ChampionId | null;
+    urlImportDravenQEnabled?: boolean | null;
+    urlImportDravenQLevel?: number | null;
+    urlImportDravenQLevelLinked?: boolean | null;
     onUrlImportHandled?: () => void;
     onChampionLevelImport?: (level: number) => void;
     onAbsoluteFocusImport?: (absoluteFocus: boolean) => void;
     onGatheringStormImport?: (minutes: number) => void;
-    autoImported?: boolean;
+    onChampionImport?: (championId: ChampionId) => void;
+    onDravenQEnabledImport?: (enabled: boolean) => void;
+    onDravenQLevelImport?: (level: number) => void;
+    onDravenQLevelLinkedImport?: (linked: boolean) => void;
 }
 
 const BuildPanel: React.FC<BuildPanelProps> = ({
     builds,
     setBuilds,
     championLevel,
+    championId,
     champion,
     absoluteFocus = false,
     gatheringStormMinutes = 0,
+    dravenQEnabled,
+    dravenQLevel,
+    dravenQLevelLinked,
     urlImportBuilds,
     urlImportChampionLevel,
     urlImportAbsoluteFocus,
     urlImportGatheringStormMinutes,
+    urlImportChampionId,
+    urlImportDravenQEnabled,
+    urlImportDravenQLevel,
+    urlImportDravenQLevelLinked,
     onUrlImportHandled,
     onChampionLevelImport,
     onAbsoluteFocusImport,
     onGatheringStormImport,
-    autoImported,
+    onChampionImport,
+    onDravenQEnabledImport,
+    onDravenQLevelImport,
+    onDravenQLevelLinkedImport,
 }) => {
     const [showShareModal, setShowShareModal] = useState(false);
     const [showImportModal, setShowImportModal] = useState(false);
 
-    // Auto-open import modal if there are URL imports (but not if auto-imported)
+    // Auto-open import modal if there are URL imports
     React.useEffect(() => {
-        if (urlImportBuilds && urlImportBuilds.length > 0 && !autoImported) {
+        if (urlImportBuilds && urlImportBuilds.length > 0) {
             setShowImportModal(true);
         }
-    }, [urlImportBuilds, autoImported]);
+    }, [urlImportBuilds]);
 
     function onAddBuild() {
         const newBuild = new Build();
@@ -101,7 +124,11 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
         clearExisting: boolean,
         importedChampionLevel?: number,
         importedAbsoluteFocus?: boolean,
-        importedGatheringStormMinutes?: number
+        importedGatheringStormMinutes?: number,
+        importedChampionId?: ChampionId,
+        importedDravenQEnabled?: boolean,
+        importedDravenQLevel?: number,
+        importedDravenQLevelLinked?: boolean
     ) {
         if (clearExisting) {
             setBuilds(importedBuilds);
@@ -109,18 +136,39 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
             setBuilds([...builds, ...importedBuilds]);
         }
 
-        // Handle champion level import
+        if (importedChampionId && onChampionImport) {
+            onChampionImport(importedChampionId);
+        }
+
         if (importedChampionLevel !== undefined && onChampionLevelImport) {
             onChampionLevelImport(importedChampionLevel);
         }
 
-        // Handle rune imports
         if (importedAbsoluteFocus !== undefined && onAbsoluteFocusImport) {
             onAbsoluteFocusImport(importedAbsoluteFocus);
         }
 
         if (importedGatheringStormMinutes !== undefined && onGatheringStormImport) {
             onGatheringStormImport(importedGatheringStormMinutes);
+        }
+
+        if (importedChampionId === "draven") {
+            if (importedDravenQEnabled !== undefined && onDravenQEnabledImport) {
+                onDravenQEnabledImport(importedDravenQEnabled);
+            }
+            if (
+                importedDravenQLevelLinked !== undefined &&
+                onDravenQLevelLinkedImport
+            ) {
+                onDravenQLevelLinkedImport(importedDravenQLevelLinked);
+            }
+            if (
+                importedDravenQLevel !== undefined &&
+                onDravenQLevelImport &&
+                !importedDravenQLevelLinked
+            ) {
+                onDravenQLevelImport(importedDravenQLevel);
+            }
         }
     }
 
@@ -418,8 +466,12 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                 <ShareModal
                     builds={builds}
                     championLevel={championLevel}
+                    championId={championId}
                     absoluteFocus={absoluteFocus}
                     gatheringStormMinutes={gatheringStormMinutes}
+                    dravenQEnabled={dravenQEnabled}
+                    dravenQLevel={dravenQLevel}
+                    dravenQLevelLinked={dravenQLevelLinked}
                     onClose={() => setShowShareModal(false)}
                 />
             )}
@@ -444,6 +496,30 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                         urlImportGatheringStormMinutes !== null &&
                         urlImportGatheringStormMinutes !== undefined
                             ? urlImportGatheringStormMinutes
+                            : undefined
+                    }
+                    initialChampionId={
+                        urlImportChampionId !== null &&
+                        urlImportChampionId !== undefined
+                            ? urlImportChampionId
+                            : undefined
+                    }
+                    initialDravenQEnabled={
+                        urlImportDravenQEnabled !== null &&
+                        urlImportDravenQEnabled !== undefined
+                            ? urlImportDravenQEnabled
+                            : undefined
+                    }
+                    initialDravenQLevel={
+                        urlImportDravenQLevel !== null &&
+                        urlImportDravenQLevel !== undefined
+                            ? urlImportDravenQLevel
+                            : undefined
+                    }
+                    initialDravenQLevelLinked={
+                        urlImportDravenQLevelLinked !== null &&
+                        urlImportDravenQLevelLinked !== undefined
+                            ? urlImportDravenQLevelLinked
                             : undefined
                     }
                     isUrlImport={!!urlImportBuilds}

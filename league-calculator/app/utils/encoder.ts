@@ -3,6 +3,7 @@
 import { Build } from "@/app/classes/Build";
 import { Item } from "@/app/classes/Item";
 import { ALL_ITEMS } from "@/app/data/Items";
+import type { ChampionId } from "@/app/data/champions";
 
 // Cassiopeia-generated item IDs are required
 
@@ -36,6 +37,7 @@ interface CompressedBuild {
 
 interface CompressedData {
     v: number; // version
+    c?: ChampionId; // champion id
     l?: number; // champion level
     b: CompressedBuild[]; // builds
     r?: {
@@ -43,13 +45,23 @@ interface CompressedData {
         af?: boolean; // absolute focus
         gs?: number; // gathering storm minutes
     };
+    d?: {
+        // draven
+        e?: boolean; // spinning axe enabled
+        q?: number; // q level
+        l?: boolean; // q level linked
+    };
 }
 
 export function encodeBuilds(
     builds: Build[],
     championLevel?: number,
     absoluteFocus?: boolean,
-    gatheringStormMinutes?: number
+    gatheringStormMinutes?: number,
+    championId?: ChampionId,
+    dravenQEnabled?: boolean,
+    dravenQLevel?: number,
+    dravenQLevelLinked?: boolean
 ): string {
     const compressedBuilds: CompressedBuild[] = builds.map((build) => ({
         n: build.name,
@@ -59,6 +71,7 @@ export function encodeBuilds(
 
     const data: CompressedData = {
         v: 1, // version
+        c: championId,
         l: championLevel,
         b: compressedBuilds,
     };
@@ -74,6 +87,24 @@ export function encodeBuilds(
         }
     }
 
+    if (
+        championId === "draven" &&
+        (dravenQEnabled !== undefined ||
+            dravenQLevel !== undefined ||
+            dravenQLevelLinked !== undefined)
+    ) {
+        data.d = {};
+        if (dravenQEnabled !== undefined) {
+            data.d.e = dravenQEnabled;
+        }
+        if (dravenQLevel !== undefined) {
+            data.d.q = dravenQLevel;
+        }
+        if (dravenQLevelLinked !== undefined) {
+            data.d.l = dravenQLevelLinked;
+        }
+    }
+
     // Convert to compact JSON (no base64 encoding)
     return JSON.stringify(data);
 }
@@ -83,6 +114,10 @@ export function decodeBuilds(encoded: string): {
     championLevel?: number;
     absoluteFocus?: boolean;
     gatheringStormMinutes?: number;
+    championId?: ChampionId;
+    dravenQEnabled?: boolean;
+    dravenQLevel?: number;
+    dravenQLevelLinked?: boolean;
 } {
     try {
         const data: CompressedData = JSON.parse(encoded);
@@ -118,11 +153,29 @@ export function decodeBuilds(encoded: string): {
             return build;
         });
 
+        const championId =
+            data.c === "aphelios" || data.c === "draven" ? data.c : undefined;
+        const dravenData = championId === "draven" ? data.d : undefined;
+        const dravenQEnabled =
+            typeof dravenData?.e === "boolean" ? dravenData.e : undefined;
+        const dravenQLevel =
+            typeof dravenData?.q === "number" &&
+            dravenData.q >= 1 &&
+            dravenData.q <= 5
+                ? dravenData.q
+                : undefined;
+        const dravenQLevelLinked =
+            typeof dravenData?.l === "boolean" ? dravenData.l : undefined;
+
         return {
             builds,
+            championId,
             championLevel: data.l,
             absoluteFocus: data.r?.af,
             gatheringStormMinutes: data.r?.gs,
+            dravenQEnabled,
+            dravenQLevel,
+            dravenQLevelLinked,
         };
     } catch (error) {
         console.error("Error decoding builds:", error);

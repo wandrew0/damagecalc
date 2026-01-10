@@ -1345,6 +1345,58 @@ input[type="text"]:focus {
     justify-content: flex-end;
 }
 
+.modal-actions-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.modal-inline-button {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 12px;
+    padding: 0;
+    cursor: pointer;
+}
+
+.modal-inline-button:hover {
+    color: var(--accent-hover);
+}
+
+.modal-inline-button:disabled {
+    color: var(--text-tertiary);
+    cursor: default;
+}
+
+.modal-selection-count {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--text-tertiary);
+}
+
+.modal-section {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-light);
+}
+
+.modal-section--first {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+
+.modal-section-title {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: 8px;
+}
+
 .build-select-list {
     display: flex;
     flex-direction: column;
@@ -1396,8 +1448,21 @@ input[type="text"]:focus {
     transition: background-color 0.15s ease;
 }
 
+.option-disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.option-disabled input[type="checkbox"] {
+    cursor: not-allowed;
+}
+
 .clear-builds-checkbox:hover {
     background-color: var(--bg-secondary);
+}
+
+.clear-builds-checkbox.option-disabled:hover {
+    background-color: transparent;
 }
 
 .clear-builds-checkbox input[type="checkbox"] {
@@ -1410,6 +1475,12 @@ input[type="text"]:focus {
     font-size: 14px;
     color: var(--text-primary);
     user-select: none;
+}
+
+.modal-hint {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-tertiary);
 }
 
 .import-textarea {
@@ -1437,6 +1508,16 @@ input[type="text"]:focus {
     border: 1px solid rgba(220, 38, 38, 0.3);
     border-radius: var(--radius);
     color: #dc2626;
+    font-size: 13px;
+}
+
+.success-message {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background-color: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: var(--radius);
+    color: #15803d;
     font-size: 13px;
 }
 

@@ -72,11 +72,26 @@ function CalculatorPage() {
     const [urlImportGatheringStormMinutes, setUrlImportGatheringStormMinutes] = useState<
         number | null
     >(null);
+    const [urlImportChampionId, setUrlImportChampionId] = useState<ChampionId | null>(
+        null
+    );
+    const [urlImportDravenQEnabled, setUrlImportDravenQEnabled] = useState<
+        boolean | null
+    >(null);
+    const [urlImportDravenQLevel, setUrlImportDravenQLevel] = useState<
+        number | null
+    >(null);
+    const [urlImportDravenQLevelLinked, setUrlImportDravenQLevelLinked] = useState<
+        boolean | null
+    >(null);
     const [disableChartAnimation, setDisableChartAnimation] = useState(false);
     const autoImportedRef = useRef(false);
     const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const previousBuildsRef = useRef<Build[]>([]);
     const step = 1;
+    const effectiveDravenQLevel = dravenQLevelLinked
+        ? getQRankFromChampLevel(level)
+        : dravenQLevel;
 
     // Helper function to compare items by content, not order
     const compareItems = (items1: Item[], items2: Item[]): boolean => {
@@ -174,35 +189,25 @@ function CalculatorPage() {
     useEffect(() => {
         setIsClient(true);
 
-        // Helper function to check if user has existing builds
-        const hasExistingBuildsInStorage = (): boolean => {
-            const savedState = localStorage.getItem("calculatorState");
-            if (!savedState) return false;
-
-            try {
-                const { builds: savedBuilds } = JSON.parse(savedState);
-                return savedBuilds && savedBuilds.length > 0;
-            } catch (error) {
-                console.error("Error parsing saved state:", error);
-                return false;
-            }
-        };
-
         // Helper function to handle imported builds
         const handleImportedBuilds = (
             importedBuilds: Build[],
-            importedLevel?: number
+            importedLevel?: number,
+            importedAbsoluteFocus?: boolean,
+            importedGatheringStormMinutes?: number,
+            importedChampionId?: ChampionId,
+            importedDravenQEnabled?: boolean,
+            importedDravenQLevel?: number,
+            importedDravenQLevelLinked?: boolean
         ) => {
-            if (!hasExistingBuildsInStorage()) {
-                setBuilds(importedBuilds);
-                if (importedLevel) {
-                    setLevel(importedLevel);
-                }
-                autoImportedRef.current = true;
-            } else {
-                setUrlImportBuilds(importedBuilds);
-                setUrlImportChampionLevel(importedLevel || null);
-            }
+            setUrlImportBuilds(importedBuilds);
+            setUrlImportChampionLevel(importedLevel ?? null);
+            setUrlImportAbsoluteFocus(importedAbsoluteFocus ?? null);
+            setUrlImportGatheringStormMinutes(importedGatheringStormMinutes ?? null);
+            setUrlImportChampionId(importedChampionId ?? null);
+            setUrlImportDravenQEnabled(importedDravenQEnabled ?? null);
+            setUrlImportDravenQLevel(importedDravenQLevel ?? null);
+            setUrlImportDravenQLevelLinked(importedDravenQLevelLinked ?? null);
         };
 
         // Handle hash changes
@@ -219,16 +224,21 @@ function CalculatorPage() {
                             championLevel: importedLevel,
                             absoluteFocus: importedAbsoluteFocus,
                             gatheringStormMinutes: importedGatheringStormMinutes,
+                            championId: importedChampionId,
+                            dravenQEnabled: importedDravenQEnabled,
+                            dravenQLevel: importedDravenQLevel,
+                            dravenQLevelLinked: importedDravenQLevelLinked,
                         } = decodeBuilds(encoded);
-                        handleImportedBuilds(importedBuilds, importedLevel);
-                        if (importedAbsoluteFocus !== undefined) {
-                            setUrlImportAbsoluteFocus(importedAbsoluteFocus);
-                        }
-                        if (importedGatheringStormMinutes !== undefined) {
-                            setUrlImportGatheringStormMinutes(
-                                importedGatheringStormMinutes
-                            );
-                        }
+                        handleImportedBuilds(
+                            importedBuilds,
+                            importedLevel,
+                            importedAbsoluteFocus,
+                            importedGatheringStormMinutes,
+                            importedChampionId,
+                            importedDravenQEnabled,
+                            importedDravenQLevel,
+                            importedDravenQLevelLinked
+                        );
                     } catch (error) {
                         console.log("New format failed, trying legacy format:", error);
                         const { builds: importedBuilds, championLevel: importedLevel } =
@@ -341,7 +351,9 @@ function CalculatorPage() {
                 targetBonusHPMax,
                 championId,
                 dravenQEnabled,
-                dravenQLevel,
+                dravenQLevel: dravenQLevelLinked
+                    ? getQRankFromChampLevel(level)
+                    : dravenQLevel,
                 dravenQLevelLinked,
                 championPanelCompact,
             };
@@ -377,6 +389,16 @@ function CalculatorPage() {
             setDravenQLevel(getQRankFromChampLevel(newLevel));
         }
     }
+
+    useEffect(() => {
+        if (!dravenQLevelLinked) {
+            return;
+        }
+        const linkedLevel = getQRankFromChampLevel(level);
+        if (dravenQLevel !== linkedLevel) {
+            setDravenQLevel(linkedLevel);
+        }
+    }, [dravenQLevelLinked, level, dravenQLevel]);
 
     function handleChampionChange(newChampionId: ChampionId) {
         setChampionId(newChampionId);
@@ -582,7 +604,7 @@ function CalculatorPage() {
                                     {dravenQEnabled && (
                                         <>
                                             <select
-                                                value={dravenQLevel}
+                                                value={effectiveDravenQLevel}
                                                 onChange={(e) => {
                                                     setDravenQLevel(
                                                         Number(e.target.value)
@@ -719,28 +741,51 @@ function CalculatorPage() {
                         builds={builds}
                         setBuilds={setBuildsWithAnimationControl}
                         championLevel={level}
+                        championId={championId}
                         champion={champion}
                         absoluteFocus={absoluteFocus}
                         gatheringStormMinutes={gatheringStormMinutes}
+                        dravenQEnabled={dravenQEnabled}
+                        dravenQLevel={effectiveDravenQLevel}
+                        dravenQLevelLinked={dravenQLevelLinked}
                         urlImportBuilds={urlImportBuilds}
                         urlImportChampionLevel={urlImportChampionLevel}
                         urlImportAbsoluteFocus={urlImportAbsoluteFocus}
                         urlImportGatheringStormMinutes={urlImportGatheringStormMinutes}
-                        autoImported={autoImportedRef.current}
+                        urlImportChampionId={urlImportChampionId}
+                        urlImportDravenQEnabled={urlImportDravenQEnabled}
+                        urlImportDravenQLevel={urlImportDravenQLevel}
+                        urlImportDravenQLevelLinked={urlImportDravenQLevelLinked}
                         onUrlImportHandled={() => {
                             setUrlImportBuilds(null);
                             setUrlImportChampionLevel(null);
                             setUrlImportAbsoluteFocus(null);
                             setUrlImportGatheringStormMinutes(null);
+                            setUrlImportChampionId(null);
+                            setUrlImportDravenQEnabled(null);
+                            setUrlImportDravenQLevel(null);
+                            setUrlImportDravenQLevelLinked(null);
                         }}
                         onChampionLevelImport={(importedLevel) => {
-                            setLevel(importedLevel);
+                            handleLevelChange(importedLevel);
                         }}
                         onAbsoluteFocusImport={(importedAbsoluteFocus) => {
                             setAbsoluteFocus(importedAbsoluteFocus);
                         }}
                         onGatheringStormImport={(importedMinutes) => {
                             setGatheringStormMinutes(importedMinutes);
+                        }}
+                        onChampionImport={(importedChampionId) => {
+                            handleChampionChange(importedChampionId);
+                        }}
+                        onDravenQEnabledImport={(importedDravenQEnabled) => {
+                            setDravenQEnabled(importedDravenQEnabled);
+                        }}
+                        onDravenQLevelImport={(importedDravenQLevel) => {
+                            setDravenQLevel(importedDravenQLevel);
+                        }}
+                        onDravenQLevelLinkedImport={(importedLinked) => {
+                            setDravenQLevelLinked(importedLinked);
                         }}
                     />
                 </div>
@@ -764,7 +809,7 @@ function CalculatorPage() {
                         disableAnimation={disableChartAnimation}
                         dravenQ={{
                             enabled: championId === "draven" && dravenQEnabled,
-                            qLevel: dravenQLevel,
+                            qLevel: effectiveDravenQLevel,
                         }}
                     />
 
