@@ -1,0 +1,85 @@
+name: Update League data
+
+on:
+  schedule:
+    # Daily 01:00 UTC ≈ 17:00 PT (PST) or 18:00 PT (PDT).
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch-date gate (patch day + next 3 days)
+        id: gate
+        run: |
+          python - <<'PY'
+          import os
+          import datetime
+          from pathlib import Path
+
+          patch_dates = [
+              line.strip()
+              for line in Path(".github/patch-dates.txt").read_text().splitlines()
+              if line.strip()
+          ]
+          today = datetime.date.today()
+          window_days = 3
+          should_run = False
+          for date_str in patch_dates:
+              y, m, d = map(int, date_str.split("-"))
+              patch_date = datetime.date(y, m, d)
+              delta = (today - patch_date).days
+              if 0 <= delta <= window_days:
+                  should_run = True
+                  break
+          output_path = os.environ["GITHUB_OUTPUT"]
+          with open(output_path, "a", encoding="utf-8") as f:
+              f.write(f"run={str(should_run).lower()}\n")
+          print("Run in patch window:", should_run)
+          PY
+
+      - uses: actions/setup-python@v5
+        if: ${{ steps.gate.outputs.run == 'true' }}
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        if: ${{ steps.gate.outputs.run == 'true' }}
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install cassiopeia requests
+
+      - name: Run generator
+        if: ${{ steps.gate.outputs.run == 'true' }}
+        run: |
+          python createitems/cass.py | tee /tmp/gen.log
+
+      - name: Fail on warnings (do not commit bad data)
+        if: ${{ steps.gate.outputs.run == 'true' }}
+        run: |
+          python - <<'PY'
+          import sys
+          text = open("/tmp/gen.log", "r", encoding="utf-8").read()
+          if "Warning:" in text:
+              print("Warnings detected; aborting update.")
+              sys.exit(1)
+          PY
+
+      - name: Commit & push
+        if: ${{ steps.gate.outputs.run == 'true' }}
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "github-actions"
+            git config user.email "github-actions@github.com"
+            git add \
+              league-calculator/app/data/Items.ts \
+              league-calculator/app/data/item-ids.ts \
+              league-calculator/app/data/champions.ts \
+              league-calculator/app/data/runes.ts \
+              league-calculator/public/images/items
+            git commit -m "Update League data"
+            git push
+          fi

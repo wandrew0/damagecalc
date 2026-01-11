@@ -4,6 +4,8 @@
 
 The encoder now uses Cassiopeia's official League of Legends API to get accurate, up-to-date item IDs instead of hardcoded mappings. This ensures the system stays current with game patches and new items.
 
+Champion base AD + growth, Draven Q values, and rune constants are generated from CommunityDragon (CDragon) with Cassiopeia fallbacks.
+
 ## How It Works
 
 ### 1. **Cassiopeia Integration** (`createitems/cass.py`)
@@ -12,6 +14,15 @@ The encoder now uses Cassiopeia's official League of Legends API to get accurate
 -   Extracts official item IDs from the API
 -   Generates both JSON and TypeScript files with the mapping
 -   Only includes items that are available on Summoner's Rift (map ID 11)
+-   Generates `league-calculator/app/data/champions.ts` (base AD, AD growth, Draven Q)
+-   Generates `league-calculator/app/data/runes.ts` (Absolute Focus + Adaptive Force shard values)
+-   Normalizes item alias ordering for deterministic diffs
+
+### 1b. **CDragon Integration** (champions + runes)
+
+-   Champion stats from `.../game/data/characters/{champ}/{champ}.bin.json`
+-   Draven Q BaseDamage + ADScaling from `.../DravenSpinning`
+-   Rune constants parsed from `.../v1/perks.json` (text values)
 
 ### 2. **Fallback System** (`scripts/generate-item-ids.js`)
 
@@ -38,6 +49,9 @@ league-calculator/
 │   ├── item-ids.json              # JSON mapping (Cassiopeia)
 │   └── item-ids.ts                # TypeScript mapping
 └── app/
+    ├── data/
+    │   ├── champions.ts            # Auto-generated champion stats + Draven Q
+    │   └── runes.ts                # Auto-generated rune constants
     └── utils/
         └── encoder.ts              # Dynamic encoder with fallbacks
 ```
@@ -130,7 +144,3 @@ node scripts/generate-item-ids.js
 -   Test export/import functionality after updates
 
 This system ensures your League of Legends damage calculator stays current with the game while maintaining robust fallback mechanisms for reliability.
-
-
-
-

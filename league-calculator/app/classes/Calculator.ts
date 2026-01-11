@@ -3,6 +3,7 @@
 import { Champion } from "./Champion";
 import { Build } from "./Build";
 import { SPINNING_AXE } from "../data/champions";
+import { RUNE_DATA } from "../data/runes";
 
 /**
  * TODO: Hexoptics C44 - Distance-based damage amplifier
@@ -49,7 +50,9 @@ export function getGiantSlayerMultiplier(targetBonusHP: number, build: Build): n
  * Formula: 1.8 + 16.2 ÷ 17 × (level − 1), giving 1.8 AD at level 1 and 18 AD at level 18
  */
 export function getAbsoluteFocusAD(champLevel: number): number {
-    return 1.8 + (16.2 / 17) * (champLevel - 1);
+    const minAd = RUNE_DATA.absoluteFocus.minAd;
+    const maxAd = RUNE_DATA.absoluteFocus.maxAd;
+    return minAd + ((maxAd - minAd) / 17) * (champLevel - 1);
 }
 
 /**
@@ -68,7 +71,9 @@ export function getGatheringStormAD(minutes: number): number {
  */
 export function getAdShardBonus(adShardCount: number): number {
     const normalizedCount = Math.max(0, Math.min(2, Math.round(adShardCount)));
-    return normalizedCount * 5.4;
+    const adPerShard =
+        RUNE_DATA.adaptiveForce.amount * RUNE_DATA.adaptiveForce.adPerPoint;
+    return normalizedCount * adPerShard;
 }
 
 /**
