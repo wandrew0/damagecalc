@@ -44,6 +44,7 @@ interface CompressedData {
         // runes
         af?: boolean; // absolute focus
         gs?: number; // gathering storm minutes
+        ad?: number; // AD shard count
     };
     d?: {
         // draven
@@ -58,6 +59,7 @@ export function encodeBuilds(
     championLevel?: number,
     absoluteFocus?: boolean,
     gatheringStormMinutes?: number,
+    adShardCount?: number,
     championId?: ChampionId,
     dravenQEnabled?: boolean,
     dravenQLevel?: number,
@@ -77,13 +79,20 @@ export function encodeBuilds(
     };
 
     // Add rune data if provided
-    if (absoluteFocus !== undefined || gatheringStormMinutes !== undefined) {
+    if (
+        absoluteFocus !== undefined ||
+        gatheringStormMinutes !== undefined ||
+        adShardCount !== undefined
+    ) {
         data.r = {};
         if (absoluteFocus !== undefined) {
             data.r.af = absoluteFocus;
         }
         if (gatheringStormMinutes !== undefined) {
             data.r.gs = gatheringStormMinutes;
+        }
+        if (adShardCount !== undefined) {
+            data.r.ad = adShardCount;
         }
     }
 
@@ -114,6 +123,7 @@ export function decodeBuilds(encoded: string): {
     championLevel?: number;
     absoluteFocus?: boolean;
     gatheringStormMinutes?: number;
+    adShardCount?: number;
     championId?: ChampionId;
     dravenQEnabled?: boolean;
     dravenQLevel?: number;
@@ -156,6 +166,10 @@ export function decodeBuilds(encoded: string): {
         const championId =
             data.c === "aphelios" || data.c === "draven" ? data.c : undefined;
         const dravenData = championId === "draven" ? data.d : undefined;
+        const adShardCount =
+            typeof data.r?.ad === "number" && Number.isFinite(data.r.ad)
+                ? Math.max(0, Math.min(2, Math.round(data.r.ad)))
+                : undefined;
         const dravenQEnabled =
             typeof dravenData?.e === "boolean" ? dravenData.e : undefined;
         const dravenQLevel =
@@ -173,6 +187,7 @@ export function decodeBuilds(encoded: string): {
             championLevel: data.l,
             absoluteFocus: data.r?.af,
             gatheringStormMinutes: data.r?.gs,
+            adShardCount,
             dravenQEnabled,
             dravenQLevel,
             dravenQLevelLinked,

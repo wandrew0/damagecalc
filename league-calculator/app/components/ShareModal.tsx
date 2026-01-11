@@ -9,6 +9,7 @@ interface ShareModalProps {
     championLevel?: number;
     absoluteFocus?: boolean;
     gatheringStormMinutes?: number;
+    adShardCount?: number;
     championId?: ChampionId;
     dravenQEnabled?: boolean;
     dravenQLevel?: number;
@@ -48,6 +49,7 @@ const ShareModal: React.FC<ShareModalProps> = ({
     championLevel,
     absoluteFocus,
     gatheringStormMinutes,
+    adShardCount,
     championId,
     dravenQEnabled,
     dravenQLevel,
@@ -65,6 +67,9 @@ const ShareModal: React.FC<ShareModalProps> = ({
     );
     const [includeGatheringStorm, setIncludeGatheringStorm] = useState(
         gatheringStormMinutes !== undefined
+    );
+    const [includeAdShardCount, setIncludeAdShardCount] = useState(
+        adShardCount !== undefined
     );
     const [includeChampion, setIncludeChampion] = useState(championId !== undefined);
     const [includeDravenQEnabled, setIncludeDravenQEnabled] = useState(
@@ -85,6 +90,7 @@ const ShareModal: React.FC<ShareModalProps> = ({
     const canIncludeChampionLevel = championLevel !== undefined;
     const canIncludeAbsoluteFocus = absoluteFocus !== undefined;
     const canIncludeGatheringStorm = gatheringStormMinutes !== undefined;
+    const canIncludeAdShardCount = adShardCount !== undefined;
     const canIncludeChampion = championId !== undefined;
     const isDraven = championId === "draven";
     const canIncludeDravenQEnabled = isDraven && dravenQEnabled !== undefined;
@@ -135,6 +141,7 @@ const ShareModal: React.FC<ShareModalProps> = ({
             includeChampionLevel ? championLevel : undefined,
             includeAbsoluteFocus ? absoluteFocus : undefined,
             includeGatheringStorm ? gatheringStormMinutes : undefined,
+            includeAdShardCount ? adShardCount : undefined,
             includeChampion ? championId : undefined,
             canIncludeDravenSettings && includeDravenQEnabled
                 ? dravenQEnabled
@@ -252,6 +259,25 @@ const ShareModal: React.FC<ShareModalProps> = ({
                                 {canIncludeChampionLevel
                                     ? `Champion level (${championLevel})`
                                     : "Champion level unavailable"}
+                            </span>
+                        </label>
+                        <label
+                            className={`clear-builds-checkbox ${
+                                canIncludeAdShardCount ? "" : "option-disabled"
+                            }`}
+                        >
+                            <input
+                                type="checkbox"
+                                checked={canIncludeAdShardCount && includeAdShardCount}
+                                disabled={!canIncludeAdShardCount}
+                                onChange={(e) =>
+                                    setIncludeAdShardCount(e.target.checked)
+                                }
+                            />
+                            <span>
+                                {canIncludeAdShardCount
+                                    ? `AD shards (${adShardCount})`
+                                    : "AD shards unavailable"}
                             </span>
                         </label>
                         <label

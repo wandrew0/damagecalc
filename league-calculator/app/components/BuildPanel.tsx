@@ -28,6 +28,7 @@ interface BuildPanelProps {
     champion?: Champion;
     absoluteFocus?: boolean;
     gatheringStormMinutes?: number;
+    adShardCount?: number;
     dravenQEnabled?: boolean;
     dravenQLevel?: number;
     dravenQLevelLinked?: boolean;
@@ -35,6 +36,7 @@ interface BuildPanelProps {
     urlImportChampionLevel?: number | null;
     urlImportAbsoluteFocus?: boolean | null;
     urlImportGatheringStormMinutes?: number | null;
+    urlImportAdShardCount?: number | null;
     urlImportChampionId?: ChampionId | null;
     urlImportDravenQEnabled?: boolean | null;
     urlImportDravenQLevel?: number | null;
@@ -43,6 +45,7 @@ interface BuildPanelProps {
     onChampionLevelImport?: (level: number) => void;
     onAbsoluteFocusImport?: (absoluteFocus: boolean) => void;
     onGatheringStormImport?: (minutes: number) => void;
+    onAdShardCountImport?: (adShardCount: number) => void;
     onChampionImport?: (championId: ChampionId) => void;
     onDravenQEnabledImport?: (enabled: boolean) => void;
     onDravenQLevelImport?: (level: number) => void;
@@ -57,6 +60,7 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
     champion,
     absoluteFocus = false,
     gatheringStormMinutes = 0,
+    adShardCount = 0,
     dravenQEnabled,
     dravenQLevel,
     dravenQLevelLinked,
@@ -64,6 +68,7 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
     urlImportChampionLevel,
     urlImportAbsoluteFocus,
     urlImportGatheringStormMinutes,
+    urlImportAdShardCount,
     urlImportChampionId,
     urlImportDravenQEnabled,
     urlImportDravenQLevel,
@@ -72,6 +77,7 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
     onChampionLevelImport,
     onAbsoluteFocusImport,
     onGatheringStormImport,
+    onAdShardCountImport,
     onChampionImport,
     onDravenQEnabledImport,
     onDravenQLevelImport,
@@ -125,6 +131,7 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
         importedChampionLevel?: number,
         importedAbsoluteFocus?: boolean,
         importedGatheringStormMinutes?: number,
+        importedAdShardCount?: number,
         importedChampionId?: ChampionId,
         importedDravenQEnabled?: boolean,
         importedDravenQLevel?: number,
@@ -150,6 +157,10 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
 
         if (importedGatheringStormMinutes !== undefined && onGatheringStormImport) {
             onGatheringStormImport(importedGatheringStormMinutes);
+        }
+
+        if (importedAdShardCount !== undefined && onAdShardCountImport) {
+            onAdShardCountImport(importedAdShardCount);
         }
 
         if (importedChampionId === "draven") {
@@ -429,7 +440,8 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                                     championLevel,
                                     build,
                                     absoluteFocus,
-                                    gatheringStormMinutes
+                                    gatheringStormMinutes,
+                                    adShardCount
                                 ).toFixed(1)}
                             </p>
                         )}
@@ -469,6 +481,7 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                     championId={championId}
                     absoluteFocus={absoluteFocus}
                     gatheringStormMinutes={gatheringStormMinutes}
+                    adShardCount={adShardCount}
                     dravenQEnabled={dravenQEnabled}
                     dravenQLevel={dravenQLevel}
                     dravenQLevelLinked={dravenQLevelLinked}
@@ -496,6 +509,12 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                         urlImportGatheringStormMinutes !== null &&
                         urlImportGatheringStormMinutes !== undefined
                             ? urlImportGatheringStormMinutes
+                            : undefined
+                    }
+                    initialAdShardCount={
+                        urlImportAdShardCount !== null &&
+                        urlImportAdShardCount !== undefined
+                            ? urlImportAdShardCount
                             : undefined
                     }
                     initialChampionId={

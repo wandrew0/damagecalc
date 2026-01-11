@@ -64,6 +64,14 @@ export function getGatheringStormAD(minutes: number): number {
 }
 
 /**
+ * Calculate AD shard bonus from rune shards (0-2 shards).
+ */
+export function getAdShardBonus(adShardCount: number): number {
+    const normalizedCount = Math.max(0, Math.min(2, Math.round(adShardCount)));
+    return normalizedCount * 5.4;
+}
+
+/**
  * Calculate total AD including rune bonuses
  */
 export function getTotalAD(
@@ -71,11 +79,12 @@ export function getTotalAD(
     champLevel: number,
     build: Build,
     absoluteFocus: boolean = false,
-    gatheringStormMinutes: number = 0
+    gatheringStormMinutes: number = 0,
+    adShardCount: number = 0
 ): number {
     const AD =
         champ.getAD(champLevel) +
-        getBonusAD(champLevel, build, absoluteFocus, gatheringStormMinutes);
+        getBonusAD(champLevel, build, absoluteFocus, gatheringStormMinutes, adShardCount);
     return AD;
 }
 
@@ -89,9 +98,17 @@ export function calculateMaxDamage(
     build: Build,
     absoluteFocus: boolean = false,
     gatheringStormMinutes: number = 0,
+    adShardCount: number = 0,
     targetBonusHP: number = 0
 ): number {
-    const AD = getTotalAD(champ, champLevel, build, absoluteFocus, gatheringStormMinutes);
+    const AD = getTotalAD(
+        champ,
+        champLevel,
+        build,
+        absoluteFocus,
+        gatheringStormMinutes,
+        adShardCount
+    );
     const giantSlayerMultiplier = getGiantSlayerMultiplier(targetBonusHP, build);
     // At armor=0, armorModifier = 100/100 = 1
     // Maximum damage is crit damage with Giant Slayer
@@ -113,9 +130,11 @@ export function getBonusAD(
     champLevel: number,
     build: Build,
     absoluteFocus: boolean = false,
-    gatheringStormMinutes: number = 0
+    gatheringStormMinutes: number = 0,
+    adShardCount: number = 0
 ): number {
     let bonusAD = build.AD; // Item AD
+    bonusAD += getAdShardBonus(adShardCount);
     if (absoluteFocus) {
         bonusAD += getAbsoluteFocusAD(champLevel);
     }
@@ -137,11 +156,19 @@ export function calculateSingleAutoDamage(
     build: Build,
     absoluteFocus: boolean = false,
     gatheringStormMinutes: number = 0,
+    adShardCount: number = 0,
     targetBonusHP: number = 0,
     dravenQ: DravenQConfig = { enabled: false, qLevel: 1 }
 ): number {
     const crit = build.critChance;
-    const AD = getTotalAD(champ, champLevel, build, absoluteFocus, gatheringStormMinutes);
+    const AD = getTotalAD(
+        champ,
+        champLevel,
+        build,
+        absoluteFocus,
+        gatheringStormMinutes,
+        adShardCount
+    );
     const giantSlayerMultiplier = getGiantSlayerMultiplier(targetBonusHP, build);
 
     let effectiveArmor = targetArmor * (1 - build.armorPenetration) - build.lethality;
@@ -162,7 +189,8 @@ export function calculateSingleAutoDamage(
             champLevel,
             build,
             absoluteFocus,
-            gatheringStormMinutes
+            gatheringStormMinutes,
+            adShardCount
         );
         const spinningAxeBase = getSpinningAxeDamage(dravenQ.qLevel, bonusAD);
         // Spinning Axe damage can crit, applying the same crit modifier
@@ -196,10 +224,18 @@ export function calculateDamageWithMargin(
     numAutoAttacks: number = 1,
     absoluteFocus: boolean = false,
     gatheringStormMinutes: number = 0,
+    adShardCount: number = 0,
     targetBonusHP: number = 0
 ): DamageRange {
     const crit = build.critChance;
-    const AD = getTotalAD(champ, champLevel, build, absoluteFocus, gatheringStormMinutes);
+    const AD = getTotalAD(
+        champ,
+        champLevel,
+        build,
+        absoluteFocus,
+        gatheringStormMinutes,
+        adShardCount
+    );
     const giantSlayerMultiplier = getGiantSlayerMultiplier(targetBonusHP, build);
 
     let effectiveArmor = targetArmor * (1 - build.armorPenetration) - build.lethality;

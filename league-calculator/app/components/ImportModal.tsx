@@ -11,6 +11,7 @@ interface ImportModalProps {
         championLevel?: number,
         absoluteFocus?: boolean,
         gatheringStormMinutes?: number,
+        adShardCount?: number,
         championId?: ChampionId,
         dravenQEnabled?: boolean,
         dravenQLevel?: number,
@@ -21,6 +22,7 @@ interface ImportModalProps {
     initialChampionLevel?: number;
     initialAbsoluteFocus?: boolean;
     initialGatheringStormMinutes?: number;
+    initialAdShardCount?: number;
     initialChampionId?: ChampionId;
     initialDravenQEnabled?: boolean;
     initialDravenQLevel?: number;
@@ -58,6 +60,7 @@ const ImportModal: React.FC<ImportModalProps> = ({
     initialChampionLevel,
     initialAbsoluteFocus,
     initialGatheringStormMinutes,
+    initialAdShardCount,
     initialChampionId,
     initialDravenQEnabled,
     initialDravenQLevel,
@@ -91,6 +94,12 @@ const ImportModal: React.FC<ImportModalProps> = ({
     const [importGatheringStorm, setImportGatheringStorm] = useState(
         initialGatheringStormMinutes !== undefined
     );
+    const [importedAdShardCount, setImportedAdShardCount] = useState<
+        number | undefined
+    >(initialAdShardCount);
+    const [importAdShardCount, setImportAdShardCount] = useState(
+        initialAdShardCount !== undefined
+    );
     const [importedChampionId, setImportedChampionId] = useState<
         ChampionId | undefined
     >(initialChampionId);
@@ -122,6 +131,7 @@ const ImportModal: React.FC<ImportModalProps> = ({
     const hasImportedChampionLevel = importedChampionLevel !== undefined;
     const hasImportedAbsoluteFocus = importedAbsoluteFocus !== undefined;
     const hasImportedGatheringStorm = importedGatheringStormMinutes !== undefined;
+    const hasImportedAdShardCount = importedAdShardCount !== undefined;
     const hasImportedChampion = importedChampionId !== undefined;
     const isImportedDraven = importedChampionId === "draven";
     const hasImportedDravenQEnabled = importedDravenQEnabled !== undefined;
@@ -147,6 +157,7 @@ const ImportModal: React.FC<ImportModalProps> = ({
                     championLevel,
                     absoluteFocus,
                     gatheringStormMinutes,
+                    adShardCount,
                     championId,
                     dravenQEnabled,
                     dravenQLevel,
@@ -159,6 +170,8 @@ const ImportModal: React.FC<ImportModalProps> = ({
                 setImportChampionLevel(championLevel !== undefined);
                 setImportAbsoluteFocus(absoluteFocus !== undefined);
                 setImportGatheringStorm(gatheringStormMinutes !== undefined);
+                setImportedAdShardCount(adShardCount);
+                setImportAdShardCount(adShardCount !== undefined);
                 setImportedChampionId(championId);
                 setImportChampion(championId !== undefined);
                 if (championId === "draven") {
@@ -188,6 +201,8 @@ const ImportModal: React.FC<ImportModalProps> = ({
                 setImportChampionLevel(championLevel !== undefined);
                 setImportAbsoluteFocus(false);
                 setImportGatheringStorm(false);
+                setImportedAdShardCount(undefined);
+                setImportAdShardCount(false);
                 setImportedChampionId(undefined);
                 setImportChampion(false);
                 setImportedDravenQEnabled(undefined);
@@ -257,6 +272,7 @@ const ImportModal: React.FC<ImportModalProps> = ({
             importChampionLevel ? importedChampionLevel : undefined,
             importAbsoluteFocus ? importedAbsoluteFocus : undefined,
             importGatheringStorm ? importedGatheringStormMinutes : undefined,
+            importAdShardCount ? importedAdShardCount : undefined,
             importChampion ? importedChampionId : undefined,
             canImportDravenSettings && importDravenQEnabled
                 ? importedDravenQEnabled
@@ -498,6 +514,27 @@ const ImportModal: React.FC<ImportModalProps> = ({
                             </div>
                             <div className="modal-section">
                                 <div className="modal-section-title">Runes</div>
+                                <label
+                                    className={`clear-builds-checkbox ${
+                                        hasImportedAdShardCount ? "" : "option-disabled"
+                                    }`}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={
+                                            hasImportedAdShardCount && importAdShardCount
+                                        }
+                                        disabled={!hasImportedAdShardCount}
+                                        onChange={(e) =>
+                                            setImportAdShardCount(e.target.checked)
+                                        }
+                                    />
+                                    <span>
+                                        {hasImportedAdShardCount
+                                            ? `Import AD shards (${importedAdShardCount})`
+                                            : "AD shards not included"}
+                                    </span>
+                                </label>
                                 <label
                                     className={`clear-builds-checkbox ${
                                         hasImportedAbsoluteFocus ? "" : "option-disabled"

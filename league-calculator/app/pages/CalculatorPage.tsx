@@ -10,7 +10,11 @@ import BuildPanel from "../components/BuildPanel";
 import DamageChart from "../components/DamageChart";
 import Navigation from "../components/Navigation";
 import { decodeBuilds, decodeBuildsLegacy } from "../utils/encoder";
-import { getAbsoluteFocusAD, getGatheringStormAD } from "../classes/Calculator";
+import {
+    getAbsoluteFocusAD,
+    getGatheringStormAD,
+    getAdShardBonus,
+} from "../classes/Calculator";
 import {
     ChampionId,
     CHAMPIONS,
@@ -54,6 +58,7 @@ function CalculatorPage() {
     const [numAutoAttacks, setNumAutoAttacks] = useState(5); // Realistic for typical engagement
     const [absoluteFocus, setAbsoluteFocus] = useState(false);
     const [gatheringStormMinutes, setGatheringStormMinutes] = useState(0);
+    const [adShardCount, setAdShardCount] = useState(0);
     const [targetBonusHP, setTargetBonusHP] = useState(0); // For LDR Giant Slayer calculation
     const [targetBonusHPRangeMode, setTargetBonusHPRangeMode] = useState(false); // Toggle for range mode
     const [targetBonusHPMax, setTargetBonusHPMax] = useState(1500); // Max value for range mode
@@ -72,6 +77,9 @@ function CalculatorPage() {
     const [urlImportGatheringStormMinutes, setUrlImportGatheringStormMinutes] = useState<
         number | null
     >(null);
+    const [urlImportAdShardCount, setUrlImportAdShardCount] = useState<number | null>(
+        null
+    );
     const [urlImportChampionId, setUrlImportChampionId] = useState<ChampionId | null>(
         null
     );
@@ -92,6 +100,8 @@ function CalculatorPage() {
     const effectiveDravenQLevel = dravenQLevelLinked
         ? getQRankFromChampLevel(level)
         : dravenQLevel;
+    const clampAdShardCount = (value: number) =>
+        Math.max(0, Math.min(2, Math.round(value)));
 
     // Helper function to compare items by content, not order
     const compareItems = (items1: Item[], items2: Item[]): boolean => {
@@ -195,6 +205,7 @@ function CalculatorPage() {
             importedLevel?: number,
             importedAbsoluteFocus?: boolean,
             importedGatheringStormMinutes?: number,
+            importedAdShardCount?: number,
             importedChampionId?: ChampionId,
             importedDravenQEnabled?: boolean,
             importedDravenQLevel?: number,
@@ -204,6 +215,7 @@ function CalculatorPage() {
             setUrlImportChampionLevel(importedLevel ?? null);
             setUrlImportAbsoluteFocus(importedAbsoluteFocus ?? null);
             setUrlImportGatheringStormMinutes(importedGatheringStormMinutes ?? null);
+            setUrlImportAdShardCount(importedAdShardCount ?? null);
             setUrlImportChampionId(importedChampionId ?? null);
             setUrlImportDravenQEnabled(importedDravenQEnabled ?? null);
             setUrlImportDravenQLevel(importedDravenQLevel ?? null);
@@ -224,6 +236,7 @@ function CalculatorPage() {
                             championLevel: importedLevel,
                             absoluteFocus: importedAbsoluteFocus,
                             gatheringStormMinutes: importedGatheringStormMinutes,
+                            adShardCount: importedAdShardCount,
                             championId: importedChampionId,
                             dravenQEnabled: importedDravenQEnabled,
                             dravenQLevel: importedDravenQLevel,
@@ -234,6 +247,7 @@ function CalculatorPage() {
                             importedLevel,
                             importedAbsoluteFocus,
                             importedGatheringStormMinutes,
+                            importedAdShardCount,
                             importedChampionId,
                             importedDravenQEnabled,
                             importedDravenQLevel,
@@ -274,6 +288,7 @@ function CalculatorPage() {
                     numAutoAttacks: savedNumAutoAttacks,
                     absoluteFocus: savedAbsoluteFocus,
                     gatheringStormMinutes: savedGatheringStormMinutes,
+                    adShardCount: savedAdShardCount,
                     targetBonusHP: savedTargetBonusHP,
                     targetBonusHPRangeMode: savedTargetBonusHPRangeMode,
                     targetBonusHPMax: savedTargetBonusHPMax,
@@ -300,6 +315,8 @@ function CalculatorPage() {
                     setAbsoluteFocus(savedAbsoluteFocus);
                 if (savedGatheringStormMinutes !== undefined)
                     setGatheringStormMinutes(savedGatheringStormMinutes);
+                if (savedAdShardCount !== undefined)
+                    setAdShardCount(savedAdShardCount);
                 if (savedTargetBonusHP !== undefined)
                     setTargetBonusHP(savedTargetBonusHP);
                 if (savedTargetBonusHPRangeMode !== undefined)
@@ -346,6 +363,7 @@ function CalculatorPage() {
                 numAutoAttacks,
                 absoluteFocus,
                 gatheringStormMinutes,
+                adShardCount,
                 targetBonusHP,
                 targetBonusHPRangeMode,
                 targetBonusHPMax,
@@ -369,6 +387,7 @@ function CalculatorPage() {
         numAutoAttacks,
         absoluteFocus,
         gatheringStormMinutes,
+        adShardCount,
         targetBonusHP,
         targetBonusHPRangeMode,
         targetBonusHPMax,
@@ -415,6 +434,7 @@ function CalculatorPage() {
         setNumAutoAttacks(5);
         setAbsoluteFocus(false);
         setGatheringStormMinutes(0);
+        setAdShardCount(0);
         setTargetBonusHP(0);
         setTargetBonusHPRangeMode(false);
         setTargetBonusHPMax(1500);
@@ -525,6 +545,23 @@ function CalculatorPage() {
                                             onChange={(e) =>
                                                 setAbsoluteFocus(e.target.checked)
                                             }
+                                        />
+                                    </label>
+                                    <label className="runeInputLabelCompact">
+                                        AD
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            max={2}
+                                            step={1}
+                                            value={adShardCount}
+                                            onChange={(e) =>
+                                                setAdShardCount(
+                                                    clampAdShardCount(Number(e.target.value))
+                                                )
+                                            }
+                                            onFocus={(e) => e.target.select()}
+                                            className="numberInputCompact"
                                         />
                                     </label>
                                     <label className="runeInputLabelCompact">
@@ -649,6 +686,60 @@ function CalculatorPage() {
                         {!championPanelCompact && (
                             <div className="runeSettings">
                             <div className="runeRow">
+                                <label className="runeInputLabel">
+                                    AD Shards:
+                                    <div className="numberInputGroup">
+                                        <button
+                                            type="button"
+                                            className="numberInputButton"
+                                            onClick={() =>
+                                                setAdShardCount(
+                                                    Math.max(0, adShardCount - 1)
+                                                )
+                                            }
+                                            aria-label="Decrease AD shards"
+                                        >
+                                            −
+                                        </button>
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            max={2}
+                                            step={1}
+                                            value={adShardCount}
+                                            onChange={(e) =>
+                                                setAdShardCount(
+                                                    clampAdShardCount(Number(e.target.value))
+                                                )
+                                            }
+                                            onFocus={(e) => e.target.select()}
+                                            className="numberInput"
+                                        />
+                                        <button
+                                            type="button"
+                                            className="numberInputButton"
+                                            onClick={() =>
+                                                setAdShardCount(
+                                                    Math.min(2, adShardCount + 1)
+                                                )
+                                            }
+                                            aria-label="Increase AD shards"
+                                        >
+                                            +
+                                        </button>
+                                    </div>
+                                </label>
+                                <span
+                                    className={`runeADValue ${
+                                        adShardCount > 0
+                                            ? "runeADValueActive"
+                                            : "runeADValueInactive"
+                                    }`}
+                                >
+                                    (+{getAdShardBonus(adShardCount).toFixed(1)} AD)
+                                </span>
+                            </div>
+                            <div className="runeRow">
                                 <label className="runeCheckboxLabel">
                                     Absolute Focus
                                     <input
@@ -745,6 +836,7 @@ function CalculatorPage() {
                         champion={champion}
                         absoluteFocus={absoluteFocus}
                         gatheringStormMinutes={gatheringStormMinutes}
+                        adShardCount={adShardCount}
                         dravenQEnabled={dravenQEnabled}
                         dravenQLevel={effectiveDravenQLevel}
                         dravenQLevelLinked={dravenQLevelLinked}
@@ -752,6 +844,7 @@ function CalculatorPage() {
                         urlImportChampionLevel={urlImportChampionLevel}
                         urlImportAbsoluteFocus={urlImportAbsoluteFocus}
                         urlImportGatheringStormMinutes={urlImportGatheringStormMinutes}
+                        urlImportAdShardCount={urlImportAdShardCount}
                         urlImportChampionId={urlImportChampionId}
                         urlImportDravenQEnabled={urlImportDravenQEnabled}
                         urlImportDravenQLevel={urlImportDravenQLevel}
@@ -761,6 +854,7 @@ function CalculatorPage() {
                             setUrlImportChampionLevel(null);
                             setUrlImportAbsoluteFocus(null);
                             setUrlImportGatheringStormMinutes(null);
+                            setUrlImportAdShardCount(null);
                             setUrlImportChampionId(null);
                             setUrlImportDravenQEnabled(null);
                             setUrlImportDravenQLevel(null);
@@ -774,6 +868,9 @@ function CalculatorPage() {
                         }}
                         onGatheringStormImport={(importedMinutes) => {
                             setGatheringStormMinutes(importedMinutes);
+                        }}
+                        onAdShardCountImport={(importedAdShardCount) => {
+                            setAdShardCount(importedAdShardCount);
                         }}
                         onChampionImport={(importedChampionId) => {
                             handleChampionChange(importedChampionId);
@@ -803,6 +900,7 @@ function CalculatorPage() {
                         numAutoAttacks={numAutoAttacks}
                         absoluteFocus={absoluteFocus}
                         gatheringStormMinutes={gatheringStormMinutes}
+                        adShardCount={adShardCount}
                         targetBonusHP={targetBonusHP}
                         targetBonusHPRangeMode={targetBonusHPRangeMode}
                         targetBonusHPMax={targetBonusHPMax}

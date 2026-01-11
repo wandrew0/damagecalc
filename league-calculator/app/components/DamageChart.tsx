@@ -40,6 +40,7 @@ interface DamageChartProps {
     numAutoAttacks: number;
     absoluteFocus?: boolean;
     gatheringStormMinutes?: number;
+    adShardCount?: number;
     targetBonusHP?: number;
     targetBonusHPRangeMode?: boolean;
     targetBonusHPMax?: number;
@@ -59,6 +60,7 @@ const DamageChart: React.FC<DamageChartProps> = ({
     numAutoAttacks: _numAutoAttacks,
     absoluteFocus = false,
     gatheringStormMinutes = 0,
+    adShardCount = 0,
     targetBonusHP = 0,
     targetBonusHPRangeMode = false,
     targetBonusHPMax = 1500,
@@ -89,6 +91,7 @@ const DamageChart: React.FC<DamageChartProps> = ({
                 build,
                 absoluteFocus,
                 gatheringStormMinutes,
+                adShardCount,
                 hpForMaxCalc,
                 dravenQ
             );
@@ -97,7 +100,18 @@ const DamageChart: React.FC<DamageChartProps> = ({
 
         // Add 10% padding to the top
         return maxDamage * 1.1;
-    }, [builds, champion, level, absoluteFocus, gatheringStormMinutes, targetBonusHP, targetBonusHPRangeMode, targetBonusHPMax, dravenQ]);
+    }, [
+        builds,
+        champion,
+        level,
+        absoluteFocus,
+        gatheringStormMinutes,
+        adShardCount,
+        targetBonusHP,
+        targetBonusHPRangeMode,
+        targetBonusHPMax,
+        dravenQ,
+    ]);
 
     // Memoize calculations to ensure they recalculate when dependencies change
     const chartData = useMemo(() => {
@@ -112,6 +126,7 @@ const DamageChart: React.FC<DamageChartProps> = ({
                     build,
                     absoluteFocus,
                     gatheringStormMinutes,
+                    adShardCount,
                     bonusHP,
                     dravenQ
                 );
@@ -325,6 +340,7 @@ const DamageChart: React.FC<DamageChartProps> = ({
         // showMargin, stdDevMultiplier, numAutoAttacks - COMMENTED OUT: Crit variance margin of error feature
         absoluteFocus,
         gatheringStormMinutes,
+        adShardCount,
         targetBonusHP,
         targetBonusHPRangeMode,
         targetBonusHPMax,
@@ -395,6 +411,7 @@ const DamageChart: React.FC<DamageChartProps> = ({
                                             build,
                                             absoluteFocus,
                                             gatheringStormMinutes,
+                                            adShardCount,
                                             targetBonusHP,
                                             dravenQ
                                         );
@@ -405,6 +422,7 @@ const DamageChart: React.FC<DamageChartProps> = ({
                                             build,
                                             absoluteFocus,
                                             gatheringStormMinutes,
+                                            adShardCount,
                                             targetBonusHPMax,
                                             dravenQ
                                         );
@@ -424,6 +442,7 @@ const DamageChart: React.FC<DamageChartProps> = ({
                                             build,
                                             absoluteFocus,
                                             gatheringStormMinutes,
+                                            adShardCount,
                                             0, // No bonus HP effect without LDR
                                             dravenQ
                                         );
@@ -515,6 +534,7 @@ const DamageChart: React.FC<DamageChartProps> = ({
                                         build,
                                         absoluteFocus,
                                         gatheringStormMinutes,
+                                        adShardCount,
                                         targetBonusHP,
                                         dravenQ
                                     );
