@@ -100,6 +100,7 @@ function CalculatorPage() {
     const effectiveDravenQLevel = dravenQLevelLinked
         ? getQRankFromChampLevel(level)
         : dravenQLevel;
+    const isGatheringStormActive = gatheringStormMinutes >= 10;
     const clampAdShardCount = (value: number) =>
         Math.max(0, Math.min(2, Math.round(value)));
 
@@ -514,78 +515,77 @@ function CalculatorPage() {
                                 </select>
                             </div>
                             {championPanelCompact && (
-                                <div className="compactControls" onClick={(e) => e.stopPropagation()}>
-                                    <label className="levelLabelCompact">
-                                        Lvl
-                                        <input
-                                            type="number"
-                                            min={1}
-                                            max={18}
-                                            value={level}
-                                            onChange={(e) => handleLevelChange(+e.target.value)}
-                                            onFocus={(e) => e.target.select()}
-                                            className="numberInputCompact"
-                                        />
-                                    </label>
+                                <div className="compactSummary" onClick={(e) => e.stopPropagation()}>
+                                    <span className="compactSummaryItem compactSummaryToggle is-on">
+                                        <span className="compactSummaryLabel">Lvl</span>
+                                        <span className="compactSummaryValue">{level}</span>
+                                    </span>
+                                    <span
+                                        className={`compactSummaryItem compactSummaryToggle ${
+                                            adShardCount > 0 ? "is-on" : "is-off"
+                                        }`}
+                                    >
+                                        <span className="compactSummaryLabel">AD</span>
+                                        <span className="compactSummaryValue">
+                                            x{adShardCount}
+                                        </span>
+                                    </span>
+                                    <span
+                                        className={`compactSummaryItem compactSummaryToggle ${
+                                            absoluteFocus ? "is-on" : "is-off"
+                                        }`}
+                                    >
+                                        <span className="compactSummaryLabel">AF</span>
+                                        <span className="compactSummaryValue">
+                                            {absoluteFocus ? "On" : "Off"}
+                                        </span>
+                                    </span>
+                                    <span
+                                        className={`compactSummaryItem compactSummaryToggle ${
+                                            isGatheringStormActive ? "is-on" : "is-off"
+                                        }`}
+                                    >
+                                        <span className="compactSummaryLabel">GS</span>
+                                        <span className="compactSummaryValue">
+                                            {isGatheringStormActive
+                                                ? `${gatheringStormMinutes}m`
+                                                : "Off"}
+                                        </span>
+                                    </span>
                                     {championId === "draven" && (
-                                        <label className="dravenCheckboxLabelCompact">
-                                            Axe
-                                            <input
-                                                type="checkbox"
-                                                checked={dravenQEnabled}
-                                                onChange={(e) => setDravenQEnabled(e.target.checked)}
-                                            />
-                                        </label>
+                                        <span
+                                            className={`compactSummaryItem compactSummaryToggle ${
+                                                dravenQEnabled ? "is-on" : "is-off"
+                                            }`}
+                                        >
+                                            <span className="compactSummaryLabel">Axe</span>
+                                            <span className="compactSummaryValue compactSummaryValueAxe">
+                                                <span className="compactSummaryValueState">
+                                                    {dravenQEnabled ? "On" : "Off"}
+                                                </span>
+                                                <span className="compactSummaryValueDivider">
+                                                    ·
+                                                </span>
+                                                <span className="compactSummaryValueLevel">
+                                                    {effectiveDravenQLevel}
+                                                </span>
+                                            </span>
+                                        </span>
                                     )}
-                                    <label className="runeCheckboxLabelCompact">
-                                        AF
-                                        <input
-                                            type="checkbox"
-                                            checked={absoluteFocus}
-                                            onChange={(e) =>
-                                                setAbsoluteFocus(e.target.checked)
-                                            }
-                                        />
-                                    </label>
-                                    <label className="runeInputLabelCompact">
-                                        AD
-                                        <input
-                                            type="number"
-                                            min={0}
-                                            max={2}
-                                            step={1}
-                                            value={adShardCount}
-                                            onChange={(e) =>
-                                                setAdShardCount(
-                                                    clampAdShardCount(Number(e.target.value))
-                                                )
-                                            }
-                                            onFocus={(e) => e.target.select()}
-                                            className="numberInputCompact"
-                                        />
-                                    </label>
-                                    <label className="runeInputLabelCompact">
-                                        GS
-                                        <input
-                                            type="number"
-                                            step={10}
-                                            value={gatheringStormMinutes}
-                                            onChange={(e) => {
-                                                const value = Number(e.target.value) || 0;
-                                                setGatheringStormMinutes(value);
-                                            }}
-                                            onFocus={(e) => e.target.select()}
-                                            className="numberInputCompact"
-                                        />
-                                    </label>
                                 </div>
                             )}
                             <span className="compactIndicator">
                                 {championPanelCompact ? "▼" : "▲"}
                             </span>
                         </div>
-                        {!championPanelCompact && (
-                            <div className="levelRow">
+                        <div
+                            className={`championPanelBody ${
+                                championPanelCompact ? "is-collapsed" : ""
+                            }`}
+                            aria-hidden={championPanelCompact}
+                        >
+                            <div className="championPanelBodyInner">
+                                <div className="levelRow">
                             <label className="levelLabel">
                                 Lvl
                                 <div className="numberInputGroup">
@@ -682,8 +682,6 @@ function CalculatorPage() {
                                 </>
                             )}
                         </div>
-                        )}
-                        {!championPanelCompact && (
                             <div className="runeSettings">
                             <div className="runeRow">
                                 <label className="runeInputLabel">
@@ -826,7 +824,8 @@ function CalculatorPage() {
                                 </span>
                             </div>
                         </div>
-                        )}
+                            </div>
+                        </div>
                     </div>
                     <BuildPanel
                         builds={builds}

@@ -217,14 +217,15 @@ input[type="text"]:focus {
 }
 
 .globalSettings.compact {
-    padding: 0;
+    padding: 16px 16px 0;
 }
 
 .globalSettings.compact .championHeader {
-    margin: 0;
+    margin: -16px -16px 0 -16px;
     padding: 12px 16px;
     border-bottom: none;
     border-radius: var(--radius);
+    gap: 8px;
 }
 
 .championHeader {
@@ -235,14 +236,42 @@ input[type="text"]:focus {
     margin-bottom: 12px;
     border-bottom: 1px solid var(--border-light);
     cursor: pointer;
-    transition: background-color 0.15s ease;
+    transition: background-color 0.15s ease, margin-bottom 0.16s ease;
     margin: -16px -16px 12px -16px;
     padding: 12px 16px;
     border-radius: var(--radius) var(--radius) 0 0;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .championHeader:hover {
     background-color: var(--bg-tertiary);
+}
+
+.championPanelBody {
+    max-height: 520px;
+    opacity: 1;
+    visibility: visible;
+    overflow: hidden;
+    transition: max-height 160ms ease, opacity 160ms ease, visibility 0s linear 0s;
+}
+
+.championPanelBody.is-collapsed {
+    max-height: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: max-height 160ms ease, opacity 160ms ease, visibility 0s linear 160ms;
+}
+
+.championPanelBodyInner {
+    overflow: hidden;
+    opacity: 1;
+    transition: opacity 120ms ease 40ms;
+}
+
+.championPanelBody.is-collapsed .championPanelBodyInner {
+    opacity: 0;
+    transition-delay: 0ms;
 }
 
 .compactControls {
@@ -250,6 +279,80 @@ input[type="text"]:focus {
     align-items: center;
     gap: 12px;
 }
+
+.compactSummary {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.compactSummaryItem {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    line-height: 1;
+    white-space: nowrap;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.compactSummaryLabel {
+    color: var(--text-tertiary);
+    font-weight: 600;
+}
+
+.compactSummaryValue {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+}
+
+.compactSummaryToggle.is-on {
+    color: var(--text-primary);
+}
+
+.compactSummaryToggle.is-on .compactSummaryValue {
+    color: var(--text-primary);
+}
+
+.compactSummaryToggle.is-off {
+    opacity: 1;
+    color: var(--text-tertiary);
+}
+
+.compactSummaryToggle.is-off .compactSummaryValue {
+    color: var(--text-tertiary);
+}
+
+.compactSummaryValueAxe {
+    gap: 3px;
+}
+
+.compactSummaryValueState {
+    letter-spacing: 0.02em;
+}
+
+.compactSummaryValueDivider {
+    font-size: 11px;
+    color: currentColor;
+}
+
+.compactSummaryValueLevel {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+}
+
 
 .levelLabelCompact {
     display: flex;
