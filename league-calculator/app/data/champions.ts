@@ -21,7 +21,7 @@ export const CHAMPIONS: Record<ChampionId, ChampionData> = {
         id: "draven",
         name: "Draven",
         baseAD: 62,
-        adGrowth: 3,
+        adGrowth: 3.4,
     },
 };
 
