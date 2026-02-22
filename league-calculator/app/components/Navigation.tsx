@@ -23,6 +23,14 @@ export default function Navigation({ className }: NavigationProps) {
             >
                 Collector
             </Link>
+            <Link
+                href="/aphelios-cutoff"
+                className={`nav-link ${
+                    pathname === "/aphelios-cutoff" ? "active" : ""
+                }`}
+            >
+                Aphelios Cutoff
+            </Link>
         </nav>
     );
 }

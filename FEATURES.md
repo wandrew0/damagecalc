@@ -13,10 +13,13 @@ Note on live service data:
 - Entry route: `league-calculator/app/page.tsx` -> `league-calculator/app/pages/CalculatorPage.tsx`.
 - Collector analysis page: `league-calculator/app/collector/page.tsx` with
   `league-calculator/app/components/CollectorAnalysis.tsx`.
+- Aphelios cutoff page: `league-calculator/app/aphelios-cutoff/page.tsx` with
+  `league-calculator/app/components/ApheliosCutoffAnalysis.tsx`.
 - Shared UI: `league-calculator/app/components/Navigation.tsx`.
 - Styles: `league-calculator/app/styles/CalculatorPage.css`,
   `league-calculator/app/styles/CollectorAnalysis.css`,
-  `league-calculator/app/styles/CollectorPage.css`, and `league-calculator/app/globals.css`.
+  `league-calculator/app/styles/CollectorPage.css`,
+  `league-calculator/app/styles/ApheliosCutoffPage.css`, and `league-calculator/app/globals.css`.
 
 ## Core calculator features (CalculatorPage)
 File: `league-calculator/app/pages/CalculatorPage.tsx`
@@ -73,7 +76,28 @@ File: `league-calculator/app/data/champions.ts`
 - Champion list: `aphelios`, `draven`.
 - Base AD and growth data (auto-generated via CDragon in `createitems/cass.py`).
 - Draven Spinning Axe data: base damage and bonus AD scaling arrays (auto-generated via CDragon).
+- Aphelios passive stat totals by rank:
+  - `APHELIOS_PASSIVE.qBonusAdByRank`
+  - `APHELIOS_PASSIVE.eBonusLethalityByRank`
 - `getQRankFromChampLevel` defines the linked Q level mapping (manual).
+
+## Aphelios cutoff feature
+Files:
+- `league-calculator/app/aphelios-cutoff/page.tsx`
+- `league-calculator/app/components/ApheliosCutoffAnalysis.tsx`
+- `league-calculator/app/utils/apheliosCutoff.ts`
+- `league-calculator/app/data/enemyArmor.ts`
+
+State and persistence:
+- Local storage key: `aphelios_cutoff_state`.
+- Seeds defaults from `calculatorState` if cutoff state does not exist.
+
+Model summary:
+- Level-by-level own item timeline and enemy armor-item timeline.
+- Enemy armor profile (champion/profile base + growth) plus armor items.
+- Aphelios level-up constraints encoded by rank gates at levels `1/2/3/5/7/9`.
+- Recommends per-level `Q` (AD) vs `E` (Lethality) based on expected auto damage at that level.
+- Selected-level drilldown shows `+Q`, `+E`, and `Q-E` curves across an armor range.
 
 ## Rune constants (generated)
 File: `league-calculator/app/data/runes.ts`
