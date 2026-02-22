@@ -7,11 +7,12 @@ temporary variants introduced by Riot.
 """
 
 import cassiopeia as cass
+import json
 import requests
 import time
 import re
 from pathlib import Path
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 from typing import Optional, Tuple
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -40,21 +41,16 @@ CHAMPION_CONFIG = {
     },
     "draven": {
         "name": "Draven",
-        "q_spell_id": "DravenSpinning",
-        "q_spell_name": "Spinning Axe",
         "cdragon_key": "draven",
     },
-}
-
-DRAVEN_Q_FALLBACK = {
-    "base_damage": [40, 45, 50, 55, 60],
-    "bonus_ad_scaling": [0.75, 0.85, 0.95, 1.05, 1.15],
 }
 
 RUNE_FALLBACK = {
     "absolute_focus": {"min_ad": 1.8, "max_ad": 18},
     "adaptive_force": {"amount": 9, "ad_per_point": 0.6},
 }
+
+ITEM_OVERRIDES_PATH = SCRIPT_DIR / "item-overrides.json"
 
 def download_image(url, filename, max_retries=3):
     """Download an image from URL and save it to the images directory with retry logic"""
@@ -114,6 +110,8 @@ def _normalize_spell_values(values: Sequence[float], expected_len: int = 5) -> S
 def _normalize_aliases(aliases: Sequence[str]) -> list[str]:
     if not aliases:
         return []
+    if isinstance(aliases, (str, bytes)):
+        raise ValueError("Item aliases must be a list of strings, not a single string.")
     cleaned = [alias for alias in aliases if isinstance(alias, str) and alias.strip()]
     seen = set()
     unique = []
@@ -125,118 +123,127 @@ def _normalize_aliases(aliases: Sequence[str]) -> list[str]:
     unique.sort(key=lambda s: (s.lower(), s))
     return unique
 
-def _extract_effect_values(effect) -> Optional[Sequence[float]]:
-    for attr in ("values", "values_by_level", "levels"):
-        if hasattr(effect, attr):
-            values = getattr(effect, attr)
-            if isinstance(values, Iterable):
-                return list(values)
-    return None
+def _load_item_overrides(path: Path) -> dict[str, dict]:
+    """Load item overrides from JSON.
 
-def _pick_level_list(candidates: Iterable[Sequence[float]], expected_len: int = 5) -> Optional[Sequence[float]]:
-    for values in candidates:
-        if not values:
-            continue
-        if len(values) == expected_len and any(v is not None and v != 0 for v in values):
-            return list(values)
-    return None
+    Expected shape:
+    {
+      "items": {
+        "<item name>": {
+          "<field>": <direct value> | {
+            "mode": "set" | "replace" | "add" | "remove" | "patch",
+            ...
+          }
+        }
+      }
+    }
+    """
+    if not path.exists():
+        return {}
 
-def _get_spell_raw(spell) -> Optional[dict]:
-    for attr in ("raw", "raw_data", "_data"):
-        if hasattr(spell, attr):
-            raw = getattr(spell, attr)
-            if isinstance(raw, dict):
-                return raw
-    if hasattr(spell, "to_dict"):
-        raw = spell.to_dict()
-        if isinstance(raw, dict):
-            return raw
-    return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Invalid JSON in {path}: {exc}") from exc
 
-def _extract_base_damage(spell) -> Optional[Sequence[float]]:
-    effects = getattr(spell, "effects", None) or []
-    effect_lists = []
-    for effect in effects:
-        values = _extract_effect_values(effect)
-        if values:
-            effect_lists.append(values)
-    base = _pick_level_list(effect_lists)
-    if base:
-        return base
+    if not isinstance(payload, dict):
+        raise ValueError(f"{path} must contain a JSON object.")
 
-    effects_by_level = getattr(spell, "effects_by_level", None)
-    if effects_by_level:
-        if isinstance(effects_by_level, dict):
-            base = _pick_level_list(effects_by_level.values())
-        else:
-            base = _pick_level_list(effects_by_level)
-        if base:
-            return base
+    raw_items = payload.get("items", {})
+    if not isinstance(raw_items, dict):
+        raise ValueError(f"{path} must define an object at 'items'.")
 
-    raw = _get_spell_raw(spell)
-    if raw:
-        raw_effects = raw.get("effect") or raw.get("effects") or []
-        base = _pick_level_list(
-            [effect for effect in raw_effects if isinstance(effect, list)]
-        )
-        if base:
-            return base
-    return None
-
-def _extract_bonus_ad_scaling(spell) -> Optional[Sequence[float]]:
-    variable_sources = []
-    for attr in ("variables", "vars"):
-        if hasattr(spell, attr):
-            variables = getattr(spell, attr)
-            if variables:
-                variable_sources.append(variables)
-
-    raw = _get_spell_raw(spell)
-    if raw:
-        for key in ("variables", "vars"):
-            if key in raw:
-                variable_sources.append(raw[key])
-
-    for variables in variable_sources:
-        for var in variables:
-            link = getattr(var, "link", None) or (
-                var.get("link") if isinstance(var, dict) else None
+    for item_name, field_overrides in raw_items.items():
+        if not isinstance(field_overrides, dict):
+            raise ValueError(
+                f"{path} item '{item_name}' must map to an object of field overrides."
             )
-            if link and "bonusattackdamage" in str(link):
-                coeff = (
-                    getattr(var, "coefficients", None)
-                    or getattr(var, "coeff", None)
-                    or getattr(var, "values", None)
-                    or (var.get("coefficients") if isinstance(var, dict) else None)
-                    or (var.get("coeff") if isinstance(var, dict) else None)
-                    or (var.get("values") if isinstance(var, dict) else None)
-                )
-                if isinstance(coeff, Sequence) and len(coeff) == 5:
-                    return list(coeff)
-    return None
 
-def _get_draven_q_values(champion) -> Tuple[Sequence[float], Sequence[float]]:
-    q_spell = None
-    for spell in champion.spells:
-        if getattr(spell, "key", "") == CHAMPION_CONFIG["draven"]["q_spell_id"]:
-            q_spell = spell
-            break
-        if getattr(spell, "name", "") == CHAMPION_CONFIG["draven"]["q_spell_name"]:
-            q_spell = spell
-            break
-    if q_spell is None and champion.spells:
-        q_spell = champion.spells[0]
+    return raw_items
 
-    base_damage = _extract_base_damage(q_spell)
-    bonus_scaling = _extract_bonus_ad_scaling(q_spell)
+def _coerce_override_list(value, context: str) -> list:
+    if not isinstance(value, list):
+        raise ValueError(f"{context} must be a list.")
+    return list(value)
 
-    if not base_damage or not bonus_scaling:
-        print("Warning: Unable to extract Draven Q values from Cassiopeia data.")
-        print("Falling back to hardcoded Draven Q values.")
-        base_damage = DRAVEN_Q_FALLBACK["base_damage"]
-        bonus_scaling = DRAVEN_Q_FALLBACK["bonus_ad_scaling"]
+def _remove_list_values(values: Sequence, to_remove: Sequence) -> list:
+    if all(isinstance(v, str) for v in values) and all(
+        isinstance(v, str) for v in to_remove
+    ):
+        remove_set = {v.lower() for v in to_remove}
+        return [v for v in values if v.lower() not in remove_set]
+    return [v for v in values if v not in to_remove]
 
-    return base_damage, bonus_scaling
+def _apply_list_override(current_values: Sequence, override_spec: dict, context: str) -> list:
+    mode = override_spec.get("mode")
+    if mode not in {"replace", "add", "remove", "patch"}:
+        raise ValueError(
+            f"{context} has unsupported mode '{mode}'. "
+            "Use one of: replace, add, remove, patch."
+        )
+
+    updated = list(current_values)
+
+    if mode == "replace":
+        return _coerce_override_list(override_spec.get("values"), f"{context}.values")
+    if mode == "add":
+        updated.extend(
+            _coerce_override_list(override_spec.get("values"), f"{context}.values")
+        )
+        return updated
+    if mode == "remove":
+        return _remove_list_values(
+            updated,
+            _coerce_override_list(override_spec.get("values"), f"{context}.values"),
+        )
+
+    if "replace" in override_spec:
+        updated = _coerce_override_list(override_spec["replace"], f"{context}.replace")
+    if "add" in override_spec:
+        updated.extend(_coerce_override_list(override_spec["add"], f"{context}.add"))
+    if "remove" in override_spec:
+        updated = _remove_list_values(
+            updated, _coerce_override_list(override_spec["remove"], f"{context}.remove")
+        )
+    return updated
+
+def _apply_field_override(item_name: str, item_data: dict, field_name: str, override):
+    context = f"override {item_name}.{field_name}"
+
+    # Shorthand: direct value means full replacement for that field.
+    if not (isinstance(override, dict) and "mode" in override):
+        item_data[field_name] = override
+        return
+
+    mode = override["mode"]
+    if mode == "set":
+        if "value" not in override:
+            raise ValueError(f"{context} mode=set requires a 'value'.")
+        item_data[field_name] = override["value"]
+        return
+
+    current_value = item_data.get(field_name, [])
+    if not isinstance(current_value, list):
+        raise ValueError(
+            f"{context} mode={mode} can only be used on list fields. "
+            f"Current value is {type(current_value).__name__}."
+        )
+
+    item_data[field_name] = _apply_list_override(current_value, override, context)
+
+def _apply_item_overrides(item_defs: Sequence[dict], item_overrides: dict[str, dict]) -> None:
+    if not item_overrides:
+        return
+
+    item_lookup = {item["name"]: item for item in item_defs}
+    for item_name, field_overrides in item_overrides.items():
+        item = item_lookup.get(item_name)
+        if not item:
+            print(f"Warning: Item override skipped (unknown item): {item_name}")
+            continue
+
+        for field_name, override in field_overrides.items():
+            _apply_field_override(item_name, item, field_name, override)
 
 def _get_cdragon_champion_stats(champ_name: str, champ_key: str) -> Tuple[float, float]:
     url = CDRAGON_CHAR_URL.format(key=champ_key)
@@ -272,6 +279,116 @@ def _get_cdragon_draven_q(champ_name: str, champ_key: str) -> Tuple[Sequence[flo
     base_damage = _normalize_spell_values(base_vals, expected_len=5)
     bonus_scaling = _normalize_spell_values(scaling_vals, expected_len=5)
     return base_damage, bonus_scaling
+
+def _collect_cdragon_data_values(node, output: list[dict]) -> None:
+    if isinstance(node, dict):
+        mspell = node.get("mSpell")
+        if isinstance(mspell, dict):
+            data_values = mspell.get("DataValues")
+            if isinstance(data_values, list):
+                output.extend([entry for entry in data_values if isinstance(entry, dict)])
+
+        for key in ("DataValues", "mDataValues"):
+            values = node.get(key)
+            if isinstance(values, list):
+                output.extend([entry for entry in values if isinstance(entry, dict)])
+
+        for value in node.values():
+            _collect_cdragon_data_values(value, output)
+    elif isinstance(node, list):
+        for value in node:
+            _collect_cdragon_data_values(value, output)
+
+def _pick_aphelios_passive_values(
+    data_values: Sequence[dict],
+) -> Tuple[Optional[Sequence[float]], Optional[Sequence[float]]]:
+    def to_cumulative(values: Sequence[float]) -> list[float]:
+        total = 0.0
+        output: list[float] = []
+        for value in values:
+            total += float(value)
+            output.append(total)
+        return output
+
+    q_bonus = None
+    e_bonus = None
+
+    for entry in data_values:
+        name = str(entry.get("mName", "")).lower()
+        values = entry.get("mValues", [])
+        if not isinstance(values, Sequence) or isinstance(values, (str, bytes)):
+            continue
+
+        normalized = [float(v) for v in _normalize_spell_values(values, expected_len=6)]
+        if len(normalized) != 6:
+            continue
+
+        # CDragon currently exposes passive ranks as per-rank increments (e.g. ADPerRank/APPerRank).
+        # Convert those increment arrays into cumulative totals by rank to match calculator usage.
+        if "perrank" in name:
+            normalized = to_cumulative(normalized)
+
+        if (
+            q_bonus is None
+            and (
+                "attackdamage" in name
+                or "bonusad" in name
+                or "bonusattackdamage" in name
+                or "adperrank" in name
+            )
+            and "ratio" not in name
+        ):
+            q_bonus = normalized
+
+        if (
+            e_bonus is None
+            and (
+                "lethality" in name
+                or "armorpenetration" in name
+                or "apperrank" in name
+            )
+            and "ratio" not in name
+        ):
+            e_bonus = normalized
+
+        if q_bonus is not None and e_bonus is not None:
+            break
+
+    return q_bonus, e_bonus
+
+def _get_cdragon_aphelios_passive(
+    champ_name: str, champ_key: str
+) -> Tuple[Sequence[float], Sequence[float]]:
+    url = CDRAGON_CHAR_URL.format(key=champ_key)
+    data = _fetch_json(url)
+
+    passive_values = []
+    for key, node in data.items():
+        key_lower = key.lower()
+        if "apheliospassive" in key_lower or (
+            "aphelios" in key_lower and "passive" in key_lower
+        ):
+            _collect_cdragon_data_values(node, passive_values)
+
+    if not passive_values:
+        _collect_cdragon_data_values(data, passive_values)
+
+    q_bonus, e_bonus = _pick_aphelios_passive_values(passive_values)
+    if not q_bonus or not e_bonus:
+        available_names = sorted(
+            {
+                str(entry.get("mName", ""))
+                for entry in passive_values
+                if isinstance(entry, dict) and entry.get("mName")
+            }
+        )
+        preview = ", ".join(available_names[:20])
+        raise ValueError(
+            "Unable to locate Aphelios passive Q/E values in CDragon data. "
+            f"Found mName entries (first 20): {preview}"
+        )
+
+    return q_bonus, e_bonus
 
 def _extract_rune_data() -> dict:
     perks = _fetch_json(CDRAGON_PERKS_URL)
@@ -412,15 +529,19 @@ for item in all_items:
 # Convert dictionary to list
 item_defs = list(items_by_name.values())
 
-# not in ddragon for some reason
+item_overrides = _load_item_overrides(ITEM_OVERRIDES_PATH)
+if item_overrides:
+    print(f"Applying overrides for {len(item_overrides)} item(s) from {ITEM_OVERRIDES_PATH}")
+_apply_item_overrides(item_defs, item_overrides)
+
 for it in item_defs:
-    if it["name"] == "Lord Dominik's Regards":
-        it["aliases"].append("ldr")
-    elif it["name"] == "Yun Tal Wildarrows":
-        it["aliases"].append("yuntal")
-    elif it["name"] == "Mortal Reminder":
-        it["aliases"].append("lw")
-    it["aliases"] = _normalize_aliases(it["aliases"])
+    raw_aliases = it.get("aliases", [])
+    if not isinstance(raw_aliases, list):
+        raise ValueError(
+            f"Item '{it['name']}' has invalid aliases override. Expected list, got "
+            f"{type(raw_aliases).__name__}."
+        )
+    it["aliases"] = _normalize_aliases(raw_aliases)
 
 item_defs.sort(key=lambda it: it["name"].lower())
 
@@ -462,6 +583,8 @@ print("\nGenerating champion data...")
 champion_rows = []
 draven_q_base = None
 draven_q_scaling = None
+aphelios_q_bonus = None
+aphelios_e_bonus = None
 
 for champ_id, config in CHAMPION_CONFIG.items():
     base_ad = None
@@ -492,13 +615,20 @@ for champ_id, config in CHAMPION_CONFIG.items():
                 config["name"], config["cdragon_key"]
             )
         except Exception as e:
-            print(f"Warning: CDragon Draven Q extraction failed: {e}")
-            print("Warning: Using Cassiopeia fallback for Draven Q.")
-            champion = cass.get_champion(config["name"], region="NA")
-            draven_q_base, draven_q_scaling = _get_draven_q_values(champion)
+            raise ValueError(f"CDragon Draven Q extraction failed: {e}") from e
+
+    if champ_id == "aphelios":
+        try:
+            aphelios_q_bonus, aphelios_e_bonus = _get_cdragon_aphelios_passive(
+                config["name"], config["cdragon_key"]
+            )
+        except Exception as e:
+            raise ValueError(f"CDragon Aphelios passive extraction failed: {e}") from e
 
 if not draven_q_base or not draven_q_scaling:
     raise ValueError("Draven Q data missing; champions.ts not generated.")
+if not aphelios_q_bonus or not aphelios_e_bonus:
+    raise ValueError("Aphelios passive data missing; champions.ts not generated.")
 
 champions_output_path = REPO_ROOT / "league-calculator/app/data/champions.ts"
 with open(champions_output_path, "w", encoding="utf-8") as f:
@@ -528,6 +658,13 @@ with open(champions_output_path, "w", encoding="utf-8") as f:
     f.write("export const SPINNING_AXE = {\n")
     f.write(f"    baseDamage: [{_format_number_list(draven_q_base)}],\n")
     f.write(f"    bonusAdScaling: [{_format_number_list(draven_q_scaling)}],\n")
+    f.write("};\n\n")
+    f.write("// Aphelios passive stat totals by rank (CDragon)\n")
+    f.write("export const APHELIOS_PASSIVE = {\n")
+    f.write(f"    qBonusAdByRank: [{_format_number_list(aphelios_q_bonus)}],\n")
+    f.write(
+        f"    eBonusLethalityByRank: [{_format_number_list(aphelios_e_bonus)}],\n"
+    )
     f.write("};\n\n")
     f.write("/**\n")
     f.write(" * Calculate Q level from champion level when maxing Q first.\n")

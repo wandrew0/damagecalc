@@ -10,7 +10,7 @@ export const ALL_ITEMS = [
     new Item("Caulfield's Warhammer", 1050, 20, 0, false, 0, 0, [], "/images/items/Caulfields_Warhammer.png"),
     new Item("Chempunk Chainsword", 3100, 45, 0, false, 0, 0, [], "/images/items/Chempunk_Chainsword.png"),
     new Item("Cloak of Agility", 600, 0, 0.15, false, 0, 0, [], "/images/items/Cloak_of_Agility.png"),
-    new Item("Cull", 450, 7, 0, false, 0, 0, ['dblade'], "/images/items/Cull.png"),
+    new Item("Cull", 450, 7, 0, false, 0, 0, [], "/images/items/Cull.png"),
     new Item("Death's Dance", 3300, 60, 0, false, 0, 0, [], "/images/items/Deaths_Dance.png"),
     new Item("Doran's Blade", 450, 10, 0, false, 0, 0, ['dblade'], "/images/items/Dorans_Blade.png"),
     new Item("Eclipse", 2900, 60, 0, false, 0, 0, [], "/images/items/Eclipse.png"),

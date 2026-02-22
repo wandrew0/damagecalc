@@ -36,6 +36,12 @@ export const SPINNING_AXE = {
     bonusAdScaling: [0.75, 0.85, 0.95, 1.05, 1.15],
 };
 
+// Aphelios passive stat totals by rank (CDragon)
+export const APHELIOS_PASSIVE = {
+    qBonusAdByRank: [4, 8, 12, 16, 20, 24],
+    eBonusLethalityByRank: [4.5, 9, 13.5, 18, 22.5, 27],
+};
+
 /**
  * Calculate Q level from champion level when maxing Q first.
  * Standard skill order: Q at 1, W at 2, E at 3, Q at 4, Q at 5, R at 6, Q at 7, secondary at 8, Q at 9

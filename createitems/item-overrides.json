@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "items": {
+    "Cull": {
+      "aliases": {
+        "mode": "patch",
+        "remove": ["dblade"]
+      }
+    },
+    "Lord Dominik's Regards": {
+      "aliases": {
+        "mode": "patch",
+        "add": ["ldr"]
+      }
+    },
+    "Mortal Reminder": {
+      "aliases": {
+        "mode": "patch",
+        "add": ["lw"]
+      }
+    },
+    "Yun Tal Wildarrows": {
+      "aliases": {
+        "mode": "patch",
+        "add": ["yuntal"]
+      }
+    }
+  }
+}
