@@ -30,9 +30,9 @@
 }
 
 .cutoff-card-policy-table {
-    width: max-content;
+    width: 100%;
     max-width: 100%;
-    align-self: center;
+    align-self: stretch;
 }
 
 .cutoff-card h3 {
@@ -1004,32 +1004,223 @@
     font-size: 13px;
 }
 
-.recommendations-table-policy {
-    width: max-content;
+.policy-comparison-layout {
+    --policy-row-height: 40px;
+    --policy-caption-height: 18px;
+    display: grid;
+    grid-template-columns: minmax(208px, 1fr) minmax(0, auto) minmax(208px, 1fr);
+    gap: 14px;
+    align-items: start;
+}
+
+.policy-triad-wrap {
     min-width: 0;
-    table-layout: fixed;
+    overflow-x: auto;
 }
 
-.recommendations-table-policy col.policy-col-level {
-    width: 70px;
+.policy-triad-caption,
+.policy-pick-rail-caption {
+    height: var(--policy-caption-height);
+    margin: 0 0 6px;
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
 }
 
-.recommendations-table-policy col.policy-col-pick {
-    width: 165px;
+.policy-triad-caption {
+    justify-content: center;
 }
 
-.recommendations-table-policy col.policy-col-diff {
-    width: 248px;
+.policy-pick-rail-caption {
+    justify-content: center;
 }
 
-.recommendations-table th.policy-pick-head,
-.recommendations-table td.policy-pick-cell {
+.policy-triad {
+    --policy-level-col: 70px;
+    --policy-pick-col: 172px;
+    --policy-diff-col: 248px;
+    width: max-content;
+    min-width: calc(
+        var(--policy-level-col) + (2 * var(--policy-pick-col)) + var(--policy-diff-col)
+    );
+}
+
+.policy-triad-head,
+.policy-triad-row {
+    display: grid;
+    grid-template-columns:
+        calc(var(--policy-level-col) + var(--policy-pick-col))
+        var(--policy-diff-col)
+        var(--policy-pick-col);
+    align-items: center;
+    min-height: var(--policy-row-height);
+}
+
+.policy-triad-head {
+    border-bottom: 1px solid var(--border-light);
+}
+
+.policy-triad-head-left,
+.policy-triad-cell-left {
+    display: grid;
+    grid-template-columns: var(--policy-level-col) var(--policy-pick-col);
+    align-items: center;
+}
+
+.policy-triad-head-right,
+.policy-triad-cell-right,
+.policy-triad-head-diff,
+.policy-triad-cell-diff {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.policy-triad-head-left,
+.policy-triad-head-diff,
+.policy-triad-head-right,
+.policy-triad-cell-left,
+.policy-triad-cell-diff,
+.policy-triad-cell-right {
+    height: 100%;
+    padding: 0 10px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.policy-triad-row {
+    border-bottom: 1px solid var(--border-light);
+    cursor: pointer;
+}
+
+.policy-triad-row:hover {
+    background: var(--bg-secondary);
+}
+
+.policy-triad-row:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+}
+
+.policy-level-head,
+.policy-pick-head {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.policy-level-cell {
+    text-align: left;
+}
+
+.policy-pick-cell {
     text-align: center;
 }
 
-.recommendations-table th.policy-level-head,
-.recommendations-table td.policy-level-cell {
-    text-align: left;
+.policy-triad-cell-left {
+    border-left: 3px solid transparent;
+    padding-left: 7px;
+}
+
+.policy-triad-row.selected-row .policy-triad-cell-left {
+    border-left-color: var(--accent);
+}
+
+.policy-pick-rail {
+    min-width: 0;
+}
+
+.policy-pick-rail-head,
+.policy-pick-rail-row {
+    display: grid;
+    grid-template-columns: 58px repeat(3, minmax(0, 1fr));
+    align-items: center;
+    min-height: var(--policy-row-height);
+}
+
+.policy-pick-rail-head {
+    border-bottom: 1px solid var(--border-light);
+}
+
+.policy-pick-rail-level-head,
+.policy-pick-rail-choice-head {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.policy-pick-rail-level-head {
+    padding-left: 10px;
+}
+
+.policy-pick-rail-choice-head {
+    text-align: center;
+}
+
+.policy-pick-rail-row {
+    border-bottom: 1px solid var(--border-light);
+    cursor: pointer;
+}
+
+.policy-pick-rail-row:hover {
+    background: var(--bg-secondary);
+}
+
+.policy-pick-rail-row:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+}
+
+.policy-pick-rail-row.diff-level {
+    background: rgba(100, 116, 139, 0.06);
+}
+
+.policy-pick-rail-row.selected-row {
+    background: var(--bg-secondary);
+}
+
+.policy-pick-rail-level {
+    border-left: 3px solid transparent;
+    padding-left: 7px;
+    font-variant-numeric: tabular-nums;
+}
+
+.policy-pick-rail-row.selected-row .policy-pick-rail-level {
+    border-left-color: var(--accent);
+}
+
+.policy-pick-rail-choice {
+    width: 24px;
+    height: 24px;
+    margin: 0 auto;
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: transparent;
+    line-height: 1;
+}
+
+.policy-pick-rail-choice.active.choice-q {
+    color: orange;
+    border-color: rgba(255, 165, 0, 0.45);
+    background: rgba(255, 165, 0, 0.1);
+}
+
+.policy-pick-rail-choice.active.choice-w {
+    color: #7a6d1b;
+    border-color: rgba(122, 109, 27, 0.45);
+    background: rgba(245, 238, 153, 0.55);
+}
+
+.policy-pick-rail-choice.active.choice-e {
+    color: tomato;
+    border-color: rgba(255, 99, 71, 0.45);
+    background: rgba(255, 99, 71, 0.12);
 }
 
 .recommendations-table th,
@@ -1096,14 +1287,9 @@
     border-left-color: #7c3aed;
 }
 
-.recommendations-table td.policy-diff-cell {
+.policy-diff-cell {
     font-weight: 600;
     text-align: center;
-}
-
-.recommendations-table th.policy-diff-head {
-    text-align: center !important;
-    white-space: nowrap;
 }
 
 .policy-diff-direction-head {
@@ -1316,6 +1502,25 @@
 
 .cutoff-select__menu-portal {
     z-index: 1300 !important;
+}
+
+@media (max-width: 1520px) {
+    .policy-comparison-layout {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .policy-triad-wrap {
+        order: 1;
+    }
+
+    .policy-pick-rail-left {
+        order: 2;
+    }
+
+    .policy-pick-rail-right {
+        order: 3;
+    }
 }
 
 @media (max-width: 1280px) {

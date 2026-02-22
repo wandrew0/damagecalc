@@ -102,6 +102,16 @@ interface HelpHintProps {
     description: string;
 }
 
+type PassiveChoice = "Q" | "W" | "E";
+
+interface PolicyComparisonRow {
+    level: number;
+    greedyPick: PassiveChoice;
+    averageBestPick: PassiveChoice;
+    flatDamageDiff: number;
+    percentDamageDiff: number | null;
+}
+
 const CUTOFF_STORAGE_KEY = "aphelios_cutoff_state";
 const CALCULATOR_STORAGE_KEY = "calculatorState";
 const DEFAULT_ENEMY_PROFILE = ENEMY_ARMOR_PROFILES[0]?.id ?? "adc";
@@ -662,45 +672,6 @@ export default function ApheliosCutoffAnalysis() {
         ]
     );
 
-    const greedyLevelGuideRows = useMemo(() => {
-        const picksByChoice: Record<"Q" | "W" | "E", number[]> = {
-            Q: [],
-            W: [],
-            E: [],
-        };
-
-        recommendations.forEach((entry) => {
-            picksByChoice[entry.choice].push(entry.level);
-        });
-
-        return [
-            { key: "Q" as const, label: "AD", levels: picksByChoice.Q },
-            { key: "W" as const, label: "AS", levels: picksByChoice.W },
-            { key: "E" as const, label: "Lethality", levels: picksByChoice.E },
-        ];
-    }, [recommendations]);
-
-    const globalLevelGuideRows = useMemo(() => {
-        const picksByChoice: Record<"Q" | "W" | "E", number[]> = {
-            Q: [],
-            W: [],
-            E: [],
-        };
-
-        globalOptimalPath.choicesByLevel.forEach((choice, index) => {
-            const level = index + 1;
-            if (choice === "Q" || choice === "W" || choice === "E") {
-                picksByChoice[choice].push(level);
-            }
-        });
-
-        return [
-            { key: "Q" as const, label: "AD", levels: picksByChoice.Q },
-            { key: "W" as const, label: "AS", levels: picksByChoice.W },
-            { key: "E" as const, label: "Lethality", levels: picksByChoice.E },
-        ];
-    }, [globalOptimalPath]);
-
     const globalDiffLevels = useMemo(() => {
         const levels: number[] = [];
         recommendations.forEach((entry, index) => {
@@ -711,8 +682,9 @@ export default function ApheliosCutoffAnalysis() {
         });
         return levels;
     }, [recommendations, globalOptimalPath]);
+    const globalDiffLevelSet = useMemo(() => new Set(globalDiffLevels), [globalDiffLevels]);
 
-    const policyComparisonRows = useMemo(
+    const policyComparisonRows = useMemo<PolicyComparisonRow[]>(
         () =>
             recommendations.map((entry, index) => {
                 const greedyDamage = greedyDamageByLevel[index] ?? 0;
@@ -726,9 +698,10 @@ export default function ApheliosCutoffAnalysis() {
 
                 return {
                     level: entry.level,
-                    greedyPick: entry.choice,
+                    greedyPick: entry.choice as PassiveChoice,
                     averageBestPick:
-                        globalOptimalPath.choicesByLevel[index] ?? entry.choice,
+                        ((globalOptimalPath.choicesByLevel[index] as PassiveChoice | null) ??
+                            entry.choice) as PassiveChoice,
                     flatDamageDiff,
                     percentDamageDiff,
                 };
@@ -1080,79 +1053,69 @@ export default function ApheliosCutoffAnalysis() {
         return !areItemListsEqual(current, previous);
     };
 
-    const renderLevelGuide = (
-        rows: Array<{ key: "Q" | "W" | "E"; label: string; levels: number[] }>,
-        highlightedLevels: number[] = []
-    ): React.ReactNode => {
-        const highlightedLevelSet = new Set(highlightedLevels);
-        return (
-            <div className="cutoff-level-guide">
-                <div className="cutoff-level-guide-scroll">
-                    <div className="cutoff-level-guide-grid-wrap">
-                        <div className="cutoff-level-guide-bands" aria-hidden="true">
-                            {highlightedLevels.map((level) => (
-                                <span
-                                    key={`guide-band-${level}`}
-                                    className="cutoff-level-guide-band"
-                                    style={
-                                        {
-                                            "--guide-band-index": level,
-                                        } as React.CSSProperties
-                                    }
-                                />
-                            ))}
-                        </div>
-                        <div className="cutoff-level-guide-grid">
-                            <div className="cutoff-level-guide-corner">Stat</div>
-                            {Array.from({ length: 18 }, (_, index) => {
-                                const level = index + 1;
-                                const isDiffLevel = highlightedLevelSet.has(level);
+    const CHOICE_ORDER: PassiveChoice[] = ["Q", "W", "E"];
+
+    const getChoiceColorClass = (choice: PassiveChoice): string => {
+        if (choice === "Q") return "choice-q";
+        if (choice === "E") return "choice-e";
+        return "choice-w";
+    };
+
+    const renderPolicyPickRail = (
+        title: string,
+        side: "left" | "right",
+        pickKey: "greedyPick" | "averageBestPick"
+    ): React.ReactNode => (
+        <div className={`policy-pick-rail policy-pick-rail-${side}`}>
+            <div className="policy-pick-rail-caption">{title}</div>
+            <div className="policy-pick-rail-head">
+                <span className="policy-pick-rail-level-head">Lv</span>
+                <span className="policy-pick-rail-choice-head">Q</span>
+                <span className="policy-pick-rail-choice-head">W</span>
+                <span className="policy-pick-rail-choice-head">E</span>
+            </div>
+            <div className="policy-pick-rail-rows">
+                {policyComparisonRows.map((entry) => {
+                    const selected = isDrilldownOpen && selectedLevel === entry.level;
+                    const pick = entry[pickKey];
+                    return (
+                        <div
+                            key={`${side}-rail-${entry.level}`}
+                            role="button"
+                            aria-label={`Open level ${entry.level} details`}
+                            tabIndex={0}
+                            className={`policy-pick-rail-row ${selected ? "selected-row" : ""} ${
+                                globalDiffLevelSet.has(entry.level) ? "diff-level" : ""
+                            }`}
+                            onClick={() => openDrilldownForLevel(entry.level)}
+                            onKeyDown={(event) => {
+                                if (event.key !== "Enter" && event.key !== " ") return;
+                                event.preventDefault();
+                                openDrilldownForLevel(entry.level);
+                            }}
+                        >
+                            <span className="policy-pick-rail-level">{entry.level}</span>
+                            {CHOICE_ORDER.map((choice) => {
+                                const isActive = pick === choice;
                                 return (
-                                    <div
-                                        key={`guide-col-${level}`}
-                                        className={`cutoff-level-guide-col ${
-                                            isDiffLevel ? "diff-level" : ""
+                                    <span
+                                        key={`${side}-${entry.level}-${choice}`}
+                                        className={`policy-pick-rail-choice ${
+                                            isActive
+                                                ? `active ${getChoiceColorClass(choice)}`
+                                                : ""
                                         }`}
                                     >
-                                        {level}
-                                    </div>
-                                );
-                            })}
-                            {rows.map((row) => {
-                                const rowLevels = new Set(row.levels);
-                                return (
-                                    <React.Fragment key={row.key}>
-                                        <div
-                                            className={`cutoff-level-guide-row-label cutoff-level-guide-row-label-${row.key.toLowerCase()}`}
-                                        >
-                                            <span className="cutoff-level-guide-row-key">{row.key}</span>
-                                            <span>{row.label}</span>
-                                        </div>
-                                        {Array.from({ length: 18 }, (_, index) => {
-                                            const level = index + 1;
-                                            const active = rowLevels.has(level);
-                                            return (
-                                                <div
-                                                    key={`${row.key}-${level}`}
-                                                    className={`cutoff-level-guide-cell ${
-                                                        active
-                                                            ? `active active-${row.key.toLowerCase()}`
-                                                            : ""
-                                                    }`}
-                                                >
-                                                    {active ? level : ""}
-                                                </div>
-                                            );
-                                        })}
-                                    </React.Fragment>
+                                        {isActive ? choice : ""}
+                                    </span>
                                 );
                             })}
                         </div>
-                    </div>
-                </div>
+                    );
+                })}
             </div>
-        );
-    };
+        </div>
+    );
 
     const renderTimelinePreviewItems = (
         items: string[],
@@ -1729,36 +1692,21 @@ export default function ApheliosCutoffAnalysis() {
                         </p>
                     </div>
                 </div>
-                <div className="path-guides-grid">
-                    <div className="path-guide-panel">
-                        <h4>Greedy Path by Level</h4>
-                        {renderLevelGuide(greedyLevelGuideRows, globalDiffLevels)}
-                    </div>
-                    <div className="path-guide-panel">
-                        <h4>Average Best Path by Level</h4>
-                        {renderLevelGuide(globalLevelGuideRows, globalDiffLevels)}
-                    </div>
-                </div>
-                <p className="muted-note highlight-legend-note">
-                    Highlighted level columns show where Average Best differs from Greedy.
-                </p>
             </section>
 
             <section className="cutoff-card cutoff-card-policy-table">
                 <h3>Greedy vs Average Best by Level</h3>
-                <div className="recommendations-table-wrap">
-                    <table className="recommendations-table recommendations-table-clickable recommendations-table-policy">
-                        <colgroup>
-                            <col className="policy-col-level" />
-                            <col className="policy-col-pick" />
-                            <col className="policy-col-diff" />
-                            <col className="policy-col-pick" />
-                        </colgroup>
-                        <thead>
-                            <tr>
-                                <th className="policy-level-head">Level</th>
-                                <th className="policy-pick-head">Greedy Pick</th>
-                                <th className="policy-diff-head">
+                <div className="policy-comparison-layout">
+                    {renderPolicyPickRail("Greedy Path Grid", "left", "greedyPick")}
+                    <div className="policy-triad-wrap">
+                        <div className="policy-triad">
+                            <div className="policy-triad-caption">Greedy vs Average Best</div>
+                            <div className="policy-triad-head">
+                                <div className="policy-triad-head-left">
+                                    <span className="policy-level-head">Level</span>
+                                    <span className="policy-pick-head">Greedy Pick</span>
+                                </div>
+                                <div className="policy-triad-head-diff">
                                     <span className="policy-diff-direction policy-diff-direction-head">
                                         <span
                                             className="policy-diff-arrow left hidden"
@@ -1783,102 +1731,103 @@ export default function ApheliosCutoffAnalysis() {
                                             ▶
                                         </span>
                                     </span>
-                                </th>
-                                <th className="policy-pick-head">Average Best Pick</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {policyComparisonRows.map((entry) => (
-                                <tr
-                                    key={entry.level}
-                                    role="button"
-                                    aria-label={`Open level ${entry.level} details`}
-                                    tabIndex={0}
-                                    className={
-                                        isDrilldownOpen && selectedLevel === entry.level ? "selected-row" : ""
-                                    }
-                                    onClick={() => openDrilldownForLevel(entry.level)}
-                                    onKeyDown={(event) => {
-                                        if (event.key !== "Enter" && event.key !== " ") return;
-                                        event.preventDefault();
-                                        openDrilldownForLevel(entry.level);
-                                    }}
-                                >
-                                    <td className="policy-level-cell">{entry.level}</td>
-                                    <td
-                                        className={`choice-cell policy-pick-cell ${
-                                            entry.greedyPick === "Q"
-                                                ? "choice-q"
-                                                : entry.greedyPick === "E"
-                                                  ? "choice-e"
-                                                  : "choice-w"
+                                </div>
+                                <div className="policy-triad-head-right">
+                                    <span className="policy-pick-head">Average Best Pick</span>
+                                </div>
+                            </div>
+                            <div className="policy-triad-rows">
+                                {policyComparisonRows.map((entry) => (
+                                    <div
+                                        key={entry.level}
+                                        role="button"
+                                        aria-label={`Open level ${entry.level} details`}
+                                        tabIndex={0}
+                                        className={`policy-triad-row ${
+                                            isDrilldownOpen && selectedLevel === entry.level
+                                                ? "selected-row"
+                                                : ""
                                         }`}
+                                        onClick={() => openDrilldownForLevel(entry.level)}
+                                        onKeyDown={(event) => {
+                                            if (event.key !== "Enter" && event.key !== " ") return;
+                                            event.preventDefault();
+                                            openDrilldownForLevel(entry.level);
+                                        }}
                                     >
-                                        {entry.greedyPick}
-                                    </td>
-                                    <td
-                                        className={`policy-diff-cell ${
-                                            entry.flatDamageDiff < 0
-                                                ? "winner-greedy"
-                                                : entry.flatDamageDiff > 0
-                                                  ? "winner-average-best"
-                                                  : "winner-tie"
-                                        }`}
-                                    >
-                                        <span className="policy-diff-direction">
+                                        <div className="policy-triad-cell policy-triad-cell-left">
+                                            <span className="policy-level-cell">{entry.level}</span>
                                             <span
-                                                className={`policy-diff-arrow left ${
-                                                    entry.flatDamageDiff < 0
-                                                        ? "active"
-                                                        : "hidden"
-                                                }`}
-                                                aria-hidden="true"
+                                                className={`choice-cell policy-pick-cell ${getChoiceColorClass(
+                                                    entry.greedyPick
+                                                )}`}
                                             >
-                                                ◀
+                                                {entry.greedyPick}
                                             </span>
-                                            <span className="policy-diff-values">
-                                                <span className="policy-diff-flat">
-                                                    {Math.abs(entry.flatDamageDiff).toFixed(2)}
-                                                </span>
+                                        </div>
+                                        <div
+                                            className={`policy-triad-cell policy-triad-cell-diff policy-diff-cell ${
+                                                entry.flatDamageDiff < 0
+                                                    ? "winner-greedy"
+                                                    : entry.flatDamageDiff > 0
+                                                      ? "winner-average-best"
+                                                      : "winner-tie"
+                                            }`}
+                                        >
+                                            <span className="policy-diff-direction">
                                                 <span
-                                                    className="policy-diff-separator"
+                                                    className={`policy-diff-arrow left ${
+                                                        entry.flatDamageDiff < 0
+                                                            ? "active"
+                                                            : "hidden"
+                                                    }`}
                                                     aria-hidden="true"
                                                 >
-                                                    |
+                                                    ◀
                                                 </span>
-                                                <span className="policy-diff-percent">
-                                                    {entry.percentDamageDiff === null
-                                                        ? "—"
-                                                        : `${Math.abs(entry.percentDamageDiff).toFixed(2)}%`}
+                                                <span className="policy-diff-values">
+                                                    <span className="policy-diff-flat">
+                                                        {Math.abs(entry.flatDamageDiff).toFixed(2)}
+                                                    </span>
+                                                    <span
+                                                        className="policy-diff-separator"
+                                                        aria-hidden="true"
+                                                    >
+                                                        |
+                                                    </span>
+                                                    <span className="policy-diff-percent">
+                                                        {entry.percentDamageDiff === null
+                                                            ? "—"
+                                                            : `${Math.abs(entry.percentDamageDiff).toFixed(2)}%`}
+                                                    </span>
+                                                </span>
+                                                <span
+                                                    className={`policy-diff-arrow right ${
+                                                        entry.flatDamageDiff > 0
+                                                            ? "active"
+                                                            : "hidden"
+                                                    }`}
+                                                    aria-hidden="true"
+                                                >
+                                                    ▶
                                                 </span>
                                             </span>
+                                        </div>
+                                        <div className="policy-triad-cell policy-triad-cell-right">
                                             <span
-                                                className={`policy-diff-arrow right ${
-                                                    entry.flatDamageDiff > 0
-                                                        ? "active"
-                                                        : "hidden"
-                                                }`}
-                                                aria-hidden="true"
+                                                className={`choice-cell policy-pick-cell ${getChoiceColorClass(
+                                                    entry.averageBestPick
+                                                )}`}
                                             >
-                                                ▶
+                                                {entry.averageBestPick}
                                             </span>
-                                        </span>
-                                    </td>
-                                    <td
-                                        className={`choice-cell policy-pick-cell ${
-                                            entry.averageBestPick === "Q"
-                                                ? "choice-q"
-                                                : entry.averageBestPick === "E"
-                                                  ? "choice-e"
-                                                  : "choice-w"
-                                        }`}
-                                    >
-                                        {entry.averageBestPick}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                    {renderPolicyPickRail("Average Best Path Grid", "right", "averageBestPick")}
                 </div>
                 <p className="table-scroll-hint">Scroll horizontally to see all columns.</p>
             </section>
