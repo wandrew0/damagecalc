@@ -712,6 +712,30 @@ export default function ApheliosCutoffAnalysis() {
         return levels;
     }, [recommendations, globalOptimalPath]);
 
+    const policyComparisonRows = useMemo(
+        () =>
+            recommendations.map((entry, index) => {
+                const greedyDamage = greedyDamageByLevel[index] ?? 0;
+                const averageBestDamage =
+                    globalOptimalPath.damageByLevel[index] ?? greedyDamage;
+                const flatDamageDiff = averageBestDamage - greedyDamage;
+                const percentDamageDiff =
+                    Math.abs(greedyDamage) > 1e-9
+                        ? (flatDamageDiff / greedyDamage) * 100
+                        : null;
+
+                return {
+                    level: entry.level,
+                    greedyPick: entry.choice,
+                    averageBestPick:
+                        globalOptimalPath.choicesByLevel[index] ?? entry.choice,
+                    flatDamageDiff,
+                    percentDamageDiff,
+                };
+            }),
+        [recommendations, greedyDamageByLevel, globalOptimalPath]
+    );
+
     const globalVsGreedyStats = useMemo(() => {
         const epsilon = 1e-9;
         const levelCount = Math.min(
@@ -852,6 +876,11 @@ export default function ApheliosCutoffAnalysis() {
         );
         return match ?? null;
     }, [globalStateAtSelectedLevel, rankedSelectedLevelStates]);
+
+    const isSameGreedyAndBestAverageState =
+        !!selectedDecision &&
+        !!globalStateAtSelectedLevel &&
+        areStatesEqual(selectedDecision.stateAfter, globalStateAtSelectedLevel);
 
     const topStatesWithHighlights = useMemo(() => {
         const merged = [...topStates];
@@ -1641,7 +1670,7 @@ export default function ApheliosCutoffAnalysis() {
 
             <section className="cutoff-card">
                 <div className="global-optimal-head">
-                    <h3>Average vs Greedy</h3>
+                    <h3>Average Best vs Greedy</h3>
                     <label className="field-label global-optimizer-select">
                         <span className="global-optimizer-label">Optimizer</span>
                         <select
@@ -1665,7 +1694,7 @@ export default function ApheliosCutoffAnalysis() {
                 </div>
                 <div className="global-stats-grid">
                     <div className="global-stat-block">
-                        <h4>Average vs Greedy</h4>
+                        <h4>Average Best vs Greedy</h4>
                         <p className="muted-note">
                             Geom: <strong>{globalVsGreedyStats.geomPercent.toFixed(2)}%</strong>
                         </p>
@@ -1706,59 +1735,64 @@ export default function ApheliosCutoffAnalysis() {
                         {renderLevelGuide(greedyLevelGuideRows, globalDiffLevels)}
                     </div>
                     <div className="path-guide-panel">
-                        <h4>Average Path by Level</h4>
+                        <h4>Average Best Path by Level</h4>
                         {renderLevelGuide(globalLevelGuideRows, globalDiffLevels)}
                     </div>
                 </div>
+                <p className="muted-note highlight-legend-note">
+                    Highlighted level columns show where Average Best differs from Greedy.
+                </p>
             </section>
 
-            <section className="cutoff-card">
-                <h3>Greedy Per-Level Best Choice</h3>
+            <section className="cutoff-card cutoff-card-policy-table">
+                <h3>Greedy vs Average Best by Level</h3>
                 <div className="recommendations-table-wrap">
-                    <table className="recommendations-table recommendations-table-clickable">
+                    <table className="recommendations-table recommendations-table-clickable recommendations-table-policy">
+                        <colgroup>
+                            <col className="policy-col-level" />
+                            <col className="policy-col-pick" />
+                            <col className="policy-col-diff" />
+                            <col className="policy-col-pick" />
+                        </colgroup>
                         <thead>
                             <tr>
-                                <th>Level</th>
-                                <th>Pick</th>
-                                <th>
-                                    Q - E
-                                    <HelpHint
-                                        label="Dash meaning"
-                                        description="A dash (—) means the value is not available at that level for the current rank state (typically that stat is already maxed)."
-                                    />
+                                <th className="policy-level-head">Level</th>
+                                <th className="policy-pick-head">Greedy Pick</th>
+                                <th className="policy-diff-head">
+                                    <span className="policy-diff-direction policy-diff-direction-head">
+                                        <span
+                                            className="policy-diff-arrow left hidden"
+                                            aria-hidden="true"
+                                        >
+                                            ◀
+                                        </span>
+                                        <span className="policy-diff-values">
+                                            <span className="policy-diff-flat">Flat Δ</span>
+                                            <span
+                                                className="policy-diff-separator"
+                                                aria-hidden="true"
+                                            >
+                                                |
+                                            </span>
+                                            <span className="policy-diff-percent">% Δ</span>
+                                        </span>
+                                        <span
+                                            className="policy-diff-arrow right hidden"
+                                            aria-hidden="true"
+                                        >
+                                            ▶
+                                        </span>
+                                    </span>
                                 </th>
-                                <th className="col-q-damage">+Q Damage</th>
-                                <th className="col-e-damage">+E Damage</th>
-                                <th>
-                                    AD Before
-                                    <HelpHint
-                                        label="AD Before"
-                                        description="Total Attack Damage before spending this level's rank point."
-                                    />
-                                </th>
-                                <th>
-                                    Lethality Before
-                                    <HelpHint
-                                        label="Lethality Before"
-                                        description="Total Lethality before spending this level's rank point."
-                                    />
-                                </th>
-                                <th>
-                                    Ranks Before
-                                    <HelpHint
-                                        label="Ranks Before"
-                                        description="Current Q / W / E passive rank allocation before the level-up choice."
-                                    />
-                                </th>
-                                <th>Target Armor</th>
+                                <th className="policy-pick-head">Average Best Pick</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {recommendations.map((entry) => (
+                            {policyComparisonRows.map((entry) => (
                                 <tr
                                     key={entry.level}
                                     role="button"
-                                    aria-label={`Select level ${entry.level} drilldown`}
+                                    aria-label={`Open level ${entry.level} details`}
                                     tabIndex={0}
                                     className={
                                         isDrilldownOpen && selectedLevel === entry.level ? "selected-row" : ""
@@ -1770,42 +1804,77 @@ export default function ApheliosCutoffAnalysis() {
                                         openDrilldownForLevel(entry.level);
                                     }}
                                 >
-                                    <td>{entry.level}</td>
+                                    <td className="policy-level-cell">{entry.level}</td>
                                     <td
-                                        className={`choice-cell ${
-                                            entry.choice === "Q"
+                                        className={`choice-cell policy-pick-cell ${
+                                            entry.greedyPick === "Q"
                                                 ? "choice-q"
-                                                : entry.choice === "E"
+                                                : entry.greedyPick === "E"
                                                   ? "choice-e"
                                                   : "choice-w"
                                         }`}
                                     >
-                                        <span className="choice-cell-content">
-                                            <span>{entry.choice}</span>
-                                            {entry.forcedWApplied && (
-                                                <span className="forced-choice-badge">Forced</span>
-                                            )}
+                                        {entry.greedyPick}
+                                    </td>
+                                    <td
+                                        className={`policy-diff-cell ${
+                                            entry.flatDamageDiff < 0
+                                                ? "winner-greedy"
+                                                : entry.flatDamageDiff > 0
+                                                  ? "winner-average-best"
+                                                  : "winner-tie"
+                                        }`}
+                                    >
+                                        <span className="policy-diff-direction">
+                                            <span
+                                                className={`policy-diff-arrow left ${
+                                                    entry.flatDamageDiff < 0
+                                                        ? "active"
+                                                        : "hidden"
+                                                }`}
+                                                aria-hidden="true"
+                                            >
+                                                ◀
+                                            </span>
+                                            <span className="policy-diff-values">
+                                                <span className="policy-diff-flat">
+                                                    {Math.abs(entry.flatDamageDiff).toFixed(2)}
+                                                </span>
+                                                <span
+                                                    className="policy-diff-separator"
+                                                    aria-hidden="true"
+                                                >
+                                                    |
+                                                </span>
+                                                <span className="policy-diff-percent">
+                                                    {entry.percentDamageDiff === null
+                                                        ? "—"
+                                                        : `${Math.abs(entry.percentDamageDiff).toFixed(2)}%`}
+                                                </span>
+                                            </span>
+                                            <span
+                                                className={`policy-diff-arrow right ${
+                                                    entry.flatDamageDiff > 0
+                                                        ? "active"
+                                                        : "hidden"
+                                                }`}
+                                                aria-hidden="true"
+                                            >
+                                                ▶
+                                            </span>
                                         </span>
                                     </td>
-                                    <td>
-                                        {entry.deltaQMinusE !== null
-                                            ? entry.deltaQMinusE.toFixed(2)
-                                            : "—"}
+                                    <td
+                                        className={`choice-cell policy-pick-cell ${
+                                            entry.averageBestPick === "Q"
+                                                ? "choice-q"
+                                                : entry.averageBestPick === "E"
+                                                  ? "choice-e"
+                                                  : "choice-w"
+                                        }`}
+                                    >
+                                        {entry.averageBestPick}
                                     </td>
-                                    <td className="col-q-damage-value">
-                                        {entry.qOptionDamage !== null
-                                            ? entry.qOptionDamage.toFixed(1)
-                                            : "—"}
-                                    </td>
-                                    <td className="col-e-damage-value">
-                                        {entry.eOptionDamage !== null
-                                            ? entry.eOptionDamage.toFixed(1)
-                                            : "—"}
-                                    </td>
-                                    <td>{entry.adBefore.toFixed(1)}</td>
-                                    <td>{entry.lethalityBefore.toFixed(1)}</td>
-                                    <td>{formatRankState(entry.stateBefore.q, entry.stateBefore.w, entry.stateBefore.e)}</td>
-                                    <td>{entry.enemyArmor.toFixed(1)}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -1823,12 +1892,12 @@ export default function ApheliosCutoffAnalysis() {
                         className="timeline-modal drilldown-modal"
                         role="dialog"
                         aria-modal="true"
-                        aria-label={`Level ${selectedLevel} Drilldown`}
+                        aria-label={`Level ${selectedLevel} details`}
                         tabIndex={-1}
                         onClick={(event) => event.stopPropagation()}
                     >
                         <div className="timeline-modal-head">
-                            <h4>Level {selectedLevel} Drilldown</h4>
+                            <h4>Level {selectedLevel} Details</h4>
                             <button
                                 type="button"
                                 className="timeline-action-button"
@@ -1890,22 +1959,74 @@ export default function ApheliosCutoffAnalysis() {
 
                         <div className="top-states-wrap">
                             <h4>Average Best Rank States at Level {selectedLevel}</h4>
-                            {planStateRank && (
-                                <p className="muted-note">
-                                    Plan state {formatRankState(
-                                        selectedDecision.stateAfter.q,
-                                        selectedDecision.stateAfter.w,
-                                        selectedDecision.stateAfter.e
-                                    )}{" "}
-                                    ranks <strong>#{planStateRank.rank}</strong> at expected armor.
-                                </p>
-                            )}
+                            <p className="muted-note">
+                                <span
+                                    className={
+                                        isSameGreedyAndBestAverageState
+                                            ? "state-label-both"
+                                            : "state-label-greedy"
+                                    }
+                                >
+                                    Greedy
+                                </span>{" "}
+                                state{" "}
+                                {formatRankState(
+                                    selectedDecision.stateAfter.q,
+                                    selectedDecision.stateAfter.w,
+                                    selectedDecision.stateAfter.e
+                                )}{" "}
+                                {planStateRank
+                                    ? (
+                                          <>
+                                              ranks <strong>#{planStateRank.rank}</strong> at
+                                              expected armor.
+                                          </>
+                                      )
+                                    : "is outside the ranked candidate set at expected armor."}{" "}
+                                {globalStateAtSelectedLevel && (
+                                    <>
+                                        {" "}
+                                        <span
+                                            className={
+                                                isSameGreedyAndBestAverageState
+                                                    ? "state-label-both"
+                                                    : "state-label-best-average"
+                                            }
+                                        >
+                                            Average Best
+                                        </span>{" "}
+                                        state{" "}
+                                        {formatRankState(
+                                            globalStateAtSelectedLevel.q,
+                                            globalStateAtSelectedLevel.w,
+                                            globalStateAtSelectedLevel.e
+                                        )}{" "}
+                                        {globalStateRank
+                                            ? (
+                                                  <>
+                                                      ranks{" "}
+                                                      <strong>#{globalStateRank.rank}</strong>.
+                                                  </>
+                                              )
+                                            : "is outside the ranked candidate set."}
+                                    </>
+                                )}
+                                {isSameGreedyAndBestAverageState && (
+                                    <>
+                                        {" "}
+                                        <span className="state-label-both">
+                                            Blue + red = purple (same state).
+                                        </span>
+                                    </>
+                                )}
+                            </p>
                             <table className="recommendations-table top-states-table">
                                 <thead>
                                     <tr>
                                         <th>Rank</th>
                                         <th>Q / W / E</th>
                                         <th>Damage at expected armor</th>
+                                        <th>Highlight</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1922,6 +2043,14 @@ export default function ApheliosCutoffAnalysis() {
                                                 entry.state,
                                                 globalStateAtSelectedLevel
                                             );
+                                        const rowHighlightLabel =
+                                            isPlanState && isGlobalState
+                                                ? "Greedy + Average Best"
+                                                : isPlanState
+                                                  ? "Greedy"
+                                                  : isGlobalState
+                                                    ? "Average Best"
+                                                    : "—";
                                         return (
                                             <tr
                                                 key={`${entry.rank}-${entry.state.q}-${entry.state.w}-${entry.state.e}`}
@@ -1941,6 +2070,22 @@ export default function ApheliosCutoffAnalysis() {
                                                     )}
                                                 </td>
                                                 <td>{entry.damage.toFixed(2)}</td>
+                                                <td>
+                                                    <span
+                                                        className={[
+                                                            "state-highlight-pill",
+                                                            isPlanState && isGlobalState
+                                                                ? "both"
+                                                                : isPlanState
+                                                                  ? "greedy"
+                                                                  : isGlobalState
+                                                                    ? "best-average"
+                                                                    : "none",
+                                                        ].join(" ")}
+                                                    >
+                                                        {rowHighlightLabel}
+                                                    </span>
+                                                </td>
                                             </tr>
                                         );
                                     })}

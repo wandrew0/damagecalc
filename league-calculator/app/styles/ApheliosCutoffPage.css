@@ -29,6 +29,12 @@
     padding: 16px;
 }
 
+.cutoff-card-policy-table {
+    width: max-content;
+    max-width: 100%;
+    align-self: center;
+}
+
 .cutoff-card h3 {
     margin: 0 0 12px;
     font-size: 16px;
@@ -549,6 +555,10 @@
     color: var(--text-secondary);
 }
 
+.highlight-legend-note {
+    margin: 8px 0 0;
+}
+
 .cutoff-level-guide {
     margin-bottom: 10px;
     display: flex;
@@ -994,6 +1004,34 @@
     font-size: 13px;
 }
 
+.recommendations-table-policy {
+    width: max-content;
+    min-width: 0;
+    table-layout: fixed;
+}
+
+.recommendations-table-policy col.policy-col-level {
+    width: 70px;
+}
+
+.recommendations-table-policy col.policy-col-pick {
+    width: 165px;
+}
+
+.recommendations-table-policy col.policy-col-diff {
+    width: 248px;
+}
+
+.recommendations-table th.policy-pick-head,
+.recommendations-table td.policy-pick-cell {
+    text-align: center;
+}
+
+.recommendations-table th.policy-level-head,
+.recommendations-table td.policy-level-cell {
+    text-align: left;
+}
+
 .recommendations-table th,
 .recommendations-table td {
     padding: 9px 10px;
@@ -1035,27 +1073,153 @@
 }
 
 .top-states-table .plan-state-row td {
-    background: rgba(37, 99, 235, 0.12);
+    background: rgba(37, 99, 235, 0.22);
 }
 
 .top-states-table .plan-state-row td:first-child {
-    border-left-color: var(--accent);
+    border-left-color: #2563eb;
 }
 
 .top-states-table .global-state-row td {
-    background: rgba(245, 238, 153, 0.25);
+    background: rgba(220, 38, 38, 0.16);
 }
 
 .top-states-table .global-state-row td:first-child {
-    border-left-color: orange;
+    border-left-color: #dc2626;
 }
 
 .top-states-table .plan-state-row.global-state-row td {
-    background: rgba(37, 99, 235, 0.16);
+    background: rgba(124, 58, 237, 0.22);
 }
 
 .top-states-table .plan-state-row.global-state-row td:first-child {
     border-left-color: #7c3aed;
+}
+
+.recommendations-table td.policy-diff-cell {
+    font-weight: 600;
+    text-align: center;
+}
+
+.recommendations-table th.policy-diff-head {
+    text-align: center !important;
+    white-space: nowrap;
+}
+
+.policy-diff-direction-head {
+    color: var(--text-secondary);
+    grid-template-columns: 1.1em auto 1.1em;
+    column-gap: 3px;
+}
+
+.policy-diff-cell.winner-greedy {
+    color: #1d4ed8;
+}
+
+.policy-diff-cell.winner-average-best {
+    color: #b91c1c;
+}
+
+.policy-diff-cell.winner-tie {
+    color: var(--text-secondary);
+}
+
+.policy-diff-direction {
+    display: inline-grid;
+    grid-template-columns: 1.1em auto 1.1em;
+    align-items: center;
+    justify-content: center;
+    column-gap: 6px;
+}
+
+.policy-diff-arrow {
+    width: 1.1em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    line-height: 1;
+    color: currentColor;
+    font-weight: 800;
+}
+
+.policy-diff-arrow.hidden {
+    visibility: hidden;
+    font-size: 0;
+    line-height: 0;
+}
+
+.policy-diff-values {
+    display: inline-grid;
+    grid-template-columns: 84px 12px 84px;
+    align-items: center;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.policy-diff-flat {
+    text-align: right;
+}
+
+.policy-diff-separator {
+    text-align: center;
+    opacity: 0.75;
+}
+
+.policy-diff-percent {
+    text-align: left;
+}
+
+.state-highlight-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 20px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.state-highlight-pill.greedy {
+    background: rgba(37, 99, 235, 0.2);
+    border-color: rgba(37, 99, 235, 0.45);
+    color: #1d4ed8;
+}
+
+.state-highlight-pill.best-average {
+    background: rgba(220, 38, 38, 0.18);
+    border-color: rgba(220, 38, 38, 0.45);
+    color: #b91c1c;
+}
+
+.state-highlight-pill.both {
+    background: rgba(124, 58, 237, 0.2);
+    border-color: rgba(124, 58, 237, 0.45);
+    color: #6d28d9;
+}
+
+.state-highlight-pill.none {
+    background: var(--bg-secondary);
+    border-color: var(--border-light);
+    color: var(--text-secondary);
+}
+
+.state-label-greedy {
+    color: #2563eb;
+    font-weight: 700;
+}
+
+.state-label-best-average {
+    color: #dc2626;
+    font-weight: 700;
+}
+
+.state-label-both {
+    color: #7c3aed;
+    font-weight: 700;
 }
 
 .choice-cell {
