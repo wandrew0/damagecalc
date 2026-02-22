@@ -11,9 +11,6 @@ import ImportModal from "./ImportModal";
 import { getTotalAD } from "../classes/Calculator";
 import type { ChampionId } from "../data/champions";
 
-// sort items by AD and crit
-ALL_ITEMS.sort((a, b) => b.AD - a.AD || b.critChance - a.critChance);
-
 // Prepare item options for the Select component
 const itemOptions = ALL_ITEMS.map((item) => ({
     value: item,
@@ -92,6 +89,14 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
             setShowImportModal(true);
         }
     }, [urlImportBuilds]);
+
+    const parseNumberInput = (rawValue: string): number | null => {
+        if (rawValue.trim() === "") {
+            return 0;
+        }
+        const parsed = Number(rawValue);
+        return Number.isFinite(parsed) ? parsed : null;
+    };
 
     function onAddBuild() {
         const newBuild = new Build();
@@ -220,7 +225,13 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                                 type="number"
                                 value={build.bonusAD === 0 ? "" : build.bonusAD}
                                 onChange={(e) => {
-                                    build.setBonusAD(+e.target.value);
+                                    const parsedBonusAD = parseNumberInput(
+                                        e.target.value
+                                    );
+                                    if (parsedBonusAD === null) {
+                                        return;
+                                    }
+                                    build.setBonusAD(parsedBonusAD);
                                     setBuilds([...builds]);
                                 }}
                             />
@@ -233,7 +244,13 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                                     build.bonusLethality === 0 ? "" : build.bonusLethality
                                 }
                                 onChange={(e) => {
-                                    build.setBonusLethality(+e.target.value);
+                                    const parsedBonusLethality = parseNumberInput(
+                                        e.target.value
+                                    );
+                                    if (parsedBonusLethality === null) {
+                                        return;
+                                    }
+                                    build.setBonusLethality(parsedBonusLethality);
                                     setBuilds([...builds]);
                                 }}
                             />

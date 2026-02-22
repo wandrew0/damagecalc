@@ -1,6 +1,19 @@
 "use client";
 
 import { Item } from "./Item";
+import {
+    deserializePersistedItem,
+    PersistedItemData,
+    serializeItemReference,
+} from "../utils/itemRegistry";
+
+interface BuildJSON {
+    items?: PersistedItemData[];
+    bonusAD?: number;
+    bonusLethality?: number;
+    bonusCrit?: number;
+    name?: string;
+}
 
 export class Build {
     items: Item[] = [];
@@ -75,7 +88,7 @@ export class Build {
 
     toJSON() {
         return {
-            items: this.items.map((it) => it.toJSON()),
+            items: this.items.map((it) => serializeItemReference(it)),
             critChance: this.critChance,
             critDamageModifier: this.critDamageModifier,
             AD: this.AD,
@@ -89,36 +102,28 @@ export class Build {
         };
     }
 
-    static fromJSON(json: {
-        items: {
-            name: string;
-            cost: number;
-            AD: number;
-            critChance: number;
-            infinityEdgeBonus?: boolean;
-            lethality: number;
-            armorPenetration: number;
-            aliases: string[];
-        }[];
-        critChance: number;
-        critDamageModifier: number;
-        AD: number;
-        armorPenetration: number;
-        lethality: number;
-        totalCost: number;
-        bonusAD: number;
-        bonusLethality: number;
-        bonusCrit: number;
-        name: string;
-    }) {
+    static fromJSON(json: BuildJSON) {
         const build = new Build();
-        build.items = json.items.map((it) => Item.fromJSON(it));
+        const persistedItems = Array.isArray(json.items) ? json.items : [];
+        build.items = persistedItems
+            .map((item) => deserializePersistedItem(item))
+            .filter((item): item is Item => item !== null);
         // Don't use saved critDamageModifier - it may be from an old season
         // Instead, set bonus values and call update() to recalculate everything
-        build.bonusAD = json.bonusAD;
-        build.bonusLethality = json.bonusLethality;
-        build.bonusCrit = json.bonusCrit;
-        build.name = json.name;
+        build.bonusAD =
+            typeof json.bonusAD === "number" && Number.isFinite(json.bonusAD)
+                ? json.bonusAD
+                : 0;
+        build.bonusLethality =
+            typeof json.bonusLethality === "number" &&
+            Number.isFinite(json.bonusLethality)
+                ? json.bonusLethality
+                : 0;
+        build.bonusCrit =
+            typeof json.bonusCrit === "number" && Number.isFinite(json.bonusCrit)
+                ? json.bonusCrit
+                : 0;
+        build.name = typeof json.name === "string" ? json.name : "";
         // Recalculate all stats including critDamageModifier based on current season values
         build.update();
         return build;

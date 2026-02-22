@@ -12,13 +12,29 @@ export default function CollectorAnalysis() {
     const [autoDamage, setAutoDamage] = useState(200);
     const [isLoaded, setIsLoaded] = useState(false);
 
+    const clampMaxHp = (value: number) =>
+        Math.max(100, Math.min(10000, Math.round(value)));
+    const clampAutoDamage = (value: number) =>
+        Math.max(1, Math.min(2000, Math.round(value)));
+    const parseNumberInput = (rawValue: string): number | null => {
+        const parsed = Number(rawValue);
+        return Number.isFinite(parsed) ? parsed : null;
+    };
+
     // Load from local storage on mount
     useEffect(() => {
         const savedMaxHp = localStorage.getItem("collector_maxHp");
         const savedAutoDamage = localStorage.getItem("collector_autoDamage");
 
-        if (savedMaxHp) setMaxHp(Number(savedMaxHp));
-        if (savedAutoDamage) setAutoDamage(Number(savedAutoDamage));
+        const parsedMaxHp = savedMaxHp === null ? null : parseNumberInput(savedMaxHp);
+        const parsedAutoDamage =
+            savedAutoDamage === null ? null : parseNumberInput(savedAutoDamage);
+        if (parsedMaxHp !== null) {
+            setMaxHp(clampMaxHp(parsedMaxHp));
+        }
+        if (parsedAutoDamage !== null) {
+            setAutoDamage(clampAutoDamage(parsedAutoDamage));
+        }
 
         setIsLoaded(true);
     }, []);
@@ -92,7 +108,7 @@ export default function CollectorAnalysis() {
                             In the best case, Collector only needs to deal{" "}
                             <span className="math-inline">(I - 0.05)H</span> damage, while
                             other builds must deal <span className="math-inline">IH</span>
-                            . However, we don&apos;t always land the enemy exactly on the 5%
+                            . However, we don&apos;t always land the target exactly on the 5%
                             threshold. The last auto leaves them somewhere between 0 and{" "}
                             <span className="math-inline">0.05H</span>.
                         </p>
@@ -231,7 +247,7 @@ export default function CollectorAnalysis() {
                                 <strong>Note on Teamplay:</strong> In practice,{" "}
                                 <span className="math-inline">I &times; H</span>{" "}
                                 represents the total damage <em>you</em> need to
-                                contribute, not the target&apos;s initial HP. If the enemy
+                                contribute, not the target&apos;s initial HP. If the target
                                 starts at 100% HP and teammates damage the target, this
                                 reduces your <span className="math-var">I</span> below
                                 100%. However, the model assumes that teammates do not
@@ -278,7 +294,14 @@ export default function CollectorAnalysis() {
                                     type="number"
                                     className="number-input"
                                     value={maxHp}
-                                    onChange={(e) => setMaxHp(Number(e.target.value))}
+                                    onChange={(e) => {
+                                        const parsedMaxHp = parseNumberInput(
+                                            e.target.value
+                                        );
+                                        if (parsedMaxHp !== null) {
+                                            setMaxHp(clampMaxHp(parsedMaxHp));
+                                        }
+                                    }}
                                     min="100"
                                     max="10000"
                                 />
@@ -289,7 +312,14 @@ export default function CollectorAnalysis() {
                                 max="5000"
                                 step="50"
                                 value={maxHp}
-                                onChange={(e) => setMaxHp(Number(e.target.value))}
+                                onChange={(e) => {
+                                    const parsedMaxHp = parseNumberInput(
+                                        e.target.value
+                                    );
+                                    if (parsedMaxHp !== null) {
+                                        setMaxHp(clampMaxHp(parsedMaxHp));
+                                    }
+                                }}
                             />
                             <div className="range-labels">
                                 <span>500</span>
@@ -304,9 +334,16 @@ export default function CollectorAnalysis() {
                                     type="number"
                                     className="number-input"
                                     value={autoDamage}
-                                    onChange={(e) =>
-                                        setAutoDamage(Number(e.target.value))
-                                    }
+                                    onChange={(e) => {
+                                        const parsedAutoDamage = parseNumberInput(
+                                            e.target.value
+                                        );
+                                        if (parsedAutoDamage !== null) {
+                                            setAutoDamage(
+                                                clampAutoDamage(parsedAutoDamage)
+                                            );
+                                        }
+                                    }}
                                     min="1"
                                     max="2000"
                                 />
@@ -317,7 +354,16 @@ export default function CollectorAnalysis() {
                                 max="1000"
                                 step="1"
                                 value={autoDamage}
-                                onChange={(e) => setAutoDamage(Number(e.target.value))}
+                                onChange={(e) => {
+                                    const parsedAutoDamage = parseNumberInput(
+                                        e.target.value
+                                    );
+                                    if (parsedAutoDamage !== null) {
+                                        setAutoDamage(
+                                            clampAutoDamage(parsedAutoDamage)
+                                        );
+                                    }
+                                }}
                             />
                             <div className="range-labels">
                                 <span>50</span>

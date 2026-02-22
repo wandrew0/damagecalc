@@ -10,6 +10,7 @@ import BuildPanel from "../components/BuildPanel";
 import DamageChart from "../components/DamageChart";
 import Navigation from "../components/Navigation";
 import { decodeBuilds, decodeBuildsLegacy } from "../utils/encoder";
+import { ITEM_DATA_VERSION } from "../utils/itemRegistry";
 import {
     getAbsoluteFocusAD,
     getGatheringStormAD,
@@ -26,22 +27,42 @@ function serializeBuilds(builds: Build[]) {
     return builds.map((b) => b.toJSON());
 }
 
-interface BuildJSON {
-    items: Item[];
-    critChance: number;
-    critDamageModifier: number;
-    AD: number;
-    armorPenetration: number;
-    lethality: number;
-    totalCost: number;
-    bonusAD: number;
-    bonusLethality: number;
-    bonusCrit: number;
-    name: string;
+function deserializeBuilds(raw: unknown): Build[] {
+    if (!Array.isArray(raw)) {
+        return [];
+    }
+
+    return raw
+        .map((entry) => {
+            if (!entry || typeof entry !== "object") {
+                return null;
+            }
+            try {
+                return Build.fromJSON(entry as Parameters<typeof Build.fromJSON>[0]);
+            } catch {
+                return null;
+            }
+        })
+        .filter((build): build is Build => build !== null);
 }
 
-function deserializeBuilds(json: BuildJSON[]) {
-    return json.map((b) => Build.fromJSON(b));
+function parseFiniteNumber(value: unknown): number | null {
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+        return null;
+    }
+    return value;
+}
+
+function parseArmorRange(value: unknown): [number, number] | null {
+    if (!Array.isArray(value) || value.length !== 2) {
+        return null;
+    }
+    const start = parseFiniteNumber(value[0]);
+    const end = parseFiniteNumber(value[1]);
+    if (start === null || end === null) {
+        return null;
+    }
+    return [start, end];
 }
 
 function CalculatorPage() {
@@ -101,8 +122,16 @@ function CalculatorPage() {
         ? getQRankFromChampLevel(level)
         : dravenQLevel;
     const isGatheringStormActive = gatheringStormMinutes >= 10;
-    const clampAdShardCount = (value: number) =>
-        Math.max(0, Math.min(2, Math.round(value)));
+    const clampAdShardCount = (value: number) => {
+        if (!Number.isFinite(value)) {
+            return 0;
+        }
+        return Math.max(0, Math.min(2, Math.round(value)));
+    };
+    const parseNumberInput = (rawValue: string): number | null => {
+        const parsed = Number(rawValue);
+        return Number.isFinite(parsed) ? parsed : null;
+    };
 
     // Helper function to compare items by content, not order
     const compareItems = (items1: Item[], items2: Item[]): boolean => {
@@ -279,63 +308,135 @@ function CalculatorPage() {
         const savedState = localStorage.getItem("calculatorState");
         if (savedState) {
             try {
-                const {
-                    level,
-                    builds: savedBuilds,
-                    armorRange,
-                    showMargin: savedShowMargin,
-                    stdDevMultiplier: savedStdDev,
-                    percentileRange: savedPercentile,
-                    numAutoAttacks: savedNumAutoAttacks,
-                    absoluteFocus: savedAbsoluteFocus,
-                    gatheringStormMinutes: savedGatheringStormMinutes,
-                    adShardCount: savedAdShardCount,
-                    targetBonusHP: savedTargetBonusHP,
-                    targetBonusHPRangeMode: savedTargetBonusHPRangeMode,
-                    targetBonusHPMax: savedTargetBonusHPMax,
-                    championId: savedChampionId,
-                    dravenQEnabled: savedDravenQEnabled,
-                    dravenQLevel: savedDravenQLevel,
-                    dravenQLevelLinked: savedDravenQLevelLinked,
-                    championPanelCompact: savedChampionPanelCompact,
-                } = JSON.parse(savedState);
+                const parsedState = JSON.parse(savedState) as Record<string, unknown>;
+                const savedLevel = parseFiniteNumber(parsedState.level);
+                const savedBuilds = parsedState.builds;
+                const savedArmorRange = parseArmorRange(parsedState.armorRange);
+                const savedShowMargin =
+                    typeof parsedState.showMargin === "boolean"
+                        ? parsedState.showMargin
+                        : undefined;
+                const savedStdDev = parseFiniteNumber(parsedState.stdDevMultiplier);
+                const savedPercentile = parseFiniteNumber(parsedState.percentileRange);
+                const savedNumAutoAttacks = parseFiniteNumber(
+                    parsedState.numAutoAttacks
+                );
+                const savedAbsoluteFocus =
+                    typeof parsedState.absoluteFocus === "boolean"
+                        ? parsedState.absoluteFocus
+                        : undefined;
+                const savedGatheringStormMinutes = parseFiniteNumber(
+                    parsedState.gatheringStormMinutes
+                );
+                const savedAdShardCount = parseFiniteNumber(parsedState.adShardCount);
+                const savedTargetBonusHP = parseFiniteNumber(parsedState.targetBonusHP);
+                const savedTargetBonusHPRangeMode =
+                    typeof parsedState.targetBonusHPRangeMode === "boolean"
+                        ? parsedState.targetBonusHPRangeMode
+                        : undefined;
+                const savedTargetBonusHPMax = parseFiniteNumber(
+                    parsedState.targetBonusHPMax
+                );
+                const savedChampionId = parsedState.championId;
+                const savedDravenQEnabled =
+                    typeof parsedState.dravenQEnabled === "boolean"
+                        ? parsedState.dravenQEnabled
+                        : undefined;
+                const savedDravenQLevel = parseFiniteNumber(parsedState.dravenQLevel);
+                const savedDravenQLevelLinked =
+                    typeof parsedState.dravenQLevelLinked === "boolean"
+                        ? parsedState.dravenQLevelLinked
+                        : undefined;
+                const savedChampionPanelCompact =
+                    typeof parsedState.championPanelCompact === "boolean"
+                        ? parsedState.championPanelCompact
+                        : undefined;
+                const savedItemDataVersionRaw = parsedState.itemDataVersion;
+                const savedItemDataVersion =
+                    typeof savedItemDataVersionRaw === "string"
+                        ? savedItemDataVersionRaw
+                        : null;
                 // Only load level if we didn't auto-import from URL
-                if (level && !autoImportedRef.current) {
-                    setLevel(level);
+                if (savedLevel !== null && !autoImportedRef.current) {
+                    setLevel(Math.max(1, Math.min(18, Math.round(savedLevel))));
                 }
-                if (armorRange) setArmorRange(armorRange);
+                if (savedArmorRange) {
+                    setArmorRange(savedArmorRange);
+                }
                 // Only load builds if we didn't auto-import from URL
                 if (savedBuilds && !autoImportedRef.current) {
-                    setBuilds(deserializeBuilds(savedBuilds));
+                    const normalizedBuilds = deserializeBuilds(savedBuilds);
+                    setBuilds(normalizedBuilds);
+
+                    // Migrate old/stale saved item payloads onto canonical item data.
+                    if (savedItemDataVersion !== ITEM_DATA_VERSION) {
+                        const migratedState = {
+                            ...parsedState,
+                            builds: serializeBuilds(normalizedBuilds),
+                            itemDataVersion: ITEM_DATA_VERSION,
+                        };
+                        localStorage.setItem(
+                            "calculatorState",
+                            JSON.stringify(migratedState)
+                        );
+                    }
                 }
-                if (savedShowMargin !== undefined) setShowMargin(savedShowMargin);
-                if (savedStdDev) setStdDevMultiplier(savedStdDev);
-                if (savedPercentile) setPercentileRange(savedPercentile);
-                if (savedNumAutoAttacks) setNumAutoAttacks(savedNumAutoAttacks);
+                if (savedShowMargin !== undefined) {
+                    setShowMargin(savedShowMargin);
+                }
+                if (savedStdDev !== null && savedStdDev > 0) {
+                    setStdDevMultiplier(savedStdDev);
+                }
+                if (savedPercentile !== null) {
+                    setPercentileRange(Math.max(0, Math.min(50, savedPercentile)));
+                }
+                if (savedNumAutoAttacks !== null) {
+                    setNumAutoAttacks(Math.max(1, Math.round(savedNumAutoAttacks)));
+                }
                 if (savedAbsoluteFocus !== undefined)
                     setAbsoluteFocus(savedAbsoluteFocus);
-                if (savedGatheringStormMinutes !== undefined)
-                    setGatheringStormMinutes(savedGatheringStormMinutes);
-                if (savedAdShardCount !== undefined)
-                    setAdShardCount(savedAdShardCount);
-                if (savedTargetBonusHP !== undefined)
-                    setTargetBonusHP(savedTargetBonusHP);
+                if (savedGatheringStormMinutes !== null) {
+                    setGatheringStormMinutes(
+                        Math.max(0, Math.round(savedGatheringStormMinutes / 10) * 10)
+                    );
+                }
+                if (savedAdShardCount !== null)
+                    setAdShardCount(clampAdShardCount(savedAdShardCount));
+                const normalizedTargetBonusHP =
+                    savedTargetBonusHP === null
+                        ? null
+                        : Math.max(0, Math.min(1500, savedTargetBonusHP));
+                const normalizedTargetBonusHPMaxBase =
+                    savedTargetBonusHPMax === null
+                        ? null
+                        : Math.max(0, Math.min(1500, savedTargetBonusHPMax));
+                const normalizedTargetBonusHPMax =
+                    normalizedTargetBonusHPMaxBase === null
+                        ? null
+                        : normalizedTargetBonusHP === null
+                          ? normalizedTargetBonusHPMaxBase
+                          : Math.max(
+                                normalizedTargetBonusHPMaxBase,
+                                normalizedTargetBonusHP
+                            );
+                if (normalizedTargetBonusHP !== null)
+                    setTargetBonusHP(normalizedTargetBonusHP);
                 if (savedTargetBonusHPRangeMode !== undefined)
                     setTargetBonusHPRangeMode(savedTargetBonusHPRangeMode);
-                if (savedTargetBonusHPMax !== undefined)
-                    setTargetBonusHPMax(savedTargetBonusHPMax);
+                if (normalizedTargetBonusHPMax !== null)
+                    setTargetBonusHPMax(normalizedTargetBonusHPMax);
                 // Load champion
-                if (
-                    savedChampionId &&
-                    (savedChampionId === "aphelios" || savedChampionId === "draven")
-                ) {
+                if (savedChampionId === "aphelios" || savedChampionId === "draven") {
                     setChampionId(savedChampionId);
                     setChampion(createChampion(savedChampionId));
                 }
                 // Load Draven Q settings
                 if (savedDravenQEnabled !== undefined)
                     setDravenQEnabled(savedDravenQEnabled);
-                if (savedDravenQLevel !== undefined) setDravenQLevel(savedDravenQLevel);
+                if (savedDravenQLevel !== null)
+                    setDravenQLevel(
+                        Math.max(1, Math.min(5, Math.round(savedDravenQLevel)))
+                    );
                 if (savedDravenQLevelLinked !== undefined)
                     setDravenQLevelLinked(savedDravenQLevelLinked);
                 if (savedChampionPanelCompact !== undefined)
@@ -358,6 +459,7 @@ function CalculatorPage() {
                 level,
                 armorRange,
                 builds: serializeBuilds(builds),
+                itemDataVersion: ITEM_DATA_VERSION,
                 showMargin,
                 stdDevMultiplier,
                 percentileRange,
@@ -402,11 +504,15 @@ function CalculatorPage() {
 
     // Functions to update state
     function handleLevelChange(newLevel: number) {
-        if (newLevel < 1 || newLevel > 18) return;
-        setLevel(newLevel);
+        if (!Number.isFinite(newLevel)) {
+            return;
+        }
+        const normalizedLevel = Math.round(newLevel);
+        if (normalizedLevel < 1 || normalizedLevel > 18) return;
+        setLevel(normalizedLevel);
         // Update Draven Q level if linked
         if (dravenQLevelLinked) {
-            setDravenQLevel(getQRankFromChampLevel(newLevel));
+            setDravenQLevel(getQRankFromChampLevel(normalizedLevel));
         }
     }
 
@@ -604,9 +710,14 @@ function CalculatorPage() {
                                         min={1}
                                         max={18}
                                         value={level}
-                                        onChange={(e) =>
-                                            handleLevelChange(+e.target.value)
-                                        }
+                                        onChange={(e) => {
+                                            const parsedLevel = parseNumberInput(
+                                                e.target.value
+                                            );
+                                            if (parsedLevel !== null) {
+                                                handleLevelChange(parsedLevel);
+                                            }
+                                        }}
                                         onFocus={(e) => e.target.select()}
                                         className="numberInput"
                                     />
@@ -643,10 +754,26 @@ function CalculatorPage() {
                                             <select
                                                 value={effectiveDravenQLevel}
                                                 onChange={(e) => {
-                                                    setDravenQLevel(
-                                                        Number(e.target.value)
-                                                    );
-                                                    setDravenQLevelLinked(false);
+                                                    const parsedQLevel =
+                                                        parseNumberInput(
+                                                            e.target.value
+                                                        );
+                                                    if (parsedQLevel !== null) {
+                                                        setDravenQLevel(
+                                                            Math.max(
+                                                                1,
+                                                                Math.min(
+                                                                    5,
+                                                                    Math.round(
+                                                                        parsedQLevel
+                                                                    )
+                                                                )
+                                                            )
+                                                        );
+                                                        setDravenQLevelLinked(
+                                                            false
+                                                        );
+                                                    }
                                                 }}
                                                 className={`qLevelSelect ${
                                                     dravenQLevelLinked ? "linked" : ""
@@ -705,11 +832,19 @@ function CalculatorPage() {
                                             max={2}
                                             step={1}
                                             value={adShardCount}
-                                            onChange={(e) =>
-                                                setAdShardCount(
-                                                    clampAdShardCount(Number(e.target.value))
-                                                )
-                                            }
+                                            onChange={(e) => {
+                                                const parsedShardCount =
+                                                    parseNumberInput(
+                                                        e.target.value
+                                                    );
+                                                if (parsedShardCount !== null) {
+                                                    setAdShardCount(
+                                                        clampAdShardCount(
+                                                            parsedShardCount
+                                                        )
+                                                    );
+                                                }
+                                            }}
                                             onFocus={(e) => e.target.select()}
                                             className="numberInput"
                                         />
@@ -783,9 +918,16 @@ function CalculatorPage() {
                                             step={10}
                                             value={gatheringStormMinutes}
                                             onChange={(e) => {
+                                                const parsedValue =
+                                                    parseNumberInput(
+                                                        e.target.value
+                                                    );
+                                                if (parsedValue === null) {
+                                                    return;
+                                                }
                                                 const value = Math.max(
                                                     0,
-                                                    Number(e.target.value)
+                                                    parsedValue
                                                 );
                                                 // Round to nearest 10
                                                 setGatheringStormMinutes(
@@ -866,10 +1008,15 @@ function CalculatorPage() {
                             setAbsoluteFocus(importedAbsoluteFocus);
                         }}
                         onGatheringStormImport={(importedMinutes) => {
-                            setGatheringStormMinutes(importedMinutes);
+                            if (!Number.isFinite(importedMinutes)) {
+                                return;
+                            }
+                            setGatheringStormMinutes(
+                                Math.max(0, Math.round(importedMinutes / 10) * 10)
+                            );
                         }}
                         onAdShardCountImport={(importedAdShardCount) => {
-                            setAdShardCount(importedAdShardCount);
+                            setAdShardCount(clampAdShardCount(importedAdShardCount));
                         }}
                         onChampionImport={(importedChampionId) => {
                             handleChampionChange(importedChampionId);
@@ -878,7 +1025,12 @@ function CalculatorPage() {
                             setDravenQEnabled(importedDravenQEnabled);
                         }}
                         onDravenQLevelImport={(importedDravenQLevel) => {
-                            setDravenQLevel(importedDravenQLevel);
+                            if (!Number.isFinite(importedDravenQLevel)) {
+                                return;
+                            }
+                            setDravenQLevel(
+                                Math.max(1, Math.min(5, Math.round(importedDravenQLevel)))
+                            );
                         }}
                         onDravenQLevelLinkedImport={(importedLinked) => {
                             setDravenQLevelLinked(importedLinked);
@@ -932,12 +1084,17 @@ function CalculatorPage() {
                                         className="armorInput numberInput"
                                         type="number"
                                         value={armorRange[0]}
-                                        onChange={(e) =>
+                                        onChange={(e) => {
+                                            const parsedArmorStart =
+                                                parseNumberInput(e.target.value);
+                                            if (parsedArmorStart === null) {
+                                                return;
+                                            }
                                             setArmorRange(([, end]) => [
-                                                +e.target.value,
+                                                parsedArmorStart,
                                                 end,
-                                            ])
-                                        }
+                                            ]);
+                                        }}
                                     />
                                     <button
                                         type="button"
@@ -974,12 +1131,18 @@ function CalculatorPage() {
                                         className="armorInput numberInput"
                                         type="number"
                                         value={armorRange[1]}
-                                        onChange={(e) =>
+                                        onChange={(e) => {
+                                            const parsedArmorEnd = parseNumberInput(
+                                                e.target.value
+                                            );
+                                            if (parsedArmorEnd === null) {
+                                                return;
+                                            }
                                             setArmorRange(([start]) => [
                                                 start,
-                                                +e.target.value,
-                                            ])
-                                        }
+                                                parsedArmorEnd,
+                                            ]);
+                                        }}
                                     />
                                     <button
                                         type="button"
@@ -1030,9 +1193,19 @@ function CalculatorPage() {
                                             max={1500}
                                             value={targetBonusHP}
                                             onChange={(e) => {
+                                                const parsedTargetBonusHP =
+                                                    parseNumberInput(
+                                                        e.target.value
+                                                    );
+                                                if (parsedTargetBonusHP === null) {
+                                                    return;
+                                                }
                                                 const newMin = Math.max(
                                                     0,
-                                                    Math.min(1500, Number(e.target.value))
+                                                    Math.min(
+                                                        1500,
+                                                        parsedTargetBonusHP
+                                                    )
                                                 );
                                                 setTargetBonusHP(
                                                     Math.min(newMin, targetBonusHPMax)
@@ -1049,9 +1222,18 @@ function CalculatorPage() {
                                                 step={50}
                                                 value={targetBonusHP}
                                                 onChange={(e) => {
-                                                    const newMin = Number(e.target.value);
+                                                    const parsedTargetBonusHP =
+                                                        parseNumberInput(
+                                                            e.target.value
+                                                        );
+                                                    if (parsedTargetBonusHP === null) {
+                                                        return;
+                                                    }
                                                     setTargetBonusHP(
-                                                        Math.min(newMin, targetBonusHPMax)
+                                                        Math.min(
+                                                            parsedTargetBonusHP,
+                                                            targetBonusHPMax
+                                                        )
                                                     );
                                                 }}
                                                 className="targetBonusHPSlider dualSlider"
@@ -1063,9 +1245,21 @@ function CalculatorPage() {
                                                 step={50}
                                                 value={targetBonusHPMax}
                                                 onChange={(e) => {
-                                                    const newMax = Number(e.target.value);
+                                                    const parsedTargetBonusHPMax =
+                                                        parseNumberInput(
+                                                            e.target.value
+                                                        );
+                                                    if (
+                                                        parsedTargetBonusHPMax ===
+                                                        null
+                                                    ) {
+                                                        return;
+                                                    }
                                                     setTargetBonusHPMax(
-                                                        Math.max(newMax, targetBonusHP)
+                                                        Math.max(
+                                                            parsedTargetBonusHPMax,
+                                                            targetBonusHP
+                                                        )
                                                     );
                                                 }}
                                                 className="targetBonusHPSlider dualSlider"
@@ -1077,9 +1271,19 @@ function CalculatorPage() {
                                             max={1500}
                                             value={targetBonusHPMax}
                                             onChange={(e) => {
+                                                const parsedTargetBonusHPMax =
+                                                    parseNumberInput(
+                                                        e.target.value
+                                                    );
+                                                if (parsedTargetBonusHPMax === null) {
+                                                    return;
+                                                }
                                                 const newMax = Math.max(
                                                     0,
-                                                    Math.min(1500, Number(e.target.value))
+                                                    Math.min(
+                                                        1500,
+                                                        parsedTargetBonusHPMax
+                                                    )
                                                 );
                                                 setTargetBonusHPMax(
                                                     Math.max(newMax, targetBonusHP)
@@ -1110,9 +1314,17 @@ function CalculatorPage() {
                                             max={1500}
                                             step={50}
                                             value={targetBonusHP}
-                                            onChange={(e) =>
-                                                setTargetBonusHP(Number(e.target.value))
-                                            }
+                                            onChange={(e) => {
+                                                const parsedTargetBonusHP =
+                                                    parseNumberInput(
+                                                        e.target.value
+                                                    );
+                                                if (parsedTargetBonusHP !== null) {
+                                                    setTargetBonusHP(
+                                                        parsedTargetBonusHP
+                                                    );
+                                                }
+                                            }}
                                             className="targetBonusHPSlider singleSlider"
                                         />
                                         <input
@@ -1120,17 +1332,24 @@ function CalculatorPage() {
                                             min={0}
                                             max={1500}
                                             value={targetBonusHP}
-                                            onChange={(e) =>
+                                            onChange={(e) => {
+                                                const parsedTargetBonusHP =
+                                                    parseNumberInput(
+                                                        e.target.value
+                                                    );
+                                                if (parsedTargetBonusHP === null) {
+                                                    return;
+                                                }
                                                 setTargetBonusHP(
                                                     Math.max(
                                                         0,
                                                         Math.min(
                                                             1500,
-                                                            Number(e.target.value)
+                                                            parsedTargetBonusHP
                                                         )
                                                     )
-                                                )
-                                            }
+                                                );
+                                            }}
                                             onFocus={(e) => e.target.select()}
                                             className="targetBonusHPInput numberInput rangeInput"
                                         />

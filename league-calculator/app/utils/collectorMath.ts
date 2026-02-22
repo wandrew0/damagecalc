@@ -93,7 +93,7 @@ export function calculateDiscreteEfficiency(input: CollectorInput): number {
     // Or 1 if we assume we are attacking.
     // Let's assume if we are already in execute range, 1 auto kills immediately due to collector?
     // If startHP <= 0.05H, collector executes instantly on damage?
-    // The item says "If you deal damage that leaves an enemy below 5%...".
+    // In-game tooltip wording uses "enemy"; same logic applies to our modeled target.
     // So if they are AT 4%, and you hit them, they die.
     // So 1 auto.
     // If without collector, 1 auto might not kill if A < 4% HP.
