@@ -2841,7 +2841,7 @@ export default function ApheliosCutoffAnalysis() {
                                 ref={closeButtonRef}
                                 type="button"
                                 className="timeline-action-button"
-                                onClick={closeTimelineEditor}
+                                onClick={() => closeTimelineEditor()}
                             >
                                 Close
                             </button>
@@ -2945,7 +2945,7 @@ export default function ApheliosCutoffAnalysis() {
                             <button
                                 type="button"
                                 className="timeline-action-button"
-                                onClick={closeTimelineEditor}
+                                onClick={() => closeTimelineEditor()}
                             >
                                 Done
                             </button>
