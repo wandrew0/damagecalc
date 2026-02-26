@@ -10,6 +10,7 @@ export interface EnemyArmorItem {
     id: string;
     name: string;
     armor: number;
+    imagePath: string;
 }
 
 export const ENEMY_ARMOR_PROFILES: EnemyArmorProfile[] = [
@@ -104,15 +105,70 @@ export const ENEMY_ARMOR_PROFILES: EnemyArmorProfile[] = [
 ];
 
 export const CURATED_ARMOR_ITEMS: EnemyArmorItem[] = [
-    { id: "cloth-armor", name: "Cloth Armor", armor: 15 },
-    { id: "plated-steelcaps", name: "Plated Steelcaps", armor: 25 },
-    { id: "chain-vest", name: "Chain Vest", armor: 40 },
-    { id: "wardens-mail", name: "Warden's Mail", armor: 40 },
-    { id: "bramble-vest", name: "Bramble Vest", armor: 40 },
-    { id: "frozen-heart", name: "Frozen Heart", armor: 75 },
-    { id: "thornmail", name: "Thornmail", armor: 75 },
-    { id: "randuins-omen", name: "Randuin's Omen", armor: 75 },
-    { id: "sunfire-aegis", name: "Sunfire Aegis", armor: 50 },
-    { id: "dead-mans-plate", name: "Dead Man's Plate", armor: 45 },
-    { id: "guardian-angel", name: "Guardian Angel", armor: 40 },
+    {
+        id: "cloth-armor",
+        name: "Cloth Armor",
+        armor: 15,
+        imagePath: "/images/items/Cloth_Armor.png",
+    },
+    {
+        id: "plated-steelcaps",
+        name: "Plated Steelcaps",
+        armor: 25,
+        imagePath: "/images/items/Plated_Steelcaps.png",
+    },
+    {
+        id: "chain-vest",
+        name: "Chain Vest",
+        armor: 40,
+        imagePath: "/images/items/Chain_Vest.png",
+    },
+    {
+        id: "wardens-mail",
+        name: "Warden's Mail",
+        armor: 40,
+        imagePath: "/images/items/Wardens_Mail.png",
+    },
+    {
+        id: "bramble-vest",
+        name: "Bramble Vest",
+        armor: 40,
+        imagePath: "/images/items/Bramble_Vest.png",
+    },
+    {
+        id: "frozen-heart",
+        name: "Frozen Heart",
+        armor: 75,
+        imagePath: "/images/items/Frozen_Heart.png",
+    },
+    {
+        id: "thornmail",
+        name: "Thornmail",
+        armor: 75,
+        imagePath: "/images/items/Thornmail.png",
+    },
+    {
+        id: "randuins-omen",
+        name: "Randuin's Omen",
+        armor: 75,
+        imagePath: "/images/items/Randuins_Omen.png",
+    },
+    {
+        id: "sunfire-aegis",
+        name: "Sunfire Aegis",
+        armor: 50,
+        imagePath: "/images/items/Sunfire_Aegis.png",
+    },
+    {
+        id: "dead-mans-plate",
+        name: "Dead Man's Plate",
+        armor: 45,
+        imagePath: "/images/items/Dead_Mans_Plate.png",
+    },
+    {
+        id: "guardian-angel",
+        name: "Guardian Angel",
+        armor: 40,
+        imagePath: "/images/items/Guardian_Angel.png",
+    },
 ];

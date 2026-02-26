@@ -1,0 +1,190 @@
+@media (max-width: 1280px) {
+    .cutoff-controls-grid {
+        grid-template-columns: repeat(2, minmax(220px, 1fr));
+    }
+
+    .results-primary-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 900px) {
+    .aphelios-cutoff-analysis {
+        padding: 14px;
+        overflow-x: hidden;
+    }
+
+    .cutoff-controls-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cutoff-controls-grid .field-label {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 7px;
+    }
+
+    .cutoff-controls-grid .field-label input:not([type="checkbox"]),
+    .cutoff-controls-grid .field-label select {
+        width: 100%;
+        flex: initial;
+    }
+
+    .timeline-modal .cutoff-select__control {
+        min-height: 40px !important;
+    }
+
+    .timeline-modal .cutoff-select__value-container {
+        padding: 1px 8px !important;
+    }
+
+    .timeline-modal .cutoff-select__placeholder,
+    .timeline-modal .cutoff-select__single-value,
+    .timeline-modal .cutoff-select__input-container input {
+        font-size: 16px !important;
+        line-height: 1.25 !important;
+    }
+
+    .cutoff-card-collapsible {
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .cutoff-card-toggle {
+        width: 100%;
+        border: none;
+        background: transparent;
+        color: var(--text-primary);
+        padding: 12px 14px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        text-align: left;
+    }
+
+    .cutoff-card-toggle-copy {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .cutoff-card-toggle-title {
+        line-height: 1.2;
+    }
+
+    .cutoff-card-toggle-summary {
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.3;
+        white-space: normal;
+    }
+
+    .cutoff-card-toggle-icon {
+        color: var(--text-secondary);
+        font-size: 16px;
+        line-height: 1;
+        margin-top: 1px;
+    }
+
+    .cutoff-card-collapsible .cutoff-card-body {
+        padding: 0 14px 14px;
+    }
+
+    .global-optimizer-select {
+        min-width: 0;
+        width: 100%;
+        max-width: none;
+    }
+
+    .forced-w-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    .timeline-change-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .timeline-mobile-lane {
+        border: none;
+        background: transparent;
+        padding: 0;
+    }
+
+    .timeline-mobile-lane-head {
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .timeline-mobile-add-button {
+        width: auto;
+        justify-content: center;
+        margin-left: auto;
+    }
+
+    .timeline-mobile-add-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    .timeline-item-icon {
+        padding: 8.4%;
+        box-sizing: border-box;
+    }
+
+    .path-guides-stack {
+        --guide-col-gap: 4px;
+        --guide-row-gap: 8px;
+        --guide-header-height: 22px;
+        --guide-label-width: 140px;
+        --guide-cell-size: max(
+            32px,
+            calc(
+                (100cqi - var(--guide-label-width) - (18 * var(--guide-col-gap)) - 1px) /
+                    18
+            )
+        );
+        min-width: 772px;
+    }
+
+    .mobile-level-scrubber {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    .mobile-path-segmented .inspector-segment {
+        min-width: 132px;
+        text-align: center;
+    }
+
+    .timeline-preview-rows {
+        grid-template-columns: repeat(18, minmax(72px, 1fr));
+        gap: 4px;
+    }
+
+    .timeline-change-row,
+    .timeline-change-row-single {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .timeline-change-row .timeline-action-button.danger {
+        justify-self: end;
+    }
+
+    .recommendations-table {
+        font-size: 12px;
+        min-width: 840px;
+    }
+
+    .top-states-table {
+        min-width: 340px;
+    }
+
+    .drilldown-chart-wrap {
+        height: 300px;
+    }
+}

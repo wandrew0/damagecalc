@@ -8,16 +8,17 @@ import {
     LineElement,
     Tooltip,
     Legend,
+    Title,
     Filler,
 } from "chart.js";
-import { Build } from "../classes/Build";
-import { Champion } from "../classes/Champion";
+import { Build } from "../../../classes/Build";
+import { Champion } from "../../../classes/Champion";
 import {
     calculateSingleAutoDamage,
     DravenQConfig,
     // calculateDamageWithMargin, // COMMENTED OUT: Crit variance margin of error feature
     // calculateMaxDamage, // COMMENTED OUT: Was using 100% crit for Y-axis, now using expected damage
-} from "../classes/Calculator";
+} from "../../../classes/Calculator";
 
 ChartJS.register(
     CategoryScale,
@@ -26,6 +27,7 @@ ChartJS.register(
     LineElement,
     Tooltip,
     Legend,
+    Title,
     Filler
 );
 
@@ -44,6 +46,7 @@ interface DamageChartProps {
     targetBonusHP?: number;
     targetBonusHPRangeMode?: boolean;
     targetBonusHPMax?: number;
+    hexopticsDistance?: number;
     disableAnimation?: boolean;
     dravenQ?: DravenQConfig;
 }
@@ -64,6 +67,7 @@ const DamageChart: React.FC<DamageChartProps> = ({
     targetBonusHP = 0,
     targetBonusHPRangeMode = false,
     targetBonusHPMax = 1500,
+    hexopticsDistance = 0,
     disableAnimation = false,
     dravenQ = { enabled: false, qLevel: 1 },
 }) => {
@@ -93,7 +97,8 @@ const DamageChart: React.FC<DamageChartProps> = ({
                 gatheringStormMinutes,
                 adShardCount,
                 hpForMaxCalc,
-                dravenQ
+                dravenQ,
+                hexopticsDistance
             );
             maxDamage = Math.max(maxDamage, expectedDamage);
         });
@@ -110,6 +115,7 @@ const DamageChart: React.FC<DamageChartProps> = ({
         targetBonusHP,
         targetBonusHPRangeMode,
         targetBonusHPMax,
+        hexopticsDistance,
         dravenQ,
     ]);
 
@@ -128,7 +134,8 @@ const DamageChart: React.FC<DamageChartProps> = ({
                     gatheringStormMinutes,
                     adShardCount,
                     bonusHP,
-                    dravenQ
+                    dravenQ,
+                    hexopticsDistance
                 );
                 results.push({ armor, damage: dmg });
             }
@@ -344,13 +351,15 @@ const DamageChart: React.FC<DamageChartProps> = ({
         targetBonusHP,
         targetBonusHPRangeMode,
         targetBonusHPMax,
+        hexopticsDistance,
         dravenQ,
     ]);
 
     return (
         <div className="chartContainer" style={{ position: "relative" }}>
             <div
-                style={{ position: "relative", height: "100%" }}
+                className="chartContainerInner"
+                style={{ position: "relative" }}
                 onMouseLeave={() => {
                     if (comparisonTooltipRef.current) {
                         comparisonTooltipRef.current.style.opacity = "0";
@@ -365,8 +374,8 @@ const DamageChart: React.FC<DamageChartProps> = ({
                         animation: disableAnimation
                             ? false
                             : {
-                                  duration: 300,
-                              },
+                                duration: 300,
+                            },
                         interaction: {
                             mode: "index",
                             intersect: false,
@@ -402,7 +411,7 @@ const DamageChart: React.FC<DamageChartProps> = ({
 
                                 builds.forEach((build, index) => {
                                     const hasLDR = build.items.some(item => item.name === "Lord Dominik's Regards");
-                                    
+
                                     if (hasLDR) {
                                         const damageMin = calculateSingleAutoDamage(
                                             champion,
@@ -413,7 +422,8 @@ const DamageChart: React.FC<DamageChartProps> = ({
                                             gatheringStormMinutes,
                                             adShardCount,
                                             targetBonusHP,
-                                            dravenQ
+                                            dravenQ,
+                                            hexopticsDistance
                                         );
                                         const damageMax = calculateSingleAutoDamage(
                                             champion,
@@ -424,7 +434,8 @@ const DamageChart: React.FC<DamageChartProps> = ({
                                             gatheringStormMinutes,
                                             adShardCount,
                                             targetBonusHPMax,
-                                            dravenQ
+                                            dravenQ,
+                                            hexopticsDistance
                                         );
                                         buildDamagesRange.push({
                                             name: build.name,
@@ -444,7 +455,8 @@ const DamageChart: React.FC<DamageChartProps> = ({
                                             gatheringStormMinutes,
                                             adShardCount,
                                             0, // No bonus HP effect without LDR
-                                            dravenQ
+                                            dravenQ,
+                                            hexopticsDistance
                                         );
                                         buildDamagesRange.push({
                                             name: build.name,
@@ -482,23 +494,19 @@ const DamageChart: React.FC<DamageChartProps> = ({
                                     innerHtml += `
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; gap: 16px;">
                                         <div style="display: flex; align-items: center; gap: 8px;">
-                                            <div style="width: 12px; height: 12px; background-color: ${
-                                                comp.color
-                                            }; border-radius: 2px; flex-shrink: 0;"></div>
-                                            <span style="font-size: 13px;">${
-                                                comp.buildName
-                                            }</span>
+                                            <div style="width: 12px; height: 12px; background-color: ${comp.color
+                                        }; border-radius: 2px; flex-shrink: 0;"></div>
+                                            <span style="font-size: 13px;">${comp.buildName
+                                        }</span>
                                         </div>
-                                        <span style="font-weight: bold; color: ${
-                                            isBaseline ? "#888" : "#4ade80"
+                                        <span style="font-weight: bold; color: ${isBaseline ? "#888" : "#4ade80"
                                         }; font-size: 13px; white-space: nowrap;">
-                                            ${
-                                                isBaseline
-                                                    ? "baseline"
-                                                    : isSingleValue
-                                                        ? `+${comp.percentDiffMin.toFixed(1)}%`
-                                                        : `+${comp.percentDiffMin.toFixed(1)}%–${comp.percentDiffMax.toFixed(1)}%`
-                                            }
+                                            ${isBaseline
+                                            ? "baseline"
+                                            : isSingleValue
+                                                ? `+${comp.percentDiffMin.toFixed(1)}%`
+                                                : `+${comp.percentDiffMin.toFixed(1)}%–${comp.percentDiffMax.toFixed(1)}%`
+                                        }
                                         </span>
                                     </div>
                                 `;
@@ -536,7 +544,8 @@ const DamageChart: React.FC<DamageChartProps> = ({
                                         gatheringStormMinutes,
                                         adShardCount,
                                         targetBonusHP,
-                                        dravenQ
+                                        dravenQ,
+                                        hexopticsDistance
                                     );
                                     // }
 
@@ -567,21 +576,17 @@ const DamageChart: React.FC<DamageChartProps> = ({
                                     innerHtml += `
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; gap: 16px;">
                                         <div style="display: flex; align-items: center; gap: 8px;">
-                                            <div style="width: 12px; height: 12px; background-color: ${
-                                                comp.color
-                                            }; border-radius: 2px; flex-shrink: 0;"></div>
-                                            <span style="font-size: 13px;">${
-                                                comp.buildName
-                                            }</span>
+                                            <div style="width: 12px; height: 12px; background-color: ${comp.color
+                                        }; border-radius: 2px; flex-shrink: 0;"></div>
+                                            <span style="font-size: 13px;">${comp.buildName
+                                        }</span>
                                         </div>
-                                        <span style="font-weight: bold; color: ${
-                                            comp.percentDiff === 0 ? "#888" : "#4ade80"
+                                        <span style="font-weight: bold; color: ${comp.percentDiff === 0 ? "#888" : "#4ade80"
                                         }; font-size: 13px; white-space: nowrap;">
-                                            ${
-                                                comp.percentDiff === 0
-                                                    ? "baseline"
-                                                    : `+${comp.percentDiff.toFixed(1)}%`
-                                            }
+                                            ${comp.percentDiff === 0
+                                            ? "baseline"
+                                            : `+${comp.percentDiff.toFixed(1)}%`
+                                        }
                                         </span>
                                     </div>
                                 `;
@@ -608,7 +613,7 @@ const DamageChart: React.FC<DamageChartProps> = ({
                             },
                             title: {
                                 display: true,
-                                text: "Single-Auto Damage vs. Armor",
+                                text: "Expected Auto Damage vs. Armor",
                             },
                             tooltip: {
                                 callbacks: {
@@ -675,6 +680,7 @@ const DamageChart: React.FC<DamageChartProps> = ({
                 />
                 <div
                     ref={comparisonTooltipRef}
+                    className="comparisonTooltip"
                     style={{
                         position: "absolute",
                         top: "10px",

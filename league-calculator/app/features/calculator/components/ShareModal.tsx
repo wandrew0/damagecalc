@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Build } from "../classes/Build";
-import { encodeBuilds } from "../utils/encoder";
-import { CHAMPIONS } from "../data/champions";
-import type { ChampionId } from "../data/champions";
+import { Build } from "../../../classes/Build";
+import { encodeBuilds } from "../../../utils/encoder";
+import { CHAMPIONS } from "../../../data/champions";
+import type { ChampionId } from "../../../data/champions";
 
 interface ShareModalProps {
     builds: Build[];

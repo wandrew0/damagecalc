@@ -5,14 +5,23 @@ import { Build } from "./Build";
 import { SPINNING_AXE } from "../data/champions";
 import { RUNE_DATA } from "../data/runes";
 
-/**
- * TODO: Hexoptics C44 - Distance-based damage amplifier
- * - Up to 10% increased damage based on distance to target
- * - Max bonus at 700 units
- * - Need to confirm: Linear scaling? Threshold-based?
- * - Need to confirm: Affects abilities or just autos?
- * - Implement once wiki is updated with exact formula
- */
+const HEXOPTICS_MAX_DISTANCE = 500;
+
+function clampHexopticsDistance(distance: number): number {
+    if (!Number.isFinite(distance)) {
+        return 0;
+    }
+    return Math.max(0, Math.min(HEXOPTICS_MAX_DISTANCE, distance));
+}
+
+export function getHexopticsMultiplier(build: Build, distance: number): number {
+    const hasHexoptics = build.items.some((item) => item.name === "Hexoptics C44");
+    if (!hasHexoptics) {
+        return 1;
+    }
+    const clampedDistance = clampHexopticsDistance(distance);
+    return 1 + 0.1 * (clampedDistance / HEXOPTICS_MAX_DISTANCE);
+}
 
 /**
  * Draven Spinning Axe bonus damage
@@ -163,7 +172,8 @@ export function calculateSingleAutoDamage(
     gatheringStormMinutes: number = 0,
     adShardCount: number = 0,
     targetBonusHP: number = 0,
-    dravenQ: DravenQConfig = { enabled: false, qLevel: 1 }
+    dravenQ: DravenQConfig = { enabled: false, qLevel: 1 },
+    hexopticsDistance: number = 0
 ): number {
     const crit = build.critChance;
     const AD = getTotalAD(
@@ -175,6 +185,7 @@ export function calculateSingleAutoDamage(
         adShardCount
     );
     const giantSlayerMultiplier = getGiantSlayerMultiplier(targetBonusHP, build);
+    const hexopticsMultiplier = getHexopticsMultiplier(build, hexopticsDistance);
 
     let effectiveArmor = targetArmor * (1 - build.armorPenetration) - build.lethality;
     effectiveArmor = Math.max(0, effectiveArmor);
@@ -207,7 +218,7 @@ export function calculateSingleAutoDamage(
         damage += spinningAxeDamage;
     }
 
-    return damage;
+    return damage * hexopticsMultiplier;
 }
 
 export interface DamageRange {
@@ -230,7 +241,8 @@ export function calculateDamageWithMargin(
     absoluteFocus: boolean = false,
     gatheringStormMinutes: number = 0,
     adShardCount: number = 0,
-    targetBonusHP: number = 0
+    targetBonusHP: number = 0,
+    hexopticsDistance: number = 0
 ): DamageRange {
     const crit = build.critChance;
     const AD = getTotalAD(
@@ -242,20 +254,27 @@ export function calculateDamageWithMargin(
         adShardCount
     );
     const giantSlayerMultiplier = getGiantSlayerMultiplier(targetBonusHP, build);
+    const hexopticsMultiplier = getHexopticsMultiplier(build, hexopticsDistance);
 
     let effectiveArmor = targetArmor * (1 - build.armorPenetration) - build.lethality;
     effectiveArmor = Math.max(0, effectiveArmor);
     const armorModifier = 100 / (100 + effectiveArmor);
 
     // Base damage values (including Giant Slayer)
-    const nonCritDamage = AD * armorModifier * giantSlayerMultiplier;
+    const nonCritDamage =
+        AD * armorModifier * giantSlayerMultiplier * hexopticsMultiplier;
     const critDamage =
-        AD * build.critDamageModifier * armorModifier * giantSlayerMultiplier;
+        AD *
+        build.critDamageModifier *
+        armorModifier *
+        giantSlayerMultiplier *
+        hexopticsMultiplier;
     const expectedDamage =
         AD *
         (1 - crit + crit * build.critDamageModifier) *
         armorModifier *
-        giantSlayerMultiplier;
+        giantSlayerMultiplier *
+        hexopticsMultiplier;
 
     // Calculate margin
     let lower = expectedDamage;

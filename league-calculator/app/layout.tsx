@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import "./styles/BaseTheme.css";
 import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
@@ -30,10 +31,10 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en">
+        <html lang="en" suppressHydrationWarning>
             <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
                 {children}
-                <Analytics />
+                {process.env.VERCEL ? <Analytics /> : null}
             </body>
         </html>
     );

@@ -1,81 +1,9 @@
-/* Minimalist Theme */
-:root {
-    --bg-primary: #ffffff;
-    --bg-secondary: #fafafa;
-    --bg-tertiary: #f5f5f5;
-    --border-light: #e5e5e5;
-    --border-medium: #d4d4d4;
-    --text-primary: #171717;
-    --text-secondary: #666666;
-    --text-tertiary: #999999;
-    --accent: #000000;
-    --accent-hover: #333333;
-    --danger: #dc2626;
-    --danger-hover: #b91c1c;
-    --radius: 4px;
-}
-
-* {
-    box-sizing: border-box;
-}
-
-body {
-    margin: 0;
-    padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    color: var(--text-primary);
-    background-color: var(--bg-primary);
-}
-
 .appContainer {
     display: flex;
     flex-direction: column;
     height: 100vh;
     overflow: hidden;
 }
-
-/* Header */
-.headerContainer {
-    flex: 0 0 auto;
-    padding: 16px 24px;
-    border-bottom: 1px solid var(--border-light);
-}
-
-.headerTop {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
-    min-height: 40px;
-}
-
-.headerTitleRow {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    flex: 1;
-    min-width: 0;
-}
-
-.headerTop h1 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--text-primary);
-    text-align: right;
-}
-
-.headerActions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    min-height: 40px;
-}
-
-/* Removed unused styles */
 
 .reset-all-button {
     background-color: var(--accent);
@@ -86,29 +14,12 @@ body {
     cursor: pointer;
     font-size: 13px;
     font-weight: 500;
+    white-space: nowrap;
     transition: background-color 0.15s ease;
 }
 
 .reset-all-button:hover {
     background-color: var(--accent-hover);
-}
-
-/* Input Styling - Clean and Modern */
-input[type="number"],
-input[type="text"] {
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius);
-    padding: 6px 10px;
-    background-color: var(--bg-primary);
-    transition: border-color 0.15s ease;
-    font-size: 13px;
-    color: var(--text-primary);
-    /* Mobile touch optimization */
-    -webkit-appearance: none;
-    -moz-appearance: textfield;
-    appearance: textfield;
-    box-sizing: border-box;
-    height: 32px;
 }
 
 .numberInput {
@@ -117,14 +28,6 @@ input[type="text"] {
 
 /* Mobile input optimization - up to 1024px (mobile/tablet) */
 @media (max-width: 1024px) {
-    input[type="number"],
-    input[type="text"] {
-        padding: 10px 12px;
-        font-size: 16px; /* Prevents zoom on iOS */
-        border-radius: 6px;
-        height: 44px; /* Match mobile button height */
-    }
-
     .numberInputButton {
         width: 44px;
         min-width: 44px; /* Minimum touch target size */
@@ -138,17 +41,6 @@ input[type="text"] {
         padding: 10px 8px;
         height: 44px; /* Match mobile button height */
     }
-}
-
-input[type="number"]:hover,
-input[type="text"]:hover {
-    border-color: var(--border-medium);
-}
-
-input[type="number"]:focus,
-input[type="text"]:focus {
-    outline: none;
-    border-color: var(--accent);
 }
 
 /* Number Input Group with Increment/Decrement Buttons */
@@ -678,6 +570,36 @@ input[type="text"]:focus {
     flex-shrink: 0;
 }
 
+.runeShardButtons {
+    display: inline-flex;
+    gap: 6px;
+}
+
+.runeShardButton {
+    min-width: 32px;
+    height: 30px;
+    padding: 0 10px;
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.runeShardButton:hover {
+    border-color: var(--border-medium);
+}
+
+.runeShardButton.active {
+    border-color: var(--accent);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
 /* Build Panel Container */
 .buildPanelContainer {
     display: flex;
@@ -925,16 +847,41 @@ input[type="text"]:focus {
     position: relative;
     width: 100%;
     height: 100%;
+    padding: 8.4%;
+    box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: visible;
+    border-radius: 0;
 }
 
 .item-image {
-    width: 52px;
-    height: 52px;
-    object-fit: contain;
-    border-radius: 2px;
+    display: block;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 1 / 1;
+}
+
+.item-image-inner {
+    display: block;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: calc(var(--radius) - 2px);
+    overflow: hidden;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+}
+
+/* iOS Safari: keep icon clipping stable on rounded corners */
+@supports (-webkit-touch-callout: none) {
+    .item-image-inner {
+        isolation: isolate;
+        transform: translateZ(0);
+        -webkit-mask-image: -webkit-radial-gradient(white, black);
+    }
 }
 
 /* Build Actions */
@@ -956,11 +903,8 @@ input[type="text"]:focus {
     cursor: pointer;
     font-size: 13px;
     font-weight: 500;
-    transition: background-color 0.15s ease;
-}
-
-.add-build-button:hover {
-    background-color: var(--accent-hover);
+    transition: background-color 50ms ease;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .share-button,
@@ -973,14 +917,32 @@ input[type="text"]:focus {
     cursor: pointer;
     font-size: 13px;
     font-weight: 500;
-    transition: all 0.15s ease;
+    transition: all 50ms ease;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.share-button:hover:not(:disabled),
-.import-button:hover {
+.add-build-button:active {
+    background-color: var(--accent-hover);
+}
+
+.share-button:not(:disabled):active,
+.import-button:active {
     background-color: var(--accent);
     color: white;
     border-color: var(--accent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .add-build-button:hover {
+        background-color: var(--accent-hover);
+    }
+
+    .share-button:hover:not(:disabled),
+    .import-button:hover {
+        background-color: var(--accent);
+        color: white;
+        border-color: var(--accent);
+    }
 }
 
 .share-button:disabled {
@@ -1001,6 +963,8 @@ input[type="text"]:focus {
 .chartContainer {
     flex: 1;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
     background-color: var(--bg-primary);
     padding: 20px;
     border-radius: var(--radius);
@@ -1008,6 +972,13 @@ input[type="text"]:focus {
     /* Ensure chart is responsive */
     position: relative;
     overflow: hidden;
+}
+
+.chartContainerInner {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
 }
 
 /* Chart responsive container */
@@ -1034,9 +1005,18 @@ input[type="text"]:focus {
     }
 
     /* Ensure chart container doesn't overflow */
-    .chartContainer > div {
+    .chartContainer > div:not(.comparisonTooltip) {
         width: 100% !important;
         height: 100% !important;
+    }
+
+    .chartContainer .comparisonTooltip {
+        top: 6px !important;
+        right: 6px !important;
+        min-width: 140px !important;
+        max-width: calc(100% - 12px) !important;
+        padding: 8px 10px !important;
+        font-size: 12px !important;
     }
 
     /* Force chart to be responsive */
@@ -1051,6 +1031,15 @@ input[type="text"]:focus {
         min-height: 180px;
         height: 180px;
         padding: 2px;
+    }
+
+    .chartContainer .comparisonTooltip {
+        top: 4px !important;
+        right: 4px !important;
+        min-width: 120px !important;
+        max-width: calc(100% - 8px) !important;
+        padding: 6px 8px !important;
+        font-size: 11px !important;
     }
 }
 
@@ -1143,6 +1132,7 @@ input[type="text"]:focus {
 .targetBonusHPContainer {
     padding: 12px 0;
     border-top: 1px solid var(--border-light);
+    overflow: visible;
 }
 
 .targetBonusHPSingleLine {
@@ -1153,6 +1143,36 @@ input[type="text"]:focus {
     font-weight: 500;
     color: var(--text-secondary);
     flex-wrap: nowrap;
+    overflow: visible;
+}
+
+.targetBonusHPControls {
+    --target-hp-input-col: 70px;
+    --target-hp-bonus-col-single: 6.5ch;
+    --target-hp-bonus-col-range: 12.5ch;
+    flex: 1;
+    min-width: 0;
+    column-gap: 8px;
+    row-gap: 8px;
+}
+
+.targetBonusHPControls.is-single {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1fr)
+        var(--target-hp-input-col)
+        var(--target-hp-bonus-col-single);
+    align-items: center;
+}
+
+.targetBonusHPControls.is-range {
+    display: grid;
+    grid-template-columns:
+        var(--target-hp-input-col)
+        minmax(0, 1fr)
+        var(--target-hp-input-col)
+        var(--target-hp-bonus-col-range);
+    align-items: center;
 }
 
 .targetBonusHPTitle {
@@ -1161,18 +1181,38 @@ input[type="text"]:focus {
     gap: 4px;
     white-space: nowrap;
     flex-shrink: 0;
+    overflow: visible;
 }
 
-.tooltipIcon {
-    cursor: help;
-    color: var(--text-tertiary);
-    font-size: 14px;
+.help-hint-wrap {
     position: relative;
+    display: inline-flex;
+    vertical-align: middle;
 }
 
-.tooltipIcon:hover {
+.help-hint {
+    display: inline-grid;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--border-medium);
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
     color: var(--text-secondary);
+    cursor: help;
+    line-height: 1;
+    appearance: none;
+    background: transparent;
+    padding: 0;
 }
+
+.help-hint:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
 
 .singleSlider {
     flex: 1;
@@ -1214,8 +1254,15 @@ input[type="text"]:focus {
 }
 
 .targetBonusHPInput {
-    width: 70px;
+    width: 100%;
     text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.targetBonusHPControls .targetBonusHPInput {
+    width: var(--target-hp-input-col) !important;
+    min-width: var(--target-hp-input-col);
+    max-width: var(--target-hp-input-col);
 }
 
 .targetBonusHPUnit {
@@ -1230,6 +1277,14 @@ input[type="text"]:focus {
     font-weight: 400;
     white-space: nowrap;
     flex-shrink: 0;
+    display: inline-block;
+    width: var(--target-hp-bonus-col-single);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.targetBonusHPControls.is-range .giantSlayerBonus {
+    width: var(--target-hp-bonus-col-range);
 }
 
 .rangeModeCheckbox {
@@ -1667,14 +1722,6 @@ input[type="text"]:focus {
         overflow: visible;
     }
 
-    .headerContainer {
-        padding: 8px 12px;
-    }
-
-    .headerTop h1 {
-        font-size: 14px;
-    }
-
     .reset-all-button {
         padding: 4px 8px;
         font-size: 13px;
@@ -1698,6 +1745,20 @@ input[type="text"]:focus {
     .globalSettings {
         padding: 8px;
         margin-bottom: 4px;
+    }
+
+    .globalSettings.compact {
+        padding: 8px 8px 0;
+    }
+
+    .championHeader {
+        margin: -8px -8px 8px -8px;
+        padding: 10px 12px;
+    }
+
+    .globalSettings.compact .championHeader {
+        margin: -8px -8px 0 -8px;
+        padding: 10px 12px;
     }
 
     .globalSettings label {
@@ -1798,7 +1859,6 @@ input[type="text"]:focus {
         border-radius: var(--radius);
         background-color: var(--bg-secondary);
         transition: all 0.15s ease;
-        padding: 8.4%;
     }
 
     .item-slot:hover {
@@ -1808,33 +1868,28 @@ input[type="text"]:focus {
     }
 
     .item-image-container {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .item-image {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        border-radius: 2px;
+        padding: 8.4%;
+        box-sizing: border-box;
     }
 
     /* Build Actions Mobile */
     .build-actions {
         flex-direction: row;
-        gap: 4px;
+        gap: 6px;
         flex-wrap: wrap;
     }
 
     .build-action-button {
-        padding: 6px 8px;
+        padding: 8px 10px;
         font-size: 13px;
         flex: 1;
         min-width: 0;
+        min-height: 44px;
+    }
+
+    .add-build-button.build-action-button {
+        flex-basis: 100%;
+        min-height: 44px;
     }
 
     /* Graph Section Mobile */
@@ -1942,28 +1997,172 @@ input[type="text"]:focus {
     }
 }
 
+@media (max-width: 480px) {
+    .globalSettings.compact .championHeader {
+        padding: 10px 12px;
+        gap: 6px;
+    }
+
+    .compactSummary {
+        gap: 6px;
+        font-size: 11px;
+    }
+
+    .compactSummaryItem {
+        gap: 2px;
+    }
+
+    .build-actions {
+        gap: 6px;
+    }
+
+    .build-action-button {
+        font-size: 12px;
+        padding: 8px;
+        min-height: 42px;
+    }
+
+    .armorRangeContainer {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        align-items: end;
+    }
+
+    .armorInputLabel {
+        width: auto;
+        min-width: 0;
+    }
+
+    .armorInputLabel .numberInputGroup {
+        display: grid;
+        grid-template-columns: 30px minmax(0, 1fr) 30px;
+        gap: 4px;
+        width: 100%;
+    }
+
+    .armorInputLabel .armorInput {
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+        height: 36px;
+        padding: 6px 4px;
+    }
+
+    .armorInputLabel .numberInputButton {
+        width: 30px;
+        min-width: 30px;
+        height: 36px;
+        font-size: 18px;
+    }
+
+    .targetBonusHPSingleLine {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            "title toggle"
+            "controls controls";
+        align-items: center;
+        column-gap: 8px;
+        row-gap: 8px;
+    }
+
+    .targetBonusHPTitle {
+        grid-area: title;
+        min-width: 0;
+    }
+
+    .rangeModeCheckbox {
+        grid-area: toggle;
+        margin-left: 0;
+    }
+
+    .targetBonusHPControls {
+        grid-area: controls;
+        min-width: 0;
+        --target-hp-input-col: 84px;
+        --target-hp-bonus-col-single: 6.5ch;
+        --target-hp-bonus-col-range: 12.5ch;
+    }
+
+    .targetBonusHPControls.is-single {
+        grid-template-columns:
+            minmax(0, 1fr)
+            var(--target-hp-input-col)
+            var(--target-hp-bonus-col-single);
+    }
+
+    .targetBonusHPControls.is-range {
+        grid-template-columns:
+            var(--target-hp-input-col)
+            minmax(0, 1fr)
+            var(--target-hp-input-col)
+            var(--target-hp-bonus-col-range);
+    }
+
+    .targetBonusHPControls .singleSlider,
+    .targetBonusHPControls .dualSliderContainer {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .targetBonusHPControls .targetBonusHPInput {
+        width: var(--target-hp-input-col) !important;
+        flex: 0 0 var(--target-hp-input-col);
+    }
+
+    .targetBonusHPControls.is-single .giantSlayerBonus {
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .targetBonusHPControls.is-range .giantSlayerBonus {
+        text-align: right;
+        white-space: nowrap;
+    }
+}
+
 /* Desktop/Horizontal styles */
 @media (min-width: 1025px) {
     .appContainer {
-        height: 100vh;
-        overflow: hidden;
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+    }
+
+    .appContainer .headerTitleRow {
+        flex-wrap: nowrap;
+    }
+
+    .appContainer .header-nav {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .appContainer .headerTitleWithActions {
+        flex: 0 0 auto;
+        width: auto;
+        margin-left: 16px;
     }
 
     .mainContent {
         flex-direction: row;
-        overflow: hidden;
+        overflow: visible;
     }
 
     .leftColumn {
         flex: 0 0 420px;
-        max-height: none;
+        max-height: calc(100dvh - 93px);
         overflow-y: auto;
+        overflow-x: hidden;
         padding-right: 8px;
     }
 
     .graphSection {
         flex: 1;
+        max-height: calc(100dvh - 93px);
         overflow-y: auto;
+        overflow-x: hidden;
     }
 
     .chartContainer {
@@ -2002,9 +2201,4 @@ input[type="text"]:focus {
         aspect-ratio: 1;
     }
 
-    .item-image {
-        width: 52px;
-        height: 52px;
-        object-fit: contain;
-    }
 }

@@ -1,27 +1,31 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
-import "../styles/CalculatorPage.css";
+import React, { useCallback, useEffect, useState, useRef } from "react";
+import "../../styles/CalculatorPage.css";
+import { Tooltip } from "react-tooltip";
 
-import { Build } from "../classes/Build";
-import { Item } from "../classes/Item";
+import { Build } from "../../classes/Build";
+import { Item } from "../../classes/Item";
 
-import BuildPanel from "../components/BuildPanel";
-import DamageChart from "../components/DamageChart";
-import Navigation from "../components/Navigation";
-import { decodeBuilds, decodeBuildsLegacy } from "../utils/encoder";
-import { ITEM_DATA_VERSION } from "../utils/itemRegistry";
+import BuildPanel from "./components/BuildPanel";
+import DamageChart from "./components/DamageChart";
+import AppHeader from "../../components/AppHeader";
+import { decodeBuilds, decodeBuildsLegacy } from "../../utils/encoder";
+import { ITEM_DATA_VERSION } from "../../utils/itemRegistry";
+import { parseNumberInput, sanitizeAdShardCount } from "../../utils/numberUtils";
+import useTouchDevice from "../../hooks/useTouchDevice";
+import usePersistenceLifecycle from "../../hooks/usePersistenceLifecycle";
 import {
     getAbsoluteFocusAD,
     getGatheringStormAD,
     getAdShardBonus,
-} from "../classes/Calculator";
+} from "../../classes/Calculator";
 import {
     ChampionId,
     CHAMPIONS,
     createChampion,
     getQRankFromChampLevel,
-} from "../data/champions";
+} from "../../data/champions";
 
 function serializeBuilds(builds: Build[]) {
     return builds.map((b) => b.toJSON());
@@ -65,14 +69,25 @@ function parseArmorRange(value: unknown): [number, number] | null {
     return [start, end];
 }
 
+function clampHexopticsDistance(value: number): number {
+    if (!Number.isFinite(value)) {
+        return 0;
+    }
+    return Math.max(0, Math.min(500, Math.round(value)));
+}
+
 function CalculatorPage() {
+    const targetHpTooltipText =
+        "Items that give HP (but not only HP) typically give 300-400 HP each. Giant Slayer deals up to 15% bonus physical damage based on target's bonus HP (max at 1500).";
+    const targetHpTooltipId = "target-hp-tooltip";
+    const isTouchDevice = useTouchDevice();
+
     // Global state
     const [level, setLevel] = useState(1);
     const [builds, setBuilds] = useState<Build[]>([]);
     const [championId, setChampionId] = useState<ChampionId>("aphelios");
     const [champion, setChampion] = useState(() => createChampion("aphelios"));
     const [armorRange, setArmorRange] = useState<[number, number]>([0, 200]);
-    const [isClient, setIsClient] = useState(false);
     const [showMargin, setShowMargin] = useState(false);
     const [stdDevMultiplier, setStdDevMultiplier] = useState(1);
     const [percentileRange, setPercentileRange] = useState(34); // ±34% for 1 std dev
@@ -83,6 +98,7 @@ function CalculatorPage() {
     const [targetBonusHP, setTargetBonusHP] = useState(0); // For LDR Giant Slayer calculation
     const [targetBonusHPRangeMode, setTargetBonusHPRangeMode] = useState(false); // Toggle for range mode
     const [targetBonusHPMax, setTargetBonusHPMax] = useState(1500); // Max value for range mode
+    const [hexopticsDistance, setHexopticsDistance] = useState(0);
     // Draven Spinning Axe settings
     const [dravenQEnabled, setDravenQEnabled] = useState(true); // Default on for Draven
     const [dravenQLevel, setDravenQLevel] = useState(() => getQRankFromChampLevel(1)); // Linked to champion level by default
@@ -122,17 +138,12 @@ function CalculatorPage() {
         ? getQRankFromChampLevel(level)
         : dravenQLevel;
     const isGatheringStormActive = gatheringStormMinutes >= 10;
-    const clampAdShardCount = (value: number) => {
-        if (!Number.isFinite(value)) {
-            return 0;
-        }
-        return Math.max(0, Math.min(2, Math.round(value)));
-    };
-    const parseNumberInput = (rawValue: string): number | null => {
-        const parsed = Number(rawValue);
-        return Number.isFinite(parsed) ? parsed : null;
-    };
-
+    const hasLDRBuild = builds.some((build) =>
+        build.items.some((item) => item.name === "Lord Dominik's Regards")
+    );
+    const hasHexopticsBuild = builds.some((build) =>
+        build.items.some((item) => item.name === "Hexoptics C44")
+    );
     // Helper function to compare items by content, not order
     const compareItems = (items1: Item[], items2: Item[]): boolean => {
         if (items1.length !== items2.length) return false;
@@ -225,10 +236,7 @@ function CalculatorPage() {
         };
     }, []);
 
-    // Only run client-side code
-    useEffect(() => {
-        setIsClient(true);
-
+    const loadPersistedState = useCallback(() => {
         // Helper function to handle imported builds
         const handleImportedBuilds = (
             importedBuilds: Build[],
@@ -337,6 +345,9 @@ function CalculatorPage() {
                 const savedTargetBonusHPMax = parseFiniteNumber(
                     parsedState.targetBonusHPMax
                 );
+                const savedHexopticsDistance = parseFiniteNumber(
+                    parsedState.hexopticsDistance
+                );
                 const savedChampionId = parsedState.championId;
                 const savedDravenQEnabled =
                     typeof parsedState.dravenQEnabled === "boolean"
@@ -401,7 +412,7 @@ function CalculatorPage() {
                     );
                 }
                 if (savedAdShardCount !== null)
-                    setAdShardCount(clampAdShardCount(savedAdShardCount));
+                    setAdShardCount(sanitizeAdShardCount(savedAdShardCount));
                 const normalizedTargetBonusHP =
                     savedTargetBonusHP === null
                         ? null
@@ -425,6 +436,11 @@ function CalculatorPage() {
                     setTargetBonusHPRangeMode(savedTargetBonusHPRangeMode);
                 if (normalizedTargetBonusHPMax !== null)
                     setTargetBonusHPMax(normalizedTargetBonusHPMax);
+                if (savedHexopticsDistance !== null) {
+                    setHexopticsDistance(
+                        clampHexopticsDistance(savedHexopticsDistance)
+                    );
+                }
                 // Load champion
                 if (savedChampionId === "aphelios" || savedChampionId === "draven") {
                     setChampionId(savedChampionId);
@@ -452,34 +468,32 @@ function CalculatorPage() {
         };
     }, []);
 
-    // Save state to localStorage whenever level, builds, or armorRange changes.
-    useEffect(() => {
-        if (isClient) {
-            const stateToSave = {
-                level,
-                armorRange,
-                builds: serializeBuilds(builds),
-                itemDataVersion: ITEM_DATA_VERSION,
-                showMargin,
-                stdDevMultiplier,
-                percentileRange,
-                numAutoAttacks,
-                absoluteFocus,
-                gatheringStormMinutes,
-                adShardCount,
-                targetBonusHP,
-                targetBonusHPRangeMode,
-                targetBonusHPMax,
-                championId,
-                dravenQEnabled,
-                dravenQLevel: dravenQLevelLinked
-                    ? getQRankFromChampLevel(level)
-                    : dravenQLevel,
-                dravenQLevelLinked,
-                championPanelCompact,
-            };
-            localStorage.setItem("calculatorState", JSON.stringify(stateToSave));
-        }
+    const persistState = useCallback(() => {
+        const stateToSave = {
+            level,
+            armorRange,
+            builds: serializeBuilds(builds),
+            itemDataVersion: ITEM_DATA_VERSION,
+            showMargin,
+            stdDevMultiplier,
+            percentileRange,
+            numAutoAttacks,
+            absoluteFocus,
+            gatheringStormMinutes,
+            adShardCount,
+            targetBonusHP,
+            targetBonusHPRangeMode,
+            targetBonusHPMax,
+            hexopticsDistance,
+            championId,
+            dravenQEnabled,
+            dravenQLevel: dravenQLevelLinked
+                ? getQRankFromChampLevel(level)
+                : dravenQLevel,
+            dravenQLevelLinked,
+            championPanelCompact,
+        };
+        localStorage.setItem("calculatorState", JSON.stringify(stateToSave));
     }, [
         level,
         armorRange,
@@ -494,13 +508,18 @@ function CalculatorPage() {
         targetBonusHP,
         targetBonusHPRangeMode,
         targetBonusHPMax,
+        hexopticsDistance,
         championId,
         dravenQEnabled,
         dravenQLevel,
         dravenQLevelLinked,
         championPanelCompact,
-        isClient,
     ]);
+
+    usePersistenceLifecycle({
+        loadState: loadPersistedState,
+        saveState: persistState,
+    });
 
     // Functions to update state
     function handleLevelChange(newLevel: number) {
@@ -545,6 +564,7 @@ function CalculatorPage() {
         setTargetBonusHP(0);
         setTargetBonusHPRangeMode(false);
         setTargetBonusHPMax(1500);
+        setHexopticsDistance(0);
         setChampionId("aphelios");
         setChampion(createChampion("aphelios"));
         setDravenQEnabled(true);
@@ -583,23 +603,17 @@ function CalculatorPage() {
     //     setStdDevMultiplier(percentileToStdDev(newPercentile));
     // }
 
-    if (!isClient) return null;
-
     return (
         <div className="appContainer">
-            <div className="headerContainer">
-                <div className="headerTop">
-                    <div className="headerTitleRow">
-                        <Navigation className="header-nav" />
-                        <h1>{CHAMPIONS[championId].name} Damage Calculator</h1>
-                    </div>
-                    <div className="headerActions">
-                        <button className="reset-all-button" onClick={handleResetAll}>
-                            Reset All
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <AppHeader
+                title={`${CHAMPIONS[championId].name} Damage Calculator`}
+                keepActionsWithTitle
+                actions={
+                    <button className="reset-all-button" onClick={handleResetAll}>
+                        Reset All
+                    </button>
+                }
+            />
 
             <div className="mainContent">
                 {/* Left Column: Champion Settings + Build Panel */}
@@ -621,7 +635,7 @@ function CalculatorPage() {
                                 </select>
                             </div>
                             {championPanelCompact && (
-                                <div className="compactSummary" onClick={(e) => e.stopPropagation()}>
+                                <div className="compactSummary">
                                     <span className="compactSummaryItem compactSummaryToggle is-on">
                                         <span className="compactSummaryLabel">Lvl</span>
                                         <span className="compactSummaryValue">{level}</span>
@@ -813,53 +827,30 @@ function CalculatorPage() {
                             <div className="runeRow">
                                 <label className="runeInputLabel">
                                     AD Shards:
-                                    <div className="numberInputGroup">
-                                        <button
-                                            type="button"
-                                            className="numberInputButton"
-                                            onClick={() =>
-                                                setAdShardCount(
-                                                    Math.max(0, adShardCount - 1)
-                                                )
-                                            }
-                                            aria-label="Decrease AD shards"
-                                        >
-                                            −
-                                        </button>
-                                        <input
-                                            type="number"
-                                            min={0}
-                                            max={2}
-                                            step={1}
-                                            value={adShardCount}
-                                            onChange={(e) => {
-                                                const parsedShardCount =
-                                                    parseNumberInput(
-                                                        e.target.value
-                                                    );
-                                                if (parsedShardCount !== null) {
-                                                    setAdShardCount(
-                                                        clampAdShardCount(
-                                                            parsedShardCount
-                                                        )
-                                                    );
+                                    <div
+                                        className="runeShardButtons"
+                                        role="group"
+                                        aria-label="AD shards"
+                                    >
+                                        {[0, 1, 2].map((count) => (
+                                            <button
+                                                key={count}
+                                                type="button"
+                                                className={`runeShardButton ${
+                                                    adShardCount === count
+                                                        ? "active"
+                                                        : ""
+                                                }`}
+                                                onClick={() =>
+                                                    setAdShardCount(count)
                                                 }
-                                            }}
-                                            onFocus={(e) => e.target.select()}
-                                            className="numberInput"
-                                        />
-                                        <button
-                                            type="button"
-                                            className="numberInputButton"
-                                            onClick={() =>
-                                                setAdShardCount(
-                                                    Math.min(2, adShardCount + 1)
-                                                )
-                                            }
-                                            aria-label="Increase AD shards"
-                                        >
-                                            +
-                                        </button>
+                                                aria-pressed={
+                                                    adShardCount === count
+                                                }
+                                            >
+                                                {count}
+                                            </button>
+                                        ))}
                                     </div>
                                 </label>
                                 <span
@@ -1016,7 +1007,7 @@ function CalculatorPage() {
                             );
                         }}
                         onAdShardCountImport={(importedAdShardCount) => {
-                            setAdShardCount(clampAdShardCount(importedAdShardCount));
+                            setAdShardCount(sanitizeAdShardCount(importedAdShardCount));
                         }}
                         onChampionImport={(importedChampionId) => {
                             handleChampionChange(importedChampionId);
@@ -1055,6 +1046,7 @@ function CalculatorPage() {
                         targetBonusHP={targetBonusHP}
                         targetBonusHPRangeMode={targetBonusHPRangeMode}
                         targetBonusHPMax={targetBonusHPMax}
+                        hexopticsDistance={hexopticsDistance}
                         disableAnimation={disableChartAnimation}
                         dravenQ={{
                             enabled: championId === "draven" && dravenQEnabled,
@@ -1161,210 +1153,310 @@ function CalculatorPage() {
                             </label>
                         </div>
 
-                        <div className="targetBonusHPContainer">
-                            <div className="targetBonusHPSingleLine">
-                                <span className="targetBonusHPTitle">
-                                    Target HP
-                                    <span
-                                        className="tooltipIcon"
-                                        title="HP items typically give 300-400 HP each. Giant Slayer deals up to 15% bonus physical damage based on target's bonus HP (max at 1500)."
-                                    >
-                                        ⓘ
-                                    </span>
-                                </span>
-                                <label
-                                    className="rangeModeCheckbox"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    <input
-                                        type="checkbox"
-                                        checked={targetBonusHPRangeMode}
-                                        onChange={(e) =>
-                                            setTargetBonusHPRangeMode(e.target.checked)
-                                        }
-                                    />
-                                    Range
-                                </label>
-                                {targetBonusHPRangeMode ? (
-                                    <>
-                                        <input
-                                            type="number"
-                                            min={0}
-                                            max={1500}
-                                            value={targetBonusHP}
-                                            onChange={(e) => {
-                                                const parsedTargetBonusHP =
-                                                    parseNumberInput(
-                                                        e.target.value
-                                                    );
-                                                if (parsedTargetBonusHP === null) {
-                                                    return;
+                        {(hasLDRBuild || hasHexopticsBuild) && (
+                            <div className="targetBonusHPContainer">
+                                {hasLDRBuild && (
+                                    <div className="targetBonusHPSingleLine">
+                                        <span className="targetBonusHPTitle">
+                                            Target HP
+                                            <span className="help-hint-wrap">
+                                                <button
+                                                    type="button"
+                                                    className="help-hint"
+                                                    data-tooltip-id={targetHpTooltipId}
+                                                    aria-label={targetHpTooltipText}
+                                                >
+                                                    ?
+                                                </button>
+                                            </span>
+                                            <Tooltip
+                                                id={targetHpTooltipId}
+                                                place="top-start"
+                                                variant="light"
+                                                border="1px solid var(--border-light)"
+                                                offset={10}
+                                                positionStrategy="fixed"
+                                                events={isTouchDevice ? ["click"] : ["hover"]}
+                                                opacity={1}
+                                                style={{
+                                                    backgroundColor: "var(--bg-primary)",
+                                                    color: "var(--text-primary)",
+                                                    borderRadius: "8px",
+                                                    padding: "8px 10px",
+                                                    fontSize: "12px",
+                                                    fontWeight: 500,
+                                                    minWidth: "190px",
+                                                    maxWidth: "min(280px, calc(100vw - 24px))",
+                                                    whiteSpace: "normal",
+                                                    zIndex: 10000,
+                                                    opacity: 1,
+                                                    boxShadow: "0 6px 18px rgba(0, 0, 0, 0.12)",
+                                                }}
+                                            >
+                                                {targetHpTooltipText}
+                                            </Tooltip>
+                                        </span>
+                                        <label
+                                            className="rangeModeCheckbox"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={targetBonusHPRangeMode}
+                                                onChange={(e) =>
+                                                    setTargetBonusHPRangeMode(e.target.checked)
                                                 }
-                                                const newMin = Math.max(
-                                                    0,
-                                                    Math.min(
-                                                        1500,
-                                                        parsedTargetBonusHP
-                                                    )
-                                                );
-                                                setTargetBonusHP(
-                                                    Math.min(newMin, targetBonusHPMax)
-                                                );
-                                            }}
-                                            onFocus={(e) => e.target.select()}
-                                            className="targetBonusHPInput numberInput rangeInput"
-                                        />
-                                        <div className="dualSliderContainer">
-                                            <input
-                                                type="range"
-                                                min={0}
-                                                max={1500}
-                                                step={50}
-                                                value={targetBonusHP}
-                                                onChange={(e) => {
-                                                    const parsedTargetBonusHP =
-                                                        parseNumberInput(
-                                                            e.target.value
-                                                        );
-                                                    if (parsedTargetBonusHP === null) {
-                                                        return;
-                                                    }
-                                                    setTargetBonusHP(
-                                                        Math.min(
-                                                            parsedTargetBonusHP,
-                                                            targetBonusHPMax
-                                                        )
-                                                    );
-                                                }}
-                                                className="targetBonusHPSlider dualSlider"
                                             />
-                                            <input
-                                                type="range"
-                                                min={0}
-                                                max={1500}
-                                                step={50}
-                                                value={targetBonusHPMax}
-                                                onChange={(e) => {
-                                                    const parsedTargetBonusHPMax =
-                                                        parseNumberInput(
-                                                            e.target.value
-                                                        );
-                                                    if (
-                                                        parsedTargetBonusHPMax ===
-                                                        null
-                                                    ) {
-                                                        return;
-                                                    }
-                                                    setTargetBonusHPMax(
-                                                        Math.max(
-                                                            parsedTargetBonusHPMax,
-                                                            targetBonusHP
-                                                        )
-                                                    );
-                                                }}
-                                                className="targetBonusHPSlider dualSlider"
-                                            />
+                                            Range
+                                        </label>
+                                        <div
+                                            className={`targetBonusHPControls ${
+                                                targetBonusHPRangeMode
+                                                    ? "is-range"
+                                                    : "is-single"
+                                            }`}
+                                        >
+                                            {targetBonusHPRangeMode ? (
+                                                <>
+                                                    <input
+                                                        type="number"
+                                                        min={0}
+                                                        max={1500}
+                                                        value={targetBonusHP}
+                                                        onChange={(e) => {
+                                                            const parsedTargetBonusHP =
+                                                                parseNumberInput(
+                                                                    e.target.value
+                                                                );
+                                                            if (parsedTargetBonusHP === null) {
+                                                                return;
+                                                            }
+                                                            const newMin = Math.max(
+                                                                0,
+                                                                Math.min(
+                                                                    1500,
+                                                                    parsedTargetBonusHP
+                                                                )
+                                                            );
+                                                            setTargetBonusHP(
+                                                                Math.min(newMin, targetBonusHPMax)
+                                                            );
+                                                        }}
+                                                        onFocus={(e) => e.target.select()}
+                                                        className="targetBonusHPInput numberInput rangeInput"
+                                                    />
+                                                    <div className="dualSliderContainer">
+                                                        <input
+                                                            type="range"
+                                                            min={0}
+                                                            max={1500}
+                                                            step={50}
+                                                            value={targetBonusHP}
+                                                            onChange={(e) => {
+                                                                const parsedTargetBonusHP =
+                                                                    parseNumberInput(
+                                                                        e.target.value
+                                                                    );
+                                                                if (parsedTargetBonusHP === null) {
+                                                                    return;
+                                                                }
+                                                                setTargetBonusHP(
+                                                                    Math.min(
+                                                                        parsedTargetBonusHP,
+                                                                        targetBonusHPMax
+                                                                    )
+                                                                );
+                                                            }}
+                                                            className="targetBonusHPSlider dualSlider"
+                                                        />
+                                                        <input
+                                                            type="range"
+                                                            min={0}
+                                                            max={1500}
+                                                            step={50}
+                                                            value={targetBonusHPMax}
+                                                            onChange={(e) => {
+                                                                const parsedTargetBonusHPMax =
+                                                                    parseNumberInput(
+                                                                        e.target.value
+                                                                    );
+                                                                if (
+                                                                    parsedTargetBonusHPMax ===
+                                                                    null
+                                                                ) {
+                                                                    return;
+                                                                }
+                                                                setTargetBonusHPMax(
+                                                                    Math.max(
+                                                                        parsedTargetBonusHPMax,
+                                                                        targetBonusHP
+                                                                    )
+                                                                );
+                                                            }}
+                                                            className="targetBonusHPSlider dualSlider"
+                                                        />
+                                                    </div>
+                                                    <input
+                                                        type="number"
+                                                        min={0}
+                                                        max={1500}
+                                                        value={targetBonusHPMax}
+                                                        onChange={(e) => {
+                                                            const parsedTargetBonusHPMax =
+                                                                parseNumberInput(
+                                                                    e.target.value
+                                                                );
+                                                            if (parsedTargetBonusHPMax === null) {
+                                                                return;
+                                                            }
+                                                            const newMax = Math.max(
+                                                                0,
+                                                                Math.min(
+                                                                    1500,
+                                                                    parsedTargetBonusHPMax
+                                                                )
+                                                            );
+                                                            setTargetBonusHPMax(
+                                                                Math.max(newMax, targetBonusHP)
+                                                            );
+                                                        }}
+                                                        onFocus={(e) => e.target.select()}
+                                                        className="targetBonusHPInput numberInput rangeInput"
+                                                    />
+                                                    <span className="giantSlayerBonus">
+                                                        +
+                                                        {Math.min(
+                                                            15,
+                                                            (targetBonusHP / 1500) * 15
+                                                        ).toFixed(1)}
+                                                        %–
+                                                        {Math.min(
+                                                            15,
+                                                            (targetBonusHPMax / 1500) * 15
+                                                        ).toFixed(1)}
+                                                        %
+                                                    </span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <input
+                                                        type="range"
+                                                        min={0}
+                                                        max={1500}
+                                                        step={50}
+                                                        value={targetBonusHP}
+                                                        onChange={(e) => {
+                                                            const parsedTargetBonusHP =
+                                                                parseNumberInput(
+                                                                    e.target.value
+                                                                );
+                                                            if (parsedTargetBonusHP !== null) {
+                                                                setTargetBonusHP(
+                                                                    parsedTargetBonusHP
+                                                                );
+                                                            }
+                                                        }}
+                                                        className="targetBonusHPSlider singleSlider"
+                                                    />
+                                                    <input
+                                                        type="number"
+                                                        min={0}
+                                                        max={1500}
+                                                        value={targetBonusHP}
+                                                        onChange={(e) => {
+                                                            const parsedTargetBonusHP =
+                                                                parseNumberInput(
+                                                                    e.target.value
+                                                                );
+                                                            if (parsedTargetBonusHP === null) {
+                                                                return;
+                                                            }
+                                                            setTargetBonusHP(
+                                                                Math.max(
+                                                                    0,
+                                                                    Math.min(
+                                                                        1500,
+                                                                        parsedTargetBonusHP
+                                                                    )
+                                                                )
+                                                            );
+                                                        }}
+                                                        onFocus={(e) => e.target.select()}
+                                                        className="targetBonusHPInput numberInput rangeInput"
+                                                    />
+                                                    <span className="giantSlayerBonus">
+                                                        +
+                                                        {Math.min(
+                                                            15,
+                                                            (targetBonusHP / 1500) * 15
+                                                        ).toFixed(1)}
+                                                        %
+                                                    </span>
+                                                </>
+                                            )}
                                         </div>
-                                        <input
-                                            type="number"
-                                            min={0}
-                                            max={1500}
-                                            value={targetBonusHPMax}
-                                            onChange={(e) => {
-                                                const parsedTargetBonusHPMax =
-                                                    parseNumberInput(
-                                                        e.target.value
-                                                    );
-                                                if (parsedTargetBonusHPMax === null) {
-                                                    return;
-                                                }
-                                                const newMax = Math.max(
-                                                    0,
-                                                    Math.min(
-                                                        1500,
-                                                        parsedTargetBonusHPMax
-                                                    )
-                                                );
-                                                setTargetBonusHPMax(
-                                                    Math.max(newMax, targetBonusHP)
-                                                );
-                                            }}
-                                            onFocus={(e) => e.target.select()}
-                                            className="targetBonusHPInput numberInput rangeInput"
-                                        />
-                                        <span className="giantSlayerBonus">
-                                            +
-                                            {Math.min(
-                                                15,
-                                                (targetBonusHP / 1500) * 15
-                                            ).toFixed(1)}
-                                            %–
-                                            {Math.min(
-                                                15,
-                                                (targetBonusHPMax / 1500) * 15
-                                            ).toFixed(1)}
-                                            %
+                                    </div>
+                                )}
+                                {hasHexopticsBuild && (
+                                    <div className="targetBonusHPSingleLine">
+                                        <span className="targetBonusHPTitle">
+                                            Hexoptics Distance
                                         </span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <input
-                                            type="range"
-                                            min={0}
-                                            max={1500}
-                                            step={50}
-                                            value={targetBonusHP}
-                                            onChange={(e) => {
-                                                const parsedTargetBonusHP =
-                                                    parseNumberInput(
-                                                        e.target.value
-                                                    );
-                                                if (parsedTargetBonusHP !== null) {
-                                                    setTargetBonusHP(
-                                                        parsedTargetBonusHP
-                                                    );
-                                                }
-                                            }}
-                                            className="targetBonusHPSlider singleSlider"
-                                        />
-                                        <input
-                                            type="number"
-                                            min={0}
-                                            max={1500}
-                                            value={targetBonusHP}
-                                            onChange={(e) => {
-                                                const parsedTargetBonusHP =
-                                                    parseNumberInput(
-                                                        e.target.value
-                                                    );
-                                                if (parsedTargetBonusHP === null) {
-                                                    return;
-                                                }
-                                                setTargetBonusHP(
-                                                    Math.max(
-                                                        0,
-                                                        Math.min(
-                                                            1500,
-                                                            parsedTargetBonusHP
-                                                        )
-                                                    )
-                                                );
-                                            }}
-                                            onFocus={(e) => e.target.select()}
-                                            className="targetBonusHPInput numberInput rangeInput"
-                                        />
-                                        <span className="giantSlayerBonus">
-                                            +
-                                            {Math.min(
-                                                15,
-                                                (targetBonusHP / 1500) * 15
-                                            ).toFixed(1)}
-                                            %
-                                        </span>
-                                    </>
+                                        <div className="targetBonusHPControls is-single">
+                                            <input
+                                                type="range"
+                                                min={0}
+                                                max={500}
+                                                step={10}
+                                                value={hexopticsDistance}
+                                                onChange={(e) => {
+                                                    const parsedDistance =
+                                                        parseNumberInput(e.target.value);
+                                                    if (parsedDistance !== null) {
+                                                        setHexopticsDistance(
+                                                            clampHexopticsDistance(
+                                                                parsedDistance
+                                                            )
+                                                        );
+                                                    }
+                                                }}
+                                                className="targetBonusHPSlider singleSlider"
+                                            />
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                max={500}
+                                                value={hexopticsDistance}
+                                                onChange={(e) => {
+                                                    const parsedDistance =
+                                                        parseNumberInput(e.target.value);
+                                                    if (parsedDistance !== null) {
+                                                        setHexopticsDistance(
+                                                            clampHexopticsDistance(
+                                                                parsedDistance
+                                                            )
+                                                        );
+                                                    }
+                                                }}
+                                                onFocus={(e) => e.target.select()}
+                                                className="targetBonusHPInput numberInput rangeInput"
+                                            />
+                                            <span className="giantSlayerBonus">
+                                                +
+                                                {(
+                                                    (clampHexopticsDistance(
+                                                        hexopticsDistance
+                                                    ) /
+                                                        500) *
+                                                    10
+                                                ).toFixed(1)}
+                                                %
+                                            </span>
+                                        </div>
+                                    </div>
                                 )}
                             </div>
-                        </div>
+                        )}
 
                         {/* Margin of error hidden for now - LDR damage variance is more important
                         <div className="marginErrorContainer">

@@ -52,6 +52,22 @@ RUNE_FALLBACK = {
 
 ITEM_OVERRIDES_PATH = SCRIPT_DIR / "item-overrides.json"
 
+# Keep armor-only target timeline items synced to locally downloaded images.
+# These may not pass the AD/crit/lethality/armor-pen filter for ALL_ITEMS.
+CURATED_ARMOR_IMAGE_ITEM_NAMES = {
+    "Cloth Armor",
+    "Plated Steelcaps",
+    "Chain Vest",
+    "Warden's Mail",
+    "Bramble Vest",
+    "Frozen Heart",
+    "Thornmail",
+    "Randuin's Omen",
+    "Sunfire Aegis",
+    "Dead Man's Plate",
+    "Guardian Angel",
+}
+
 def download_image(url, filename, max_retries=3):
     """Download an image from URL and save it to the images directory with retry logic"""
     for attempt in range(max_retries):
@@ -486,7 +502,8 @@ for item in all_items:
     # Filter out Arena items (6-digit IDs like Atma's Reckoning, Sword of the Divine, etc.)
     if int(item.id) >= 100000:
         continue
-    if hassomething:
+    force_download_image = item.name in CURATED_ARMOR_IMAGE_ITEM_NAMES
+    if hassomething or force_download_image:
         # print(f"Processing: {item.name}")
         # map_ids = [m.id for m in item.maps]
         # map_names = [map_lookup.get(mid, f"Unknown({mid})") for mid in map_ids]
@@ -496,7 +513,7 @@ for item in all_items:
         image_url = item.image.url
         
         # Debug: Print image properties for the first few items
-        if len(items_by_name) < 3:
+        if hassomething and len(items_by_name) < 3:
             print(f"\nImage data for {item.name}:")
             print(f"  URL: {item.image.url}")
             print(f"  Width: {getattr(item.image, 'width', 'N/A')}")
@@ -512,6 +529,10 @@ for item in all_items:
         download_image(image_url, filename)
         data["image_path"] = f"/images/items/{filename}"
         data["item_id"] = int(item.id)
+
+        # Keep armor-only image downloads local, but don't include them in ALL_ITEMS.
+        if not hassomething:
+            continue
         
         # Check if we already have this item name
         item_name = item.name

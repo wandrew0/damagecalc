@@ -1,3 +1,25 @@
+.collector-page-wrapper--collector {
+    height: 100vh;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.collector-page--collector {
+    overflow: hidden;
+}
+
+@media (max-width: 1024px) {
+    .collector-page-wrapper--collector {
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+    }
+
+    .collector-page--collector {
+        overflow: visible;
+    }
+}
+
 .collector-analysis {
     height: 100%;
     overflow: hidden;
@@ -39,6 +61,11 @@
     height: 100%;
 }
 
+.collector-page.collector-page-columns {
+    overflow: hidden;
+    scrollbar-gutter: auto;
+}
+
 /* Thin scrollbars */
 .explanation-column::-webkit-scrollbar,
 .calculator-column::-webkit-scrollbar {
@@ -76,6 +103,10 @@
         height: auto;
         padding-right: 0;
     }
+
+    .collector-page.collector-page-columns {
+        overflow: visible;
+    }
     
     .writeup-section,
     .controls-section,
@@ -104,6 +135,15 @@
     }
     
     .writeup-section p {
+        font-size: 13px;
+    }
+
+    .collector-notes h4 {
+        font-size: 13px;
+    }
+
+    .collector-notes p,
+    .collector-notes li {
         font-size: 13px;
     }
     
@@ -150,7 +190,7 @@
         width: 90px;
     }
     
-    input[type="range"] {
+    .collector-analysis input[type="range"] {
         height: 44px; /* Larger tap target */
         margin: 12px 0;
     }
@@ -187,6 +227,10 @@
         overflow: visible;
         height: auto;
         padding-right: 0;
+    }
+
+    .collector-page.collector-page-columns {
+        overflow: visible;
     }
 }
 
@@ -374,13 +418,18 @@
 }
 
 .writeup-section,
-.controls-section,
-.results-section,
 .math-explanation {
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
     overflow-x: hidden;
+}
+
+.controls-section,
+.results-section {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .formula-block {
@@ -461,6 +510,42 @@
     color: var(--text-secondary);
     line-height: 1.6;
     margin-bottom: 12px;
+}
+
+.collector-notes {
+    margin-top: 16px;
+}
+
+.collector-note-block + .collector-note-block {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-light);
+}
+
+.collector-notes h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    color: var(--text-primary);
+}
+
+.collector-notes p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+.collector-notes ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.collector-notes li {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 10px;
 }
 
 /* Standard Math Formatting */

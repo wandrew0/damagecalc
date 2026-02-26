@@ -1,0 +1,358 @@
+.cutoff-level-guide {
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cutoff-level-guides-scroll {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 8px;
+    scrollbar-gutter: stable;
+}
+
+.cutoff-level-guide-grid-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.path-guides-column-clickzones {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    pointer-events: none;
+}
+
+.path-guides-column-clickzone {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(
+        var(--guide-label-width) + var(--guide-col-gap) +
+            ((var(--guide-band-index) - 1) * (var(--guide-cell-size) + var(--guide-col-gap)))
+    );
+    width: calc(var(--guide-cell-size) + var(--guide-col-gap));
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.path-guides-column-clickzone:last-child {
+    width: var(--guide-cell-size);
+}
+
+.cutoff-level-guide-grid {
+    display: grid;
+    grid-template-columns: var(--guide-label-width) repeat(18, var(--guide-cell-size));
+    column-gap: var(--guide-col-gap);
+    row-gap: var(--guide-row-gap);
+    width: 100%;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+}
+
+.cutoff-level-guide-bands {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 3;
+}
+
+.cutoff-level-guide-band {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: var(--guide-cell-size);
+    left: calc(
+        var(--guide-label-width) + var(--guide-col-gap) +
+            ((var(--guide-band-index) - 1) * (var(--guide-cell-size) + var(--guide-col-gap)))
+    );
+    border-radius: 8px;
+    background: rgba(100, 116, 139, 0.09);
+}
+
+.cutoff-level-guide-band-selected {
+    top: -2px;
+    bottom: -2px;
+    margin-left: -2px;
+    width: calc(var(--guide-cell-size) + 4px);
+    border-radius: 10px;
+    background: rgba(37, 99, 235, 0.08);
+    box-shadow: inset 0 0 0 2px rgba(37, 99, 235, 0.22);
+}
+
+.cutoff-level-guide-band-hover {
+    top: -1px;
+    bottom: -1px;
+    margin-left: -1px;
+    width: calc(var(--guide-cell-size) + 2px);
+    border-radius: 9px;
+    background: rgba(37, 99, 235, 0.05);
+    box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.18);
+}
+
+.cutoff-level-guide-corner,
+.cutoff-level-guide-col {
+    height: var(--guide-header-height);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+}
+
+.cutoff-level-guide-corner,
+.cutoff-level-guide-col {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+.cutoff-level-guide-row-label {
+    height: var(--guide-cell-size);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    background: var(--bg-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.cutoff-level-guide-row-key {
+    width: 22px;
+    height: 22px;
+    border: 1px solid var(--border-medium);
+    border-radius: 5px;
+    background: var(--bg-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.cutoff-level-guide-row-label-q .cutoff-level-guide-row-key {
+    color: orange;
+    border-color: rgba(255, 165, 0, 0.5);
+}
+
+.cutoff-level-guide-row-label-w .cutoff-level-guide-row-key {
+    color: #7a6d1b;
+    border-color: rgba(122, 109, 27, 0.45);
+}
+
+.cutoff-level-guide-row-label-e .cutoff-level-guide-row-key {
+    color: tomato;
+    border-color: rgba(255, 99, 71, 0.45);
+}
+
+.cutoff-level-guide-col.diff-level {
+    position: relative;
+}
+
+.cutoff-level-guide-col.diff-level::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 3px;
+    transform: translateX(-50%);
+    width: 14px;
+    height: 2px;
+    border-radius: 999px;
+    background: rgba(71, 85, 105, 0.62);
+}
+
+.cutoff-level-guide-row-label-q {
+    color: orange;
+}
+
+.cutoff-level-guide-row-label-w {
+    color: #7a6d1b;
+}
+
+.cutoff-level-guide-row-label-e {
+    color: tomato;
+}
+
+.cutoff-level-guide-row-label-context {
+    color: var(--text-secondary);
+    height: var(--guide-context-row-height, 18px);
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    font-size: 12px;
+    padding: 0 8px 0 0;
+}
+
+.cutoff-level-guide-context {
+    --guide-context-row-height: 18px;
+}
+
+.cutoff-level-guide-context .cutoff-level-guide-grid {
+    row-gap: 4px;
+}
+
+.cutoff-level-guide-cell {
+    width: var(--guide-cell-size);
+    height: var(--guide-cell-size);
+    justify-self: center;
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    font-size: 12px;
+    font-weight: 700;
+    color: transparent;
+    font-variant-numeric: tabular-nums;
+}
+
+.cutoff-level-guide-cell-context {
+    width: 100%;
+    height: var(--guide-context-row-height, 18px);
+    justify-self: stretch;
+    align-self: stretch;
+    box-sizing: border-box;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    color: var(--text-primary);
+    font-size: clamp(10px, calc(var(--guide-cell-size) * 0.34), 12px);
+    font-weight: 600;
+    line-height: 1;
+    padding: 0 2px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.cutoff-level-guide-col.level-selectable,
+.cutoff-level-guide-cell.level-selectable,
+.cutoff-level-guide-cell-delta.level-selectable {
+    cursor: pointer;
+}
+
+.cutoff-level-guide-col.level-selectable:focus-visible,
+.cutoff-level-guide-cell.level-selectable:focus-visible,
+.cutoff-level-guide-cell-delta.level-selectable:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.cutoff-level-guide-col.selected-level {
+    border-color: rgba(37, 99, 235, 0.55);
+    color: var(--accent);
+    background: rgba(37, 99, 235, 0.1);
+}
+
+.cutoff-level-guide-row-label-delta {
+    color: var(--text-secondary);
+    height: var(--guide-delta-row-height, 24px);
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    font-size: 12px;
+}
+
+.cutoff-level-guide-cell-delta {
+    width: 100%;
+    height: var(--guide-delta-row-height, 24px);
+    justify-self: stretch;
+    align-self: stretch;
+    box-sizing: border-box;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: clamp(10px, calc(var(--guide-cell-size) * 0.36), 13px);
+    font-weight: 700;
+    gap: clamp(1px, calc(var(--guide-cell-size) * 0.08), 4px);
+    padding: 0 clamp(1px, calc(var(--guide-cell-size) * 0.06), 2px);
+    overflow: hidden;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.cutoff-level-guide-cell-delta.is-diff-level {
+    background: transparent;
+}
+
+.cutoff-level-guide-diff {
+    --guide-delta-row-height: 20px;
+}
+
+.cutoff-level-guide-diff .cutoff-level-guide-grid {
+    row-gap: 4px;
+}
+
+.cutoff-level-guide-delta-arrow {
+    width: clamp(8px, calc(var(--guide-cell-size) * 0.35), 14px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    font-size: clamp(10px, calc(var(--guide-cell-size) * 0.45), 15px);
+    flex: 0 0 auto;
+}
+
+.cutoff-level-guide-delta-value {
+    min-width: 0;
+    line-height: 1;
+}
+
+.cutoff-level-guide-cell-delta.delta-greedy {
+    color: #0f766e;
+}
+
+.cutoff-level-guide-cell-delta.delta-average {
+    color: #6d28d9;
+}
+
+.cutoff-level-guide-cell-delta.delta-best-average {
+    color: #6d28d9;
+}
+
+.cutoff-level-guide-cell-delta.delta-best_average {
+    color: #6d28d9;
+}
+
+.cutoff-level-guide-cell-delta.delta-tie {
+    color: var(--text-secondary);
+}
+
+.cutoff-level-guide-cell.active {
+    color: #ffffff;
+}
+
+.cutoff-level-guide-cell.active-q {
+    background: orange;
+    border-color: orange;
+    color: #ffffff;
+}
+
+.cutoff-level-guide-cell.active-w {
+    background: #f5ee99;
+    border-color: #f5ee99;
+    color: #1f2937;
+}
+
+.cutoff-level-guide-cell.active-e {
+    background: tomato;
+    border-color: tomato;
+    color: #ffffff;
+}
+

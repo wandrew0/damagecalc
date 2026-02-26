@@ -1,9 +1,6 @@
-import CalculatorPage from "./pages/CalculatorPage";
+import HomePage from "./features/home/HomePage";
+import "./styles/HomePage.css";
 
 export default function Page() {
-    return (
-        <main>
-            <CalculatorPage />
-        </main>
-    );
+    return <HomePage />;
 }

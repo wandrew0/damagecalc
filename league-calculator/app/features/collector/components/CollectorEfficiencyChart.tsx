@@ -14,7 +14,7 @@ import {
 import {
     calculateCollectorEfficiency,
     calculateDiscreteEfficiency,
-} from "../utils/collectorMath";
+} from "../lib/collectorMath";
 
 ChartJS.register(
     CategoryScale,

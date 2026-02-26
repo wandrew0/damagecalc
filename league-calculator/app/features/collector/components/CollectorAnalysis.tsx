@@ -1,28 +1,27 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
-import { calculateCollectorEfficiency } from "../utils/collectorMath";
+import React, { useState, useMemo, useCallback } from "react";
+import { calculateCollectorEfficiency } from "../lib/collectorMath";
 import CollectorConceptViz from "./CollectorConceptViz";
 import CollectorEfficiencyChart from "./CollectorEfficiencyChart";
-import "../styles/CollectorAnalysis.css";
+import "../../../styles/CollectorAnalysis.css";
+import { parseNumberInput } from "../../../utils/numberUtils";
+import usePersistenceLifecycle from "../../../hooks/usePersistenceLifecycle";
+
+function clampMaxHp(value: number) {
+    return Math.max(100, Math.min(10000, Math.round(value)));
+}
+
+function clampAutoDamage(value: number) {
+    return Math.max(1, Math.min(2000, Math.round(value)));
+}
 
 export default function CollectorAnalysis() {
     // State for inputs
     const [maxHp, setMaxHp] = useState(2000);
     const [autoDamage, setAutoDamage] = useState(200);
-    const [isLoaded, setIsLoaded] = useState(false);
 
-    const clampMaxHp = (value: number) =>
-        Math.max(100, Math.min(10000, Math.round(value)));
-    const clampAutoDamage = (value: number) =>
-        Math.max(1, Math.min(2000, Math.round(value)));
-    const parseNumberInput = (rawValue: string): number | null => {
-        const parsed = Number(rawValue);
-        return Number.isFinite(parsed) ? parsed : null;
-    };
-
-    // Load from local storage on mount
-    useEffect(() => {
+    const loadPersistedState = useCallback(() => {
         const savedMaxHp = localStorage.getItem("collector_maxHp");
         const savedAutoDamage = localStorage.getItem("collector_autoDamage");
 
@@ -35,17 +34,17 @@ export default function CollectorAnalysis() {
         if (parsedAutoDamage !== null) {
             setAutoDamage(clampAutoDamage(parsedAutoDamage));
         }
-
-        setIsLoaded(true);
     }, []);
 
-    // Save to local storage when values change, but only after initial load
-    useEffect(() => {
-        if (isLoaded) {
-            localStorage.setItem("collector_maxHp", maxHp.toString());
-            localStorage.setItem("collector_autoDamage", autoDamage.toString());
-        }
-    }, [maxHp, autoDamage, isLoaded]);
+    const persistState = useCallback(() => {
+        localStorage.setItem("collector_maxHp", maxHp.toString());
+        localStorage.setItem("collector_autoDamage", autoDamage.toString());
+    }, [maxHp, autoDamage]);
+
+    const isLoaded = usePersistenceLifecycle({
+        loadState: loadPersistedState,
+        saveState: persistState,
+    });
 
     // Calculate results
     const result = useMemo(() => {
@@ -224,63 +223,67 @@ export default function CollectorAnalysis() {
                             </div>
                         </div>
 
-                        <div className="writeup-section">
-                            <h4>Why is the Uniform Assumption (mostly) Fair?</h4>
-                            <p>
-                                This assumption holds because your Attack Damage (
-                                <span className="math-var">A</span>) is effectively
-                                uncorrelated with the exact current Health of the target
-                                at any given moment.
-                            </p>
-                            <p>
-                                Since there is no mechanism synchronizing the
-                                target&apos;s current HP to be a multiple of your damage,
-                                the remainder{" "}
-                                <span className="math-inline">(Current HP) mod A</span>{" "}
-                                (the HP remaining before the lethal hit) is effectively
-                                random. Across many scenarios, this &quot;alignment
-                                offset&quot; is uniformly distributed, meaning the kill
-                                shot is equally likely to land anywhere in the potential
-                                range.
-                            </p>
-                            <p>
-                                <strong>Note on Teamplay:</strong> In practice,{" "}
-                                <span className="math-inline">I &times; H</span>{" "}
-                                represents the total damage <em>you</em> need to
-                                contribute, not the target&apos;s initial HP. If the target
-                                starts at 100% HP and teammates damage the target, this
-                                reduces your <span className="math-var">I</span> below
-                                100%. However, the model assumes that teammates do not
-                                touch the target below 5% HP. Of course, collector is
-                                worse if teammates burst the target from above 5% HP to 0
-                                HP.
-                            </p>
+                        <section className="collector-notes">
+                            <div className="collector-note-block">
+                                <h4>Why is the Uniform Assumption (mostly) Fair?</h4>
+                                <p>
+                                    This assumption holds because your Attack Damage (
+                                    <span className="math-var">A</span>) is effectively
+                                    uncorrelated with the exact current Health of the target
+                                    at any given moment.
+                                </p>
+                                <p>
+                                    Since there is no mechanism synchronizing the
+                                    target&apos;s current HP to be a multiple of your damage,
+                                    the remainder{" "}
+                                    <span className="math-inline">(Current HP) mod A</span>{" "}
+                                    (the HP remaining before the lethal hit) is effectively
+                                    random. Across many scenarios, this &quot;alignment
+                                    offset&quot; is uniformly distributed, meaning the kill
+                                    shot is equally likely to land anywhere in the potential
+                                    range.
+                                </p>
+                                <p>
+                                    <strong>Note on Teamplay:</strong> In practice,{" "}
+                                    <span className="math-inline">I &times; H</span>{" "}
+                                    represents the total damage <em>you</em> need to
+                                    contribute, not the target&apos;s initial HP. If the target
+                                    starts at 100% HP and teammates damage the target, this
+                                    reduces your <span className="math-var">I</span> below
+                                    100%. However, the model assumes that teammates do not
+                                    touch the target below 5% HP. Of course, collector is
+                                    worse if teammates burst the target from above 5% HP to 0
+                                    HP.
+                                </p>
+                            </div>
 
-                            <h4>Caveats &amp; Limitations</h4>
-                            <ul>
-                                <li>
-                                    <strong>Constant Damage Assumption:</strong> Assuming
-                                    constant damage <span className="math-var">A</span> is
-                                    generous. In reality, Critical Strikes and abilities
-                                    introduce variance (higher or lower damage). You also
-                                    can and should deliberately last hit kills as ADC when
-                                    possible, overriding the random distribution modeled
-                                    here. If you&apos;re able to time your last auto to bring
-                                    the target to exactly 5% HP with Collector, Collector
-                                    becomes the most efficient.
-                                </li>
-                                <li>
-                                    <strong>Averages Only:</strong> This analysis
-                                    calculates the{" "}
-                                    <strong>Expected Value (Average)</strong>. It
-                                    describes long-term damage efficiency, not the
-                                    specific probability distribution. It cannot tell you
-                                    &quot;what % of kills Collector secures that you would
-                                    otherwise miss&quot;; it only provides a high-level
-                                    heuristic for how to value the execute damage.
-                                </li>
-                            </ul>
-                        </div>
+                            <div className="collector-note-block">
+                                <h4>Caveats &amp; Limitations</h4>
+                                <ul>
+                                    <li>
+                                        <strong>Constant Damage Assumption:</strong> Assuming
+                                        constant damage <span className="math-var">A</span> is
+                                        generous. In reality, Critical Strikes and abilities
+                                        introduce variance (higher or lower damage). You also
+                                        can and should deliberately last hit kills as ADC when
+                                        possible, overriding the random distribution modeled
+                                        here. If you&apos;re able to time your last auto to bring
+                                        the target to exactly 5% HP with Collector, Collector
+                                        becomes the most efficient.
+                                    </li>
+                                    <li>
+                                        <strong>Averages Only:</strong> This analysis
+                                        calculates the{" "}
+                                        <strong>Expected Value (Average)</strong>. It
+                                        describes long-term damage efficiency, not the
+                                        specific probability distribution. It cannot tell you
+                                        &quot;what % of kills Collector secures that you would
+                                        otherwise miss&quot;; it only provides a high-level
+                                        heuristic for how to value the execute damage.
+                                    </li>
+                                </ul>
+                            </div>
+                        </section>
                     </div>
                 </div>
 

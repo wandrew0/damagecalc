@@ -1,0 +1,333 @@
+.global-stat-block {
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    background: var(--bg-secondary);
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.global-stat-block h4 {
+    margin: 0 0 2px;
+    font-size: 12px;
+}
+
+.path-guides-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 12px;
+    position: relative;
+    width: 100%;
+    min-width: 820px;
+    container-type: inline-size;
+    --guide-col-gap: 4px;
+    --guide-row-gap: 10px;
+    --guide-header-height: 24px;
+    --guide-label-width: 172px;
+    --guide-cell-size: max(
+        32px,
+        calc(
+            (100cqi - var(--guide-label-width) - (18 * var(--guide-col-gap)) - 1px) / 18
+        )
+    );
+}
+
+.path-guide-panel {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.path-guide-panel-stacked {
+    width: 100%;
+    align-items: stretch;
+    padding-block: 4px;
+}
+
+.path-guide-panel h4 {
+    margin: 0;
+    width: 100%;
+    text-align: left;
+}
+
+.global-forced-note {
+    margin-top: 8px;
+    margin-bottom: 0;
+}
+
+.force-w-status-note {
+    min-height: 18px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.force-w-status-note.is-empty {
+    visibility: hidden;
+}
+
+.radio-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.field-label {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.cutoff-controls-grid .field-label {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+}
+
+.cutoff-controls-grid .field-label input:not([type="checkbox"]),
+.cutoff-controls-grid .field-label select {
+    flex: 1 1 170px;
+    width: auto;
+}
+
+.field-label-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.help-hint-wrap {
+    position: relative;
+    display: inline-flex;
+    vertical-align: middle;
+}
+
+.help-hint {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--border-medium);
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    cursor: help;
+    line-height: 1;
+    appearance: none;
+    background: transparent;
+    padding: 0;
+}
+
+.help-hint-tooltip {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 190px;
+    max-width: min(280px, calc(100vw - 24px));
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    background: var(--bg-primary);
+    box-shadow: var(--shadow);
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.35;
+    padding: 8px 10px;
+    text-align: left;
+    z-index: 20;
+    display: none;
+}
+
+.help-hint-wrap:focus-within .help-hint-tooltip,
+.help-hint-wrap:hover .help-hint-tooltip {
+    display: block;
+}
+
+.muted-note .help-hint,
+.recommendations-table th .help-hint {
+    margin-left: 6px;
+}
+
+.field-label input,
+.field-label select {
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    padding: 8px 10px;
+    font-size: 14px;
+    height: 36px;
+    width: 100%;
+    min-width: 0;
+}
+
+.field-label select {
+    /* Avoid clipped descenders (g/q/y) in native select text rendering */
+    height: 38px;
+    padding-top: 0;
+    padding-bottom: 0;
+    line-height: 1.4;
+}
+
+.field-label input:focus,
+.field-label select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.cutoff-shard-buttons {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.cutoff-shard-button {
+    min-width: 34px;
+    height: 34px;
+    padding: 0 12px;
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.cutoff-shard-button:hover {
+    border-color: var(--border-medium);
+}
+
+.cutoff-shard-button.active {
+    border-color: var(--accent);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.checkbox-field-label {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.checkbox-field-label input[type="checkbox"] {
+    width: 16px;
+    min-width: 16px;
+    height: 16px;
+    margin: 0;
+    padding: 0;
+}
+
+.muted-note {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--text-secondary);
+}
+
+.profile-included-details {
+    margin-top: 8px;
+}
+
+.profile-included-details summary {
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.profile-included-details[open] summary {
+    margin-bottom: 6px;
+}
+
+.profile-included-list {
+    font-size: 12px;
+}
+
+.passive-stat-list {
+    margin-top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.passive-stat-line-q {
+    color: orange;
+}
+
+.passive-stat-line-w {
+    color: #7a6d1b;
+}
+
+.passive-stat-line-e {
+    color: tomato;
+}
+
+.forced-w-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.forced-w-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.forced-w-actions .timeline-action-button {
+    height: 28px;
+    padding: 0 10px;
+    font-size: 12px;
+}
+
+.forced-w-grid {
+    display: grid;
+    grid-template-columns: repeat(9, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.forced-level-chip {
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    height: 30px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.forced-level-chip:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
+}
+
+.forced-level-chip.active {
+    border-color: var(--accent);
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--accent);
+}
+
+.forced-level-chip.active.blocked {
+    border-color: #7f1d1d;
+    border-style: dashed;
+    background: rgba(127, 29, 29, 0.12);
+    color: #7f1d1d;
+}

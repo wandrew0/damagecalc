@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import "../styles/Navigation.css";
 
 interface NavigationProps {
     className?: string;
@@ -14,22 +13,35 @@ export default function Navigation({ className }: NavigationProps) {
 
     return (
         <nav className={navClassName}>
-            <Link href="/" className={`nav-link ${pathname === "/" ? "active" : ""}`}>
+            <Link
+                href="/"
+                prefetch={false}
+                className={`nav-link ${pathname === "/" ? "active" : ""}`}
+            >
+                Home
+            </Link>
+            <Link
+                href="/calculator"
+                prefetch={false}
+                className={`nav-link ${pathname === "/calculator" ? "active" : ""}`}
+            >
                 Calculator
             </Link>
             <Link
-                href="/collector"
-                className={`nav-link ${pathname === "/collector" ? "active" : ""}`}
-            >
-                Collector
-            </Link>
-            <Link
                 href="/aphelios-cutoff"
+                prefetch={false}
                 className={`nav-link ${
                     pathname === "/aphelios-cutoff" ? "active" : ""
                 }`}
             >
-                Aphelios Cutoff
+                Aphelios Q vs E
+            </Link>
+            <Link
+                href="/collector"
+                prefetch={false}
+                className={`nav-link ${pathname === "/collector" ? "active" : ""}`}
+            >
+                Collector
             </Link>
         </nav>
     );

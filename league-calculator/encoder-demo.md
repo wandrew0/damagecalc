@@ -29,10 +29,10 @@ I've successfully implemented a custom encoder/decoder system that significantly
 ### Files Modified:
 
 -   `app/utils/encoder.ts` - New custom encoder/decoder
--   `app/components/ShareModal.tsx` - Updated to use new encoder and include champion level
--   `app/components/BuildPanel.tsx` - Pass champion level to ShareModal
--   `app/pages/CalculatorPage.tsx` - Updated import logic to handle champion level
--   `app/components/ImportModal.tsx` - Updated to use new decoder
+-   `app/features/calculator/components/ShareModal.tsx` - Updated to use new encoder and include champion level
+-   `app/features/calculator/components/BuildPanel.tsx` - Pass champion level to ShareModal
+-   `app/features/calculator/CalculatorPage.tsx` - Updated import logic to handle champion level
+-   `app/features/calculator/components/ImportModal.tsx` - Updated to use new decoder
 
 ### Size Comparison Example:
 
@@ -66,7 +66,6 @@ New Format (Compressed):
 3. **Champion Level**: Preserves build context
 4. **Backward Compatible**: Existing shares still work
 5. **Future Proof**: Extensible format for additional features
-
 
 
 

@@ -35,6 +35,7 @@ export interface RecommendationInput {
     enemyArmorByLevel: number[];
     forcedWLevels?: number[];
     extraBonusAD?: number;
+    extraBonusADByLevel?: number[];
     extraBonusLethality?: number;
 }
 
@@ -57,6 +58,20 @@ export interface DrilldownPoint {
     qDamage: number | null;
     eDamage: number | null;
     deltaQMinusE: number | null;
+}
+
+export interface ExactDeltaPercentMinimum {
+    armor: number;
+    qDamage: number;
+    eDamage: number;
+    deltaPercent: number;
+}
+
+export interface ExactDeltaPercentTransitionPoint {
+    armor: number;
+    qDamage: number;
+    eDamage: number;
+    deltaPercent: number;
 }
 
 export interface RankedState {
@@ -267,6 +282,19 @@ function buildForState(
     return build;
 }
 
+function getExtraBonusADForLevel(input: RecommendationInput, level: number): number {
+    const clampedLevel = clampLevel(level);
+    const byLevel = input.extraBonusADByLevel;
+    if (Array.isArray(byLevel)) {
+        const value = byLevel[clampedLevel - 1];
+        if (typeof value === "number" && Number.isFinite(value)) {
+            return value;
+        }
+    }
+    const fallback = input.extraBonusAD ?? 0;
+    return Number.isFinite(fallback) ? fallback : 0;
+}
+
 function estimateDamage(
     champ: Champion,
     level: number,
@@ -356,7 +384,6 @@ function getStableChoices(
 export function buildDamageEstimator(
     input: RecommendationInput
 ): DamageEstimator {
-    const extraBonusAD = input.extraBonusAD ?? 0;
     const extraBonusLethality = input.extraBonusLethality ?? 0;
     const cache = new Map<string, number>();
 
@@ -374,7 +401,7 @@ export function buildDamageEstimator(
             input.enemyArmorByLevel[clampedLevel - 1] ?? 0,
             input.ownItemsByLevel[clampedLevel - 1] ?? [],
             state,
-            extraBonusAD,
+            getExtraBonusADForLevel(input, clampedLevel),
             extraBonusLethality
         );
         cache.set(key, damage);
@@ -385,7 +412,6 @@ export function buildDamageEstimator(
 export function calculateLevelRecommendations(
     input: RecommendationInput
 ): LevelRecommendation[] {
-    const extraBonusAD = input.extraBonusAD ?? 0;
     const extraBonusLethality = input.extraBonusLethality ?? 0;
     const forcedWLevels = new Set(
         (input.forcedWLevels ?? []).map((level) => clampLevel(level))
@@ -397,6 +423,7 @@ export function calculateLevelRecommendations(
     for (let level = 1; level <= MAX_LEVEL; level++) {
         const ownItems = input.ownItemsByLevel[level - 1] ?? [];
         const enemyArmor = input.enemyArmorByLevel[level - 1] ?? 0;
+        const extraBonusAD = getExtraBonusADForLevel(input, level);
         const before = { ...state };
         const { adBefore, lethalityBefore } = estimateBeforeStats(
             APHELIOS,
@@ -557,6 +584,23 @@ export function estimateDamageAtLevelForState(
         APHELIOS,
         clampLevel(level),
         enemyArmor,
+        ownItemsAtLevel,
+        state,
+        extraBonusAD,
+        extraBonusLethality
+    );
+}
+
+export function estimateBeforeStatsAtLevelForState(
+    level: number,
+    ownItemsAtLevel: string[],
+    state: PassiveRankState,
+    extraBonusAD: number,
+    extraBonusLethality: number
+): { adBefore: number; lethalityBefore: number } {
+    return estimateBeforeStats(
+        APHELIOS,
+        clampLevel(level),
         ownItemsAtLevel,
         state,
         extraBonusAD,
@@ -801,6 +845,193 @@ export function buildDrilldownPoints(
     }
 
     return points;
+}
+
+function getArmorClampBreakpoint(build: Build): number | null {
+    const slope = 1 - build.armorPenetration;
+    if (!Number.isFinite(slope) || slope <= 0) {
+        return null;
+    }
+    const breakpoint = build.lethality / slope;
+    return Number.isFinite(breakpoint) ? breakpoint : null;
+}
+
+function evaluateExactDeltaPercentPoint(
+    level: number,
+    armor: number,
+    ownItemsAtLevel: string[],
+    qState: PassiveRankState,
+    eState: PassiveRankState,
+    extraBonusAD: number,
+    extraBonusLethality: number
+): ExactDeltaPercentTransitionPoint | null {
+    const qDamage = estimateDamage(
+        APHELIOS,
+        level,
+        armor,
+        ownItemsAtLevel,
+        qState,
+        extraBonusAD,
+        extraBonusLethality
+    );
+    const eDamage = estimateDamage(
+        APHELIOS,
+        level,
+        armor,
+        ownItemsAtLevel,
+        eState,
+        extraBonusAD,
+        extraBonusLethality
+    );
+    if (!(eDamage > 0)) {
+        return null;
+    }
+    return {
+        armor,
+        qDamage,
+        eDamage,
+        deltaPercent: ((qDamage - eDamage) / eDamage) * 100,
+    };
+}
+
+export function findExactDeltaPercentTransitionPoints(
+    level: number,
+    stateBeforeLevelChoice: PassiveRankState,
+    ownItemsAtLevel: string[],
+    armorMin: number,
+    armorMax: number,
+    extraBonusAD: number,
+    extraBonusLethality: number
+): ExactDeltaPercentTransitionPoint[] {
+    const low = Math.min(armorMin, armorMax);
+    const high = Math.max(armorMin, armorMax);
+    if (!Number.isFinite(low) || !Number.isFinite(high)) {
+        return [];
+    }
+
+    const canQ = canLevelSkill(stateBeforeLevelChoice.q, level);
+    const canE = canLevelSkill(stateBeforeLevelChoice.e, level);
+    if (!canQ || !canE) {
+        return [];
+    }
+
+    const qState = { ...stateBeforeLevelChoice, q: stateBeforeLevelChoice.q + 1 };
+    const eState = { ...stateBeforeLevelChoice, e: stateBeforeLevelChoice.e + 1 };
+    const qBuild = buildForState(
+        ownItemsAtLevel,
+        qState,
+        extraBonusAD,
+        extraBonusLethality
+    );
+    const eBuild = buildForState(
+        ownItemsAtLevel,
+        eState,
+        extraBonusAD,
+        extraBonusLethality
+    );
+
+    const candidateSet = new Set<number>();
+    const addCandidate = (armor: number | null) => {
+        if (armor === null || !Number.isFinite(armor)) return;
+        if (armor < low || armor > high) return;
+        candidateSet.add(Number(armor.toFixed(9)));
+    };
+
+    addCandidate(getArmorClampBreakpoint(qBuild));
+    addCandidate(getArmorClampBreakpoint(eBuild));
+
+    return [...candidateSet]
+        .sort((a, b) => a - b)
+        .map((armor) =>
+            evaluateExactDeltaPercentPoint(
+                level,
+                armor,
+                ownItemsAtLevel,
+                qState,
+                eState,
+                extraBonusAD,
+                extraBonusLethality
+            )
+        )
+        .filter((point): point is ExactDeltaPercentTransitionPoint => point !== null);
+}
+
+export function findExactDeltaPercentMinimum(
+    level: number,
+    stateBeforeLevelChoice: PassiveRankState,
+    ownItemsAtLevel: string[],
+    armorMin: number,
+    armorMax: number,
+    extraBonusAD: number,
+    extraBonusLethality: number
+): ExactDeltaPercentMinimum | null {
+    const low = Math.min(armorMin, armorMax);
+    const high = Math.max(armorMin, armorMax);
+    if (!Number.isFinite(low) || !Number.isFinite(high)) {
+        return null;
+    }
+
+    const canQ = canLevelSkill(stateBeforeLevelChoice.q, level);
+    const canE = canLevelSkill(stateBeforeLevelChoice.e, level);
+    if (!canQ || !canE) {
+        return null;
+    }
+
+    const qState = { ...stateBeforeLevelChoice, q: stateBeforeLevelChoice.q + 1 };
+    const eState = { ...stateBeforeLevelChoice, e: stateBeforeLevelChoice.e + 1 };
+    const qBuild = buildForState(
+        ownItemsAtLevel,
+        qState,
+        extraBonusAD,
+        extraBonusLethality
+    );
+    const eBuild = buildForState(
+        ownItemsAtLevel,
+        eState,
+        extraBonusAD,
+        extraBonusLethality
+    );
+
+    const candidateSet = new Set<number>();
+    const addCandidate = (armor: number) => {
+        if (!Number.isFinite(armor)) return;
+        if (armor < low || armor > high) return;
+        candidateSet.add(Number(armor.toFixed(9)));
+    };
+
+    addCandidate(low);
+    addCandidate(high);
+    addCandidate(getArmorClampBreakpoint(qBuild) ?? Number.NaN);
+    addCandidate(getArmorClampBreakpoint(eBuild) ?? Number.NaN);
+
+    const candidates = [...candidateSet].sort((a, b) => a - b);
+    let best: ExactDeltaPercentMinimum | null = null;
+
+    for (const armor of candidates) {
+        const point = evaluateExactDeltaPercentPoint(
+            level,
+            armor,
+            ownItemsAtLevel,
+            qState,
+            eState,
+            extraBonusAD,
+            extraBonusLethality
+        );
+        if (!point) {
+            continue;
+        }
+        const current: ExactDeltaPercentMinimum = point;
+
+        if (
+            best === null ||
+            current.deltaPercent < best.deltaPercent ||
+            (current.deltaPercent === best.deltaPercent && current.armor < best.armor)
+        ) {
+            best = current;
+        }
+    }
+
+    return best;
 }
 
 export function findFirstEPreferenceLevel(

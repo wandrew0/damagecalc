@@ -1,20 +1,34 @@
-import React, { useState } from "react";
-import Image from "next/image";
+import React, { useMemo, useState } from "react";
 import Select from "react-select";
 import { Tooltip } from "react-tooltip";
-import { Build } from "../classes/Build";
-import { Item } from "../classes/Item";
-import { Champion } from "../classes/Champion";
-import { ALL_ITEMS } from "../data/Items";
+import { Build } from "../../../classes/Build";
+import { Item } from "../../../classes/Item";
+import { Champion } from "../../../classes/Champion";
+import { ALL_ITEMS } from "../../../data/Items";
+import ItemIcon from "../../../components/ItemIcon";
 import ShareModal from "./ShareModal";
 import ImportModal from "./ImportModal";
-import { getTotalAD } from "../classes/Calculator";
-import type { ChampionId } from "../data/champions";
+import { getTotalAD } from "../../../classes/Calculator";
+import type { ChampionId } from "../../../data/champions";
+import useTouchDevice from "../../../hooks/useTouchDevice";
+import {
+    buildSearchTerms,
+    rankSearchOptions,
+    sortItemsByAdAndCrit,
+} from "../../../utils/itemSearch";
+import { parseNumberInput } from "../../../utils/numberUtils";
+
+interface ItemOption {
+    value: Item;
+    label: string;
+    searchTerms: string[];
+}
 
 // Prepare item options for the Select component
-const itemOptions = ALL_ITEMS.map((item) => ({
+const itemOptions: ItemOption[] = sortItemsByAdAndCrit(ALL_ITEMS).map((item) => ({
     value: item,
     label: `${item.name} (${item.cost}g)`,
+    searchTerms: buildSearchTerms(item.name, ...(item.aliases ?? [])),
 }));
 
 interface BuildPanelProps {
@@ -82,6 +96,10 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
 }) => {
     const [showShareModal, setShowShareModal] = useState(false);
     const [showImportModal, setShowImportModal] = useState(false);
+    const [itemSearchByBuild, setItemSearchByBuild] = useState<Record<number, string>>(
+        {}
+    );
+    const isTouchDevice = useTouchDevice();
 
     // Auto-open import modal if there are URL imports
     React.useEffect(() => {
@@ -90,13 +108,16 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
         }
     }, [urlImportBuilds]);
 
-    const parseNumberInput = (rawValue: string): number | null => {
-        if (rawValue.trim() === "") {
-            return 0;
+    const selectMenuPortalTarget = useMemo(() => {
+        if (isTouchDevice || typeof document === "undefined") {
+            return undefined;
         }
-        const parsed = Number(rawValue);
-        return Number.isFinite(parsed) ? parsed : null;
-    };
+        return document.body;
+    }, [isTouchDevice]);
+
+    const selectMenuPosition: "absolute" | "fixed" = isTouchDevice
+        ? "absolute"
+        : "fixed";
 
     function onAddBuild() {
         const newBuild = new Build();
@@ -128,6 +149,13 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
         newBuild.setName(newBuild.name + " Copy");
         // Add the new build to the builds list
         setBuilds([...builds, newBuild]);
+    }
+
+    function setBuildSearchInput(buildIndex: number, inputValue: string) {
+        setItemSearchByBuild((prev) => ({
+            ...prev,
+            [buildIndex]: inputValue,
+        }));
     }
 
     function handleImportBuilds(
@@ -226,7 +254,8 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                                 value={build.bonusAD === 0 ? "" : build.bonusAD}
                                 onChange={(e) => {
                                     const parsedBonusAD = parseNumberInput(
-                                        e.target.value
+                                        e.target.value,
+                                        { emptyAs: 0 }
                                     );
                                     if (parsedBonusAD === null) {
                                         return;
@@ -245,7 +274,8 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                                 }
                                 onChange={(e) => {
                                     const parsedBonusLethality = parseNumberInput(
-                                        e.target.value
+                                        e.target.value,
+                                        { emptyAs: 0 }
                                     );
                                     if (parsedBonusLethality === null) {
                                         return;
@@ -282,25 +312,27 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
 
                     <h3>Items:</h3>
                     <div className="items-grid">
-                        {build.items.map((item, idx) => (
-                            <div
-                                key={idx}
-                                className="item-slot"
-                                onClick={() => onRemoveItem(buildIndex, idx)}
-                                title="Click to remove item"
-                            >
-                                <div className="item-image-container">
-                                    <Image
-                                        src={
-                                            item.imagePath ||
-                                            "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yNCAzNkMzMC42MjcgMzYgMzYgMzAuNjI3IDM2IDI0QzM2IDE3LjM3MyAzMC42MjcgMTIgMjQgMTJDMTcuMzczIDEyIDEyIDE3LjM3MyAxMiAyNEMxMiAzMC42MjcgMTcuMzczIDM2IDI0IDM2WiIgZmlsbD0iI0U1RTdFQiIvPgo8cGF0aCBkPSJNMjQgMjhDMjUuMTA0NiAyOCAyNiAyNy4xMDQ2IDI2IDI2QzI2IDI0Ljg5NTQgMjUuMTA0NiAyNCAyNCAyNEMyMi44OTU0IDI0IDIyIDI0Ljg5NTQgMjIgMjZDMjIgMjcuMTA0NiAyMi44OTU0IDI4IDI0IDI4WiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4K"
-                                        }
-                                        alt={item.name}
-                                        width={52}
-                                        height={52}
-                                        className="item-image"
-                                        data-tooltip-id={`item-tooltip-${buildIndex}-${idx}`}
-                                    />
+                        {build.items.map((item, idx) => {
+                            const itemImageSrc =
+                                item.imagePath ||
+                                "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yNCAzNkMzMC42MjcgMzYgMzYgMzAuNjI3IDM2IDI0QzM2IDE3LjM3MyAzMC42MjcgMTIgMjQgMTJDMTcuMzczIDEyIDEyIDE3LjM3MyAxMiAyNEMxMiAzMC42MjcgMTcuMzczIDM2IDI0IDM2WiIgZmlsbD0iI0U1RTdFQiIvPgo8cGF0aCBkPSJNMjQgMjhDMjUuMTA0NiAyOCAyNiAyNy4xMDQ2IDI2IDI2QzI2IDI0Ljg5NTQgMjUuMTA0NiAyNCAyNCAyNEMyMi44OTU0IDI0IDIyIDI0Ljg5NTQgMjIgMjZDMjIgMjcuMTA0NiAyMi44OTU0IDI4IDI0IDI4WiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4K";
+
+                            return (
+                                <div
+                                    key={idx}
+                                    className="item-slot"
+                                    onClick={() => onRemoveItem(buildIndex, idx)}
+                                    title="Click to remove item"
+                                >
+                                    <div className="item-image-container">
+                                        <ItemIcon
+                                            itemName={item.name}
+                                            iconPath={itemImageSrc}
+                                            className="item-image"
+                                            imageClassName="item-image-inner"
+                                            fallbackClassName="item-image-fallback"
+                                            tooltipId={`item-tooltip-${buildIndex}-${idx}`}
+                                        />
                                     <Tooltip
                                         id={`item-tooltip-${buildIndex}-${idx}`}
                                         place="top-start"
@@ -308,6 +340,7 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                                         border="1px solid var(--border-light)"
                                         offset={10}
                                         positionStrategy="fixed"
+                                        events={isTouchDevice ? ["click"] : ["hover"]}
                                         opacity={1}
                                         style={{
                                             backgroundColor:
@@ -318,7 +351,6 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                                             fontSize: "12px",
                                             maxWidth: "250px",
                                             zIndex: 10000,
-                                            opacity: "1 !important",
                                             boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
                                         }}
                                     >
@@ -420,22 +452,36 @@ const BuildPanel: React.FC<BuildPanelProps> = ({
                                     </Tooltip>
                                 </div>
                             </div>
-                        ))}
+                            );
+                        })}
                     </div>
                     <Select
-                        options={itemOptions}
+                        options={rankSearchOptions(
+                            itemOptions,
+                            itemSearchByBuild[buildIndex] ?? ""
+                        )}
                         value={null}
+                        inputValue={itemSearchByBuild[buildIndex] ?? ""}
+                        filterOption={() => true}
                         blurInputOnSelect={false}
                         closeMenuOnSelect={false}
                         onChange={(e) => {
                             if (e) {
                                 onAddItem(buildIndex, e.value);
+                                setBuildSearchInput(buildIndex, "");
                             }
                         }}
-                        menuPortalTarget={
-                            typeof document !== "undefined" ? document.body : null
-                        }
-                        menuPosition="fixed"
+                        onInputChange={(value, { action }) => {
+                            if (action === "input-change") {
+                                setBuildSearchInput(buildIndex, value);
+                            } else if (action === "set-value") {
+                                setBuildSearchInput(buildIndex, "");
+                            }
+                        }}
+                        menuPortalTarget={selectMenuPortalTarget}
+                        menuPosition={selectMenuPosition}
+                        menuShouldBlockScroll={isTouchDevice}
+                        menuShouldScrollIntoView={!isTouchDevice}
                         styles={{
                             menuPortal: (base) => ({ ...base, zIndex: 9999 }),
                             menu: (base) => ({ ...base, zIndex: 9999 }),

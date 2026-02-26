@@ -1,0 +1,121 @@
+.home-page {
+    padding: 24px;
+}
+
+.home-tools-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    align-items: stretch;
+}
+
+.home-tool-card {
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    background: var(--bg-primary);
+    padding: 0;
+    transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease,
+        box-shadow 0.15s ease,
+        transform 0.15s ease;
+}
+
+.home-tool-card:hover,
+.home-tool-card:focus-within {
+    border-color: var(--border-medium);
+    background: var(--bg-secondary);
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.07);
+    transform: translateY(-1px);
+}
+
+.home-tool-card:focus-within {
+    outline: 2px solid var(--border-medium);
+    outline-offset: 2px;
+}
+
+.home-tool-card-link {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+    color: inherit;
+    text-decoration: none;
+    height: 100%;
+}
+
+.home-tool-card-link:hover .home-tool-visual,
+.home-tool-card-link:focus-visible .home-tool-visual {
+    border-color: var(--border-medium);
+}
+
+.home-tool-card-link:focus-visible {
+    outline: none;
+}
+
+.home-tool-visual {
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    background: #fcfcfd;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 220px;
+}
+
+.home-tool-visual svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.home-tool-card h3 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 620;
+}
+
+.home-tool-card p {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    min-height: 40px;
+}
+
+@media (max-width: 1100px) {
+    .home-tools-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .home-tool-visual {
+        min-height: 204px;
+    }
+}
+
+@media (max-width: 768px) {
+    .home-page {
+        padding: 12px;
+    }
+
+    .home-tools-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .home-tool-card {
+        padding: 0;
+    }
+
+    .home-tool-card-link {
+        padding: 12px;
+    }
+
+    .home-tool-card p {
+        min-height: 0;
+    }
+
+    .home-tool-visual {
+        min-height: 176px;
+    }
+}
