@@ -2,8 +2,8 @@ name: Update League data
 
 on:
   schedule:
-    # Daily 01:00 UTC ≈ 17:00 PT (PST) or 18:00 PT (PDT).
-    - cron: "0 1 * * *"
+    # Daily 11:00 UTC ≈ 03:00 PT (PST) or 04:00 PT (PDT).
+    - cron: "0 11 * * *"
   workflow_dispatch:
 
 permissions:
@@ -21,6 +21,7 @@ jobs:
           python - <<'PY'
           import os
           import datetime
+          from zoneinfo import ZoneInfo
           from pathlib import Path
 
           patch_dates = [
@@ -28,20 +29,24 @@ jobs:
               for line in Path(".github/patch-dates.txt").read_text().splitlines()
               if line.strip()
           ]
-          today = datetime.date.today()
+          now_pt = datetime.datetime.now(ZoneInfo("America/Los_Angeles"))
+          today = now_pt.date()
           window_days = 3
-          should_run = False
+          in_patch_window = False
           for date_str in patch_dates:
               y, m, d = map(int, date_str.split("-"))
               patch_date = datetime.date(y, m, d)
               delta = (today - patch_date).days
               if 0 <= delta <= window_days:
-                  should_run = True
+                  in_patch_window = True
                   break
+          should_run = in_patch_window
           output_path = os.environ["GITHUB_OUTPUT"]
           with open(output_path, "a", encoding="utf-8") as f:
               f.write(f"run={str(should_run).lower()}\n")
-          print("Run in patch window:", should_run)
+          print("PT now:", now_pt.isoformat())
+          print("Run in patch window:", in_patch_window)
+          print("Workflow should run:", should_run)
           PY
 
       - uses: actions/setup-python@v5
