@@ -26,7 +26,7 @@ export const ALL_ITEMS = [
     new Item("Hexdrinker", 1300, 25, 0, false, 0, 0, [], "/images/items/Hexdrinker.png"),
     new Item("Hexoptics C44", 2800, 55, 0.25, false, 0, 0, [], "/images/items/Hexoptics_C44.png"),
     new Item("Hextech Gunblade", 3000, 40, 0, false, 0, 0, [], "/images/items/Hextech_Gunblade.png"),
-    new Item("Hubris", 3000, 60, 0, false, 18, 0, [], "/images/items/Hubris.png"),
+    new Item("Hubris", 2800, 60, 0, false, 18, 0, [], "/images/items/Hubris.png"),
     new Item("Hullbreaker", 3000, 40, 0, false, 0, 0, [], "/images/items/Hullbreaker.png"),
     new Item("Immortal Shieldbow", 3000, 55, 0.25, false, 0, 0, [], "/images/items/Immortal_Shieldbow.png"),
     new Item("Infinity Edge", 3500, 75, 0.25, true, 0, 0, ['ie'], "/images/items/Infinity_Edge.png"),
