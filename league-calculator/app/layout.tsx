@@ -29,6 +29,9 @@ export const metadata: Metadata = {
         template: `%s | ${siteName}`,
     },
     description: defaultDescription,
+    verification: {
+        google: "usaS-bhX8KytxnIq95F_9j96OFcyxCeiLPLXoh3Dd1A",
+    },
     alternates: {
         canonical: "/",
     },
