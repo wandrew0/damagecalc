@@ -1,26 +1,24 @@
 import type { Metadata } from "next";
 import AppHeader from "../components/AppHeader";
 import ApheliosCutoffAnalysis from "../features/aphelios-cutoff/components/ApheliosCutoffAnalysis";
-import { absoluteUrl } from "../lib/seo";
+import { absoluteUrl, apheliosCutoffPageDescription, siteName } from "../lib/seo";
 import "../styles/ApheliosCutoffPage.css";
 
 export const metadata: Metadata = {
     title: "Aphelios Q vs E Leveling Analysis",
-    description:
-        "Analyze Aphelios Q vs E leveling paths with timeline-based item purchases and target armor assumptions.",
+    description: apheliosCutoffPageDescription,
     alternates: {
         canonical: "/aphelios-cutoff",
     },
     openGraph: {
+        siteName,
         title: "Aphelios Q vs E Leveling Analysis",
-        description:
-            "Analyze Aphelios Q vs E leveling paths with timeline-based item purchases and target armor assumptions.",
+        description: apheliosCutoffPageDescription,
         url: absoluteUrl("/aphelios-cutoff"),
     },
     twitter: {
         title: "Aphelios Q vs E Leveling Analysis",
-        description:
-            "Analyze Aphelios Q vs E leveling paths with timeline-based item purchases and target armor assumptions.",
+        description: apheliosCutoffPageDescription,
     },
 };
 

@@ -606,7 +606,7 @@ function CalculatorPage() {
     return (
         <div className="appContainer">
             <AppHeader
-                title={`${CHAMPIONS[championId].name} Damage Calculator`}
+                title={`${CHAMPIONS[championId].name} Auto Calculator`}
                 keepActionsWithTitle
                 actions={
                     <button className="reset-all-button" onClick={handleResetAll}>

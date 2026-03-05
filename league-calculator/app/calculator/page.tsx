@@ -1,24 +1,22 @@
 import type { Metadata } from "next";
 import CalculatorPage from "../features/calculator/CalculatorPage";
-import { absoluteUrl } from "../lib/seo";
+import { absoluteUrl, calculatorPageDescription, siteName } from "../lib/seo";
 
 export const metadata: Metadata = {
     title: "LoL Build Damage Calculator",
-    description:
-        "Compare damage output across League of Legends item builds and armor ranges with shareable build setups.",
+    description: calculatorPageDescription,
     alternates: {
         canonical: "/calculator",
     },
     openGraph: {
+        siteName,
         title: "LoL Build Damage Calculator",
-        description:
-            "Compare damage output across League of Legends item builds and armor ranges with shareable build setups.",
+        description: calculatorPageDescription,
         url: absoluteUrl("/calculator"),
     },
     twitter: {
         title: "LoL Build Damage Calculator",
-        description:
-            "Compare damage output across League of Legends item builds and armor ranges with shareable build setups.",
+        description: calculatorPageDescription,
     },
 };
 

@@ -318,7 +318,7 @@ export default function HomePage() {
 
     return (
         <div className="collector-page-wrapper">
-            <AppHeader title="League Auto Calculator" />
+            <AppHeader title="Aphelios Calculator" />
             <main className="collector-page home-page">
                 <section className="home-tools-grid">
                     <article className="home-tool-card">

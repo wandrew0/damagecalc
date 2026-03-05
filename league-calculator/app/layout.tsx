@@ -89,7 +89,14 @@ export default function RootLayout({
             {
                 "@type": "WebSite",
                 name: siteName,
+                alternateName: "Aphelios Calculator",
                 url: siteUrlObject.toString().replace(/\/$/, ""),
+            },
+            {
+                "@type": "Organization",
+                name: siteName,
+                url: siteUrlObject.toString().replace(/\/$/, ""),
+                logo: absoluteUrl("/favicon.ico"),
             },
             {
                 "@type": "SoftwareApplication",

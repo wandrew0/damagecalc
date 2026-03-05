@@ -55,6 +55,19 @@
     margin-bottom: 0;
 }
 
+.global-optimal-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 999 1 860px;
+    min-width: min(520px, 100%);
+}
+
+.global-optimal-subtitle {
+    max-width: none;
+    white-space: nowrap;
+}
+
 .field-label.global-optimizer-select {
     margin: 0;
     min-width: 280px;

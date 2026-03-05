@@ -57,6 +57,7 @@ import {
     sortItemsByAdAndCrit,
 } from "../../../utils/itemSearch";
 import usePersistenceLifecycle from "../../../hooks/usePersistenceLifecycle";
+import { greedyVsBestAverageDescription } from "../../../lib/seo";
 import HelpHint from "./HelpHint";
 import {
     ContextValueGuide,
@@ -2279,7 +2280,12 @@ export default function ApheliosCutoffAnalysis() {
 
             <section className="cutoff-card">
                 <div className="global-optimal-head">
-                    <h3>Greedy vs Best Average</h3>
+                    <div className="global-optimal-title-group">
+                        <h3>Greedy vs Best Average</h3>
+                        <p className="muted-note global-optimal-subtitle">
+                            {greedyVsBestAverageDescription}
+                        </p>
+                    </div>
                     <label className="field-label global-optimizer-select">
                         <span className="global-optimizer-label">Optimizer</span>
                         <select
