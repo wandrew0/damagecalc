@@ -26,7 +26,7 @@ export const apheliosCutoffPageDescription =
 export const greedyVsBestAverageDescription =
     "Greedy picks the best upgrade level by level, while Best Average finds the path with the strongest average performance across all levels.";
 export const defaultDescription = homePageDescription;
-export const defaultOgImage = "/images/items/Infinity_Edge.png";
+export const defaultOgImage = "/images/og/infinity-edge-hd.png";
 
 export const allowIndexing = process.env.VERCEL_ENV
     ? process.env.VERCEL_ENV === "production"

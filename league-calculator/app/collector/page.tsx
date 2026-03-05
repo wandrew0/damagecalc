@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import AppHeader from "../components/AppHeader";
 import CollectorAnalysis from "../features/collector/components/CollectorAnalysis";
-import { absoluteUrl, collectorPageDescription, siteName } from "../lib/seo";
+import {
+    absoluteUrl,
+    collectorPageDescription,
+    defaultOgImage,
+    siteName,
+} from "../lib/seo";
 
 export const metadata: Metadata = {
     title: "Collector Execute Damage Calculator",
@@ -14,10 +19,17 @@ export const metadata: Metadata = {
         title: "Collector Execute Damage Calculator",
         description: collectorPageDescription,
         url: absoluteUrl("/collector"),
+        images: [
+            {
+                url: absoluteUrl(defaultOgImage),
+                alt: `${siteName} preview`,
+            },
+        ],
     },
     twitter: {
         title: "Collector Execute Damage Calculator",
         description: collectorPageDescription,
+        images: [absoluteUrl(defaultOgImage)],
     },
 };
 
