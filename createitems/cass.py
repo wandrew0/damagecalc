@@ -261,6 +261,14 @@ def _apply_item_overrides(item_defs: Sequence[dict], item_overrides: dict[str, d
         for field_name, override in field_overrides.items():
             _apply_field_override(item_name, item, field_name, override)
 
+def _get_nested_value(node: dict, path: Sequence[str]):
+    current = node
+    for key in path:
+        if not isinstance(current, dict) or key not in current:
+            return None
+        current = current[key]
+    return current
+
 def _get_cdragon_champion_stats(champ_name: str, champ_key: str) -> Tuple[float, float]:
     url = CDRAGON_CHAR_URL.format(key=champ_key)
     data = _fetch_json(url)
@@ -268,8 +276,24 @@ def _get_cdragon_champion_stats(champ_name: str, champ_key: str) -> Tuple[float,
     root = data.get(root_key)
     if not root:
         raise ValueError(f"Missing CDragon root data at {root_key}")
-    base_ad = float(root["baseDamage"])
-    ad_growth = float(root["damagePerLevel"])
+
+    # CDragon moved several basic stats behind hashed keys in 16.5.x. Keep the
+    # older named paths first so this still works if Riot restores readable keys.
+    base_ad = _get_nested_value(root, ("baseDamage",))
+    if base_ad is None:
+        base_ad = _get_nested_value(root, ("{4af40dc3}", "{b35aa769}"))
+
+    ad_growth = _get_nested_value(root, ("damagePerLevel",))
+    if ad_growth is None:
+        ad_growth = _get_nested_value(root, ("{e2b5d80d}", "{b35aa769}"))
+
+    if base_ad is None or ad_growth is None:
+        raise ValueError(
+            "Unable to locate champion base AD or AD growth in CDragon root data."
+        )
+
+    base_ad = float(base_ad)
+    ad_growth = float(ad_growth)
     return base_ad, ad_growth
 
 def _get_cdragon_draven_q(champ_name: str, champ_key: str) -> Tuple[Sequence[float], Sequence[float]]:
