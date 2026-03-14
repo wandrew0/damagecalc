@@ -9,14 +9,14 @@ import {
 } from "../lib/seo";
 
 export const metadata: Metadata = {
-    title: "Collector Execute Damage Calculator",
+    title: "Collector Analysis",
     description: collectorPageDescription,
     alternates: {
         canonical: "/collector",
     },
     openGraph: {
         siteName,
-        title: "Collector Execute Damage Calculator",
+        title: "Collector Analysis",
         description: collectorPageDescription,
         url: absoluteUrl("/collector"),
         images: [
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
         ],
     },
     twitter: {
-        title: "Collector Execute Damage Calculator",
+        title: "Collector Analysis",
         description: collectorPageDescription,
         images: [absoluteUrl(defaultOgImage)],
     },

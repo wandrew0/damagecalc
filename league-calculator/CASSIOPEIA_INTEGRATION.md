@@ -24,6 +24,19 @@ Champion base AD + growth, Draven Q values, and rune constants are generated fro
 -   Draven Q BaseDamage + ADScaling from `.../DravenSpinning`
 -   Rune constants parsed from `.../v1/perks.json` (text values)
 
+### 1c. **League Wiki API Note** (not currently used)
+
+-   The League of Legends Wiki MediaWiki API appears usable as a manual fallback for champion base stats.
+-   `action=expandtemplates` can expand the wiki's internal `{{ccd|...}}` template directly.
+-   Confirmed examples:
+    `{{ccd|Draven|dam_base}} -> 62`
+    `{{ccd|Draven|dam_lvl}} -> 3.4`
+    `{{ccd|Aphelios|dam_base}} -> 55`
+    `{{ccd|Aphelios|dam_lvl}} -> 2.3`
+-   Example endpoint shape:
+    `https://wiki.leagueoflegends.com/en-us/api.php?action=expandtemplates&text={{ccd|Draven|dam_base}}&prop=wikitext&format=json`
+-   This was only validated experimentally and is documented here as a future fallback option, not an active production dependency.
+
 ### 2. **Fallback System** (`scripts/generate-item-ids.js`)
 
 -   When Cassiopeia is not available, generates item IDs from existing `Items.ts`

@@ -10,14 +10,14 @@ import {
 import "../styles/ApheliosCutoffPage.css";
 
 export const metadata: Metadata = {
-    title: "Aphelios Q vs E Leveling Analysis",
+    title: "Q vs E",
     description: apheliosCutoffPageDescription,
     alternates: {
         canonical: "/aphelios-cutoff",
     },
     openGraph: {
         siteName,
-        title: "Aphelios Q vs E Leveling Analysis",
+        title: "Q vs E",
         description: apheliosCutoffPageDescription,
         url: absoluteUrl("/aphelios-cutoff"),
         images: [
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
         ],
     },
     twitter: {
-        title: "Aphelios Q vs E Leveling Analysis",
+        title: "Q vs E",
         description: apheliosCutoffPageDescription,
         images: [absoluteUrl(defaultOgImage)],
     },

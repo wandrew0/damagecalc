@@ -8,14 +8,14 @@ import {
 } from "../lib/seo";
 
 export const metadata: Metadata = {
-    title: "LoL Build Damage Calculator",
+    title: "Build Calculator",
     description: calculatorPageDescription,
     alternates: {
         canonical: "/calculator",
     },
     openGraph: {
         siteName,
-        title: "LoL Build Damage Calculator",
+        title: "Build Calculator",
         description: calculatorPageDescription,
         url: absoluteUrl("/calculator"),
         images: [
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
         ],
     },
     twitter: {
-        title: "LoL Build Damage Calculator",
+        title: "Build Calculator",
         description: calculatorPageDescription,
         images: [absoluteUrl(defaultOgImage)],
     },
