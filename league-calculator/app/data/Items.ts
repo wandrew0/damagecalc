@@ -8,7 +8,7 @@ export const ALL_ITEMS = [
     new Item("Blade of The Ruined King", 3200, 40, 0, false, 0, 0, ['bork', 'botrk', 'brk'], "/images/items/Blade_of_The_Ruined_King.png"),
     new Item("Bloodthirster", 3400, 80, 0, false, 0, 0, ['bt'], "/images/items/Bloodthirster.png"),
     new Item("Caulfield's Warhammer", 1050, 20, 0, false, 0, 0, [], "/images/items/Caulfields_Warhammer.png"),
-    new Item("Chempunk Chainsword", 3100, 45, 0, false, 0, 0, [], "/images/items/Chempunk_Chainsword.png"),
+    new Item("Chempunk Chainsword", 3000, 45, 0, false, 0, 0, [], "/images/items/Chempunk_Chainsword.png"),
     new Item("Cloak of Agility", 600, 0, 0.15, false, 0, 0, [], "/images/items/Cloak_of_Agility.png"),
     new Item("Cull", 450, 7, 0, false, 0, 0, [], "/images/items/Cull.png"),
     new Item("Death's Dance", 3300, 60, 0, false, 0, 0, [], "/images/items/Deaths_Dance.png"),
