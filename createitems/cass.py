@@ -97,6 +97,11 @@ arptag = "ArmorPenetration"
 
 # Dictionary to track items by name and keep only the one with the lowest ID
 items_by_name = {}
+fallback_events: list[str] = []
+
+def _record_fallback(message: str) -> None:
+    fallback_events.append(message)
+    print(f"Warning: {message}")
 
 def _format_number(value: float) -> str:
     value_float = float(value)
@@ -269,6 +274,15 @@ def _get_nested_value(node: dict, path: Sequence[str]):
         current = current[key]
     return current
 
+def _get_data_value_name(entry: dict) -> str:
+    return str(entry.get("mName") or entry.get("name") or "")
+
+def _get_data_value_values(entry: dict):
+    values = entry.get("mValues")
+    if values is None:
+        values = entry.get("values")
+    return values or []
+
 def _get_cdragon_champion_stats(champ_name: str, champ_key: str) -> Tuple[float, float]:
     url = CDRAGON_CHAR_URL.format(key=champ_key)
     data = _fetch_json(url)
@@ -277,13 +291,17 @@ def _get_cdragon_champion_stats(champ_name: str, champ_key: str) -> Tuple[float,
     if not root:
         raise ValueError(f"Missing CDragon root data at {root_key}")
 
-    # CDragon moved several basic stats behind hashed keys in 16.5.x. Keep the
-    # older named paths first so this still works if Riot restores readable keys.
-    base_ad = _get_nested_value(root, ("baseDamage",))
+    # Live CDragon exposes AD fields as ModifiableFloat structs. Keep older
+    # readable and hashed paths as fallbacks in case Riot changes this again.
+    base_ad = _get_nested_value(root, ("baseDamageModifiable", "baseValue"))
+    if base_ad is None:
+        base_ad = _get_nested_value(root, ("baseDamage",))
     if base_ad is None:
         base_ad = _get_nested_value(root, ("{4af40dc3}", "{b35aa769}"))
 
-    ad_growth = _get_nested_value(root, ("damagePerLevel",))
+    ad_growth = _get_nested_value(root, ("damagePerLevelModifiable", "baseValue"))
+    if ad_growth is None:
+        ad_growth = _get_nested_value(root, ("damagePerLevel",))
     if ad_growth is None:
         ad_growth = _get_nested_value(root, ("{e2b5d80d}", "{b35aa769}"))
 
@@ -309,11 +327,12 @@ def _get_cdragon_draven_q(champ_name: str, champ_key: str) -> Tuple[Sequence[flo
     base_vals = None
     scaling_vals = None
     for entry in data_values:
-        name = entry.get("mName")
+        name = _get_data_value_name(entry)
+        values = _get_data_value_values(entry)
         if name == "BaseDamage":
-            base_vals = entry.get("mValues", [])
+            base_vals = values
         elif name == "ADScaling":
-            scaling_vals = entry.get("mValues", [])
+            scaling_vals = values
     if not base_vals or not scaling_vals:
         raise ValueError("Unable to locate BaseDamage or ADScaling in CDragon data.")
     base_damage = _normalize_spell_values(base_vals, expected_len=5)
@@ -354,8 +373,8 @@ def _pick_aphelios_passive_values(
     e_bonus = None
 
     for entry in data_values:
-        name = str(entry.get("mName", "")).lower()
-        values = entry.get("mValues", [])
+        name = _get_data_value_name(entry).lower()
+        values = _get_data_value_values(entry)
         if not isinstance(values, Sequence) or isinstance(values, (str, bytes)):
             continue
 
@@ -403,6 +422,14 @@ def _get_cdragon_aphelios_passive(
     data = _fetch_json(url)
 
     passive_values = []
+    root_key = f"Characters/{champ_name}/CharacterRecords/Root"
+    root = data.get(root_key, {})
+    passive_key = root.get("mCharacterPassiveSpell")
+    if isinstance(passive_key, str):
+        passive_node = data.get(passive_key)
+        if isinstance(passive_node, dict):
+            _collect_cdragon_data_values(passive_node, passive_values)
+
     for key, node in data.items():
         key_lower = key.lower()
         if "apheliospassive" in key_lower or (
@@ -417,15 +444,15 @@ def _get_cdragon_aphelios_passive(
     if not q_bonus or not e_bonus:
         available_names = sorted(
             {
-                str(entry.get("mName", ""))
+                _get_data_value_name(entry)
                 for entry in passive_values
-                if isinstance(entry, dict) and entry.get("mName")
+                if isinstance(entry, dict) and _get_data_value_name(entry)
             }
         )
         preview = ", ".join(available_names[:20])
         raise ValueError(
             "Unable to locate Aphelios passive Q/E values in CDragon data. "
-            f"Found mName entries (first 20): {preview}"
+            f"Found data value names (first 20): {preview}"
         )
 
     return q_bonus, e_bonus
@@ -441,14 +468,14 @@ def _extract_rune_data() -> dict:
     adaptive_force = find_perk("Adaptive Force")
 
     if not absolute_focus or not adaptive_force:
-        print("Warning: Unable to locate rune data in CDragon. Using fallback values.")
+        _record_fallback("Unable to locate rune data in CDragon. Using fallback values.")
         return RUNE_FALLBACK
 
     af_desc = absolute_focus.get("longDesc", "")
     ad_matches = re.findall(r"([0-9]+(?:\.[0-9]+)?)\s*Attack Damage", af_desc)
     ad_values = [float(v) for v in ad_matches]
     if len(ad_values) < 2:
-        print("Warning: Unable to parse Absolute Focus numbers. Using fallback values.")
+        _record_fallback("Unable to parse Absolute Focus numbers. Using fallback values.")
         absolute_focus_data = RUNE_FALLBACK["absolute_focus"]
         fallback_used = True
     else:
@@ -460,7 +487,7 @@ def _extract_rune_data() -> dict:
     af_short = adaptive_force.get("shortDesc", "")
     af_match = re.search(r"\+\s*([0-9]+(?:\.[0-9]+)?)", af_short)
     if not af_match:
-        print("Warning: Unable to parse Adaptive Force value. Using fallback values.")
+        _record_fallback("Unable to parse Adaptive Force value. Using fallback values.")
         adaptive_force_data = RUNE_FALLBACK["adaptive_force"]
         fallback_used = True
     else:
@@ -470,7 +497,7 @@ def _extract_rune_data() -> dict:
         }
 
     if fallback_used:
-        print("Warning: Rune fallback values applied; verify generated rune data.")
+        print("Fallback used for rune data; verify generated values.")
 
     return {
         "absolute_focus": absolute_focus_data,
@@ -639,8 +666,10 @@ for champ_id, config in CHAMPION_CONFIG.items():
             config["name"], config["cdragon_key"]
         )
     except Exception as e:
-        print(f"Warning: CDragon stats failed for {config['name']}: {e}")
-        print(f"Warning: Using Cassiopeia fallback for {config['name']} base stats.")
+        _record_fallback(
+            f"CDragon stats failed for {config['name']}: {e}. "
+            "Using Cassiopeia fallback for base stats."
+        )
         champion = cass.get_champion(config["name"], region="NA")
         base_ad = float(champion.stats.attack_damage)
         ad_growth = float(champion.stats.attack_damage_per_level)
@@ -752,3 +781,8 @@ with open(runes_output_path, "w", encoding="utf-8") as f:
     f.write("};\n")
 
 print(f"Rune data saved to {runes_output_path}")
+
+if fallback_events:
+    print("\nFallback summary:")
+    for event in fallback_events:
+        print(f"  - {event}")

@@ -63,6 +63,7 @@ jobs:
       - name: Run generator
         if: ${{ steps.gate.outputs.run == 'true' }}
         run: |
+          set -o pipefail
           python createitems/cass.py | tee /tmp/gen.log
 
       - name: Fail on warnings (do not commit bad data)
