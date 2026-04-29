@@ -12,6 +12,7 @@ export const ITEM_IDS: { [key: string]: number } = {
     "Cull": 1083,
     "Death's Dance": 6333,
     "Doran's Blade": 1055,
+    "Doran's Bow": 1086,
     "Eclipse": 6692,
     "Edge of Night": 3814,
     "Endless Hunger": 2517,
