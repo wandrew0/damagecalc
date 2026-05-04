@@ -161,7 +161,8 @@ export function getBonusAD(
 /**
  * Simplified physical auto-attack formula:
  * Damage = AD * [(1 - critChance) + critChance * critDamageModifier] * (100 / (100 + armor)) * giantSlayer
- * For Draven with Spinning Axe: adds flat bonus damage that also crits
+ * For Draven with Spinning Axe: the base attack can crit, but the Q bonus
+ * damage itself is not amplified by critical strike damage.
  */
 export function calculateSingleAutoDamage(
     champ: Champion,
@@ -198,8 +199,8 @@ export function calculateSingleAutoDamage(
         armorModifier *
         giantSlayerMultiplier;
 
-    // Add Draven Spinning Axe damage if enabled
-    // Spinning Axe can crit, so it also uses the crit averaging formula
+    // Add Draven Spinning Axe damage if enabled. The attack can crit, but the
+    // Q bonus itself is not multiplied by crit damage.
     if (dravenQ.enabled && dravenQ.qLevel >= 1) {
         const bonusAD = getBonusAD(
             champLevel,
@@ -209,12 +210,8 @@ export function calculateSingleAutoDamage(
             adShardCount
         );
         const spinningAxeBase = getSpinningAxeDamage(dravenQ.qLevel, bonusAD);
-        // Spinning Axe damage can crit, applying the same crit modifier
         const spinningAxeDamage =
-            spinningAxeBase *
-            (1 - crit + crit * build.critDamageModifier) *
-            armorModifier *
-            giantSlayerMultiplier;
+            spinningAxeBase * armorModifier * giantSlayerMultiplier;
         damage += spinningAxeDamage;
     }
 

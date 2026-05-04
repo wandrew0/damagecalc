@@ -115,7 +115,8 @@ File: `league-calculator/app/classes/Calculator.ts`
   - Gathering Storm (scaled by minutes).
 - Draven Q:
   - `getSpinningAxeDamage` applies base + bonus AD scaling.
-  - Spinning Axe can crit; uses same crit averaging and armor/giant slayer scaling.
+  - The base auto can crit, but the Spinning Axe bonus is not multiplied by crit damage.
+  - The Spinning Axe bonus still uses armor and giant slayer scaling.
 - LDR Giant Slayer:
   - `getGiantSlayerMultiplier` scales with target bonus HP.
 - `calculateSingleAutoDamage` is the core formula used by the chart.
