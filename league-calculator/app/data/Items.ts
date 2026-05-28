@@ -57,7 +57,7 @@ export const ALL_ITEMS = [
     new Item("Serrated Dirk", 1000, 20, 0, false, 10, 0, ['lethality'], "/images/items/Serrated_Dirk.png"),
     new Item("Serylda's Grudge", 3000, 45, 0, false, 0, 0.35, [], "/images/items/Seryldas_Grudge.png"),
     new Item("Spear of Shojin", 3100, 45, 0, false, 0, 0, [], "/images/items/Spear_of_Shojin.png"),
-    new Item("Statikk Shiv", 3000, 40, 0, false, 0, 0, [], "/images/items/Statikk_Shiv.png"),
+    new Item("Statikk Shiv", 3000, 45, 0, false, 0, 0, [], "/images/items/Statikk_Shiv.png"),
     new Item("Steel Sigil", 1100, 15, 0, false, 0, 0, [], "/images/items/Steel_Sigil.png"),
     new Item("Stormrazor", 3200, 50, 0.25, false, 0, 0, ['Celestial Eye'], "/images/items/Stormrazor.png"),
     new Item("Stridebreaker", 3300, 40, 0, false, 0, 0, [], "/images/items/Stridebreaker.png"),
