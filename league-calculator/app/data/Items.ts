@@ -3,7 +3,7 @@ import { Item } from "../classes/Item";
 export const ALL_ITEMS = [
     new Item("Axiom Arc", 2750, 55, 0, false, 18, 0, [], "/images/items/Axiom_Arc.png"),
     new Item("B. F. Sword", 1300, 40, 0, false, 0, 0, ['bf'], "/images/items/B_F_Sword.png"),
-    new Item("Bastionbreaker", 3200, 55, 0, false, 22, 0, [], "/images/items/Bastionbreaker.png"),
+    new Item("Bastionbreaker", 3000, 55, 0, false, 22, 0, [], "/images/items/Bastionbreaker.png"),
     new Item("Black Cleaver", 3000, 40, 0, false, 0, 0, ['bc'], "/images/items/Black_Cleaver.png"),
     new Item("Blade of The Ruined King", 3200, 40, 0, false, 0, 0, ['bork', 'botrk', 'brk'], "/images/items/Blade_of_The_Ruined_King.png"),
     new Item("Bloodthirster", 3400, 80, 0, false, 0, 0, ['bt'], "/images/items/Bloodthirster.png"),
@@ -73,6 +73,6 @@ export const ALL_ITEMS = [
     new Item("Vampiric Scepter", 900, 15, 0, false, 0, 0, [], "/images/items/Vampiric_Scepter.png"),
     new Item("Voltaic Cyclosword", 3000, 55, 0, false, 10, 0, [], "/images/items/Voltaic_Cyclosword.png"),
     new Item("Youmuu's Ghostblade", 2800, 55, 0, false, 18, 0, ['lethality'], "/images/items/Youmuus_Ghostblade.png"),
-    new Item("Yun Tal Wildarrows", 3100, 50, 0, false, 0, 0, ['yuntal'], "/images/items/Yun_Tal_Wildarrows.png"),
+    new Item("Yun Tal Wildarrows", 3000, 50, 0, false, 0, 0, ['yuntal'], "/images/items/Yun_Tal_Wildarrows.png"),
     new Item("Zeal", 1200, 0, 0.15, false, 0, 0, [], "/images/items/Zeal.png"),
 ];
