@@ -58,7 +58,7 @@ export const ITEM_IDS: { [key: string]: number } = {
     "Spear of Shojin": 3161,
     "Statikk Shiv": 3087,
     "Steel Sigil": 2019,
-    "Stormrazor": 3097,
+    "Stormrazor": 3095,
     "Stridebreaker": 6631,
     "Sundered Sky": 6610,
     "Terminus": 3302,
