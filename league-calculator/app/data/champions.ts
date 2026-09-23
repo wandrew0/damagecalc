@@ -20,7 +20,7 @@ export const CHAMPIONS: Record<ChampionId, ChampionData> = {
     draven: {
         id: "draven",
         name: "Draven",
-        baseAD: 62,
+        baseAD: 64,
         adGrowth: 3.4,
     },
 };
