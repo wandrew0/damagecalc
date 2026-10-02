@@ -36,7 +36,7 @@ export const metadata: Metadata = {
 export default function CollectorPage() {
     return (
         <div className="collector-page-wrapper collector-page-wrapper--collector">
-            <AppHeader title="Average Collector Value" />
+            <AppHeader title="Collector Execute Contribution" />
             <main className="collector-page collector-page-columns collector-page--collector">
                 <CollectorAnalysis />
             </main>

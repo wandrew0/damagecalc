@@ -69,26 +69,21 @@ export default function CollectorAnalysis() {
                 {/* Left Column: Explanation */}
                 <div className="explanation-column">
                     <div className="writeup-section">
-                        <h3>Model</h3>
+                        <h3>Execute contribution</h3>
                         <p>
-                            Collector&apos;s base stats suck, and its main benefit is of course
-                            its passive. Sometimes when we don&apos;t go Collector, we wonder
-                            if the missing execute would have secured a kill. However,
-                            other times when we go Collector, we wonder if the extra
-                            damage from IE or LDR would have been better. It&apos;s incredibly
-                            difficult to quantify the value of this execute, but this is
-                            an attempt to do so using averages (disclaimer at the bottom).
-                            This model calculates the average % damage increase that
-                            Collector does with its execute given various input variables.
+                            This model estimates average execute damage under a uniform
+                            last-hit assumption. The smooth percentage compares that
+                            execute damage with useful attack damage. It is not the
+                            damage buff needed to match attack counts or kill speed.
                         </p>
                         <p>
                             <strong>Assumptions:</strong>
                             <br />
                             1. Target has <span className="math-var">H</span> max HP.
                             <br />
-                            2. We start attacking at{" "}
+                            2. Assume a total damage contribution of{" "}
                             <span className="math-inline">I &times; H</span> HP, where{" "}
-                            <span className="math-var">I</span> is the initial percent HP.
+                            <span className="math-var">I</span> is your share of maximum HP, including execute damage.
                             <br />
                             3. We deal constant damage <span className="math-var">
                                 A
@@ -102,14 +97,11 @@ export default function CollectorAnalysis() {
                             and <span className="math-inline">0.05H + A</span>).
                         </p>
 
-                        <h4>The Logic</h4>
+                        <h4>The calculation</h4>
                         <p>
-                            In the best case, Collector only needs to deal{" "}
-                            <span className="math-inline">(I - 0.05)H</span> damage, while
-                            other builds must deal <span className="math-inline">IH</span>
-                            . However, we don&apos;t always land the target exactly on the 5%
-                            threshold. The last auto leaves them somewhere between 0 and{" "}
-                            <span className="math-inline">0.05H</span>.
+                            After crossing the execute threshold, the assumed residual
+                            HP ranges from 0.05H - A to 0.05H. Positive residual HP is
+                            execute damage; an attack that already kills adds zero.
                         </p>
 
                         <div className="cases-explanation">
@@ -139,18 +131,15 @@ export default function CollectorAnalysis() {
                                     <br />= <strong>0.05H - 0.5A</strong>
                                 </div>
                                 <p>
-                                    To kill the target without Collector, we must deal{" "}
-                                    <span className="math-inline">
-                                        (IH / Required) - 100%
-                                    </span>{" "}
-                                    more damage.
+                                    Useful attack contribution excludes the expected execute
+                                    damage. Their ratio describes damage accounting.
                                 </p>
                                 <div className="formula-block">
-                                    Required Damage = IH - (0.05H - 0.5A)
+                                    Attack contribution = IH - (0.05H - 0.5A)
                                 </div>
-                                <p>Thus, the required damage increase is:</p>
+                                <p>Execute relative to useful attack contribution:</p>
                                 <div className="formula-block">
-                                    % Diff = IH / (IH - (0.05H - 0.5A)) - 100%
+                                    Contribution % = (IH / (IH - (0.05H - 0.5A)) - 1) × 100%
                                 </div>
                             </div>
 
@@ -214,74 +203,33 @@ export default function CollectorAnalysis() {
                                     <br />= <strong>0.00125H² / A</strong>
                                 </div>
                                 <div className="formula-block">
-                                    Required Damage = IH - (0.00125H² / A)
+                                    Attack contribution = IH - (0.00125H² / A)
                                 </div>
-                                <p>The required damage increase for case 2 is:</p>
+                                <p>Execute relative to useful attack contribution:</p>
                                 <div className="formula-block">
-                                    % Diff = IH / (IH - (0.00125H² / A)) - 100%
+                                    Contribution % = (IH / (IH - (0.00125H² / A)) - 1) × 100%
                                 </div>
                             </div>
                         </div>
 
                         <section className="collector-notes">
                             <div className="collector-note-block">
-                                <h4>Why is the Uniform Assumption (mostly) Fair?</h4>
+                                <h4>What this assumes</h4>
                                 <p>
-                                    This assumption holds because your Attack Damage (
-                                    <span className="math-var">A</span>) is effectively
-                                    uncorrelated with the exact current Health of the target
-                                    at any given moment.
+                                    A uniform last-hit phase is an assumption, not something
+                                    implied by unrelated HP and attack damage. This model
+                                    does not establish how frequently these situations occur
+                                    in games. The assumed pre-hit HP range must fit within
+                                    maximum HP, and the contribution must exceed mean execute
+                                    damage for the ratio to be defined.
                                 </p>
                                 <p>
-                                    Since there is no mechanism synchronizing the
-                                    target&apos;s current HP to be a multiple of your damage,
-                                    the remainder{" "}
-                                    <span className="math-inline">(Current HP) mod A</span>{" "}
-                                    (the HP remaining before the lethal hit) is effectively
-                                    random. Across many scenarios, this &quot;alignment
-                                    offset&quot; is uniformly distributed, meaning the kill
-                                    shot is equally likely to land anywhere in the potential
-                                    range.
+                                    Crits, spells, allies, healing, shields, and unfinished
+                                    trades are excluded. Average execute damage does not
+                                    measure attacks saved, kill probability, or overall item
+                                    strength. The breakpoint curve answers a separate question:
+                                    extra damage per fixed hit needed to match an attack count.
                                 </p>
-                                <p>
-                                    <strong>Note on Teamplay:</strong> In practice,{" "}
-                                    <span className="math-inline">I &times; H</span>{" "}
-                                    represents the total damage <em>you</em> need to
-                                    contribute, not the target&apos;s initial HP. If the target
-                                    starts at 100% HP and teammates damage the target, this
-                                    reduces your <span className="math-var">I</span> below
-                                    100%. However, the model assumes that teammates do not
-                                    touch the target below 5% HP. Of course, collector is
-                                    worse if teammates burst the target from above 5% HP to 0
-                                    HP.
-                                </p>
-                            </div>
-
-                            <div className="collector-note-block">
-                                <h4>Caveats &amp; Limitations</h4>
-                                <ul>
-                                    <li>
-                                        <strong>Constant Damage Assumption:</strong> Assuming
-                                        constant damage <span className="math-var">A</span> is
-                                        generous. In reality, Critical Strikes and abilities
-                                        introduce variance (higher or lower damage). You also
-                                        can and should deliberately last hit kills as ADC when
-                                        possible, overriding the random distribution modeled
-                                        here. If you&apos;re able to time your last auto to bring
-                                        the target to exactly 5% HP with Collector, Collector
-                                        becomes the most efficient.
-                                    </li>
-                                    <li>
-                                        <strong>Averages Only:</strong> This analysis
-                                        calculates the{" "}
-                                        <strong>Expected Value (Average)</strong>. It
-                                        describes long-term damage efficiency, not the
-                                        specific probability distribution. It cannot tell you
-                                        &quot;what % of kills Collector secures that you would
-                                        otherwise miss&quot;; it only provides a high-level
-                                        heuristic for how to value the execute damage.
-                                    </li>
-                                </ul>
                             </div>
                         </section>
                     </div>

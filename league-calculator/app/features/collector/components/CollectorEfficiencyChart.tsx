@@ -77,7 +77,7 @@ export default function CollectorEfficiencyChart({
             labels,
             datasets: [
                 {
-                    label: "Average Efficiency",
+                    label: "Execute contribution ratio",
                     data: avgPercentDiffs,
                     borderColor: "rgba(255, 99, 132, 0.8)",
                     backgroundColor: "rgba(255, 99, 132, 0.5)",
@@ -90,7 +90,7 @@ export default function CollectorEfficiencyChart({
                     order: 1,
                 },
                 {
-                    label: "True Breakpoint Efficiency",
+                    label: "Damage to match fixed-hit count",
                     data: discretePercentDiffs,
                     borderColor: "rgba(53, 162, 235, 0.8)",
                     backgroundColor: "rgba(53, 162, 235, 0.5)",
@@ -120,7 +120,7 @@ export default function CollectorEfficiencyChart({
         plugins: {
             title: {
                 display: true,
-                text: "Collector Efficiency vs Damage Dealt",
+                text: "Collector: two different measures",
             },
             tooltip: {
                 callbacks: {
@@ -159,7 +159,7 @@ export default function CollectorEfficiencyChart({
                 position: "left" as const,
                 title: {
                     display: true,
-                    text: "% Damage Increase",
+                    text: "Percent",
                 },
                 beginAtZero: true,
             },
@@ -182,10 +182,11 @@ export default function CollectorEfficiencyChart({
                     paddingBottom: "0px",
                 }}
             >
-                * <strong>Blue Line (Sawtooth):</strong> Represents the exact efficiency
-                based on discrete auto-attack breakpoints. For sanity checking. <br />*{" "}
-                <strong>Red Line (Smooth):</strong> Represents the average expected
-                efficiency (uniform distribution model).
+                <strong>Blue:</strong> Damage per hit needed to match an attack count.
+                <br />
+                <strong>Red:</strong> Execute damage relative to useful attack contribution,
+                under the uniform-phase assumption. It is not an average of the blue curve
+                or an equivalent damage buff.
             </div>
         </div>
     );
