@@ -1,71 +1,42 @@
-# Custom Encoder/Decoder Implementation
+# Build sharing
 
-## Overview
+Source: [encoder.ts](app/utils/encoder.ts), with URL and paste handling in [CalculatorPage.tsx](app/features/calculator/CalculatorPage.tsx) and [ImportModal.tsx](app/features/calculator/components/ImportModal.tsx).
 
-I've successfully implemented a custom encoder/decoder system that significantly reduces the size of build export strings while adding champion level support.
+Share codes are compact JSON. Items are represented by numeric IDs from [item-ids.ts](app/data/item-ids.ts), and derived build stats are recalculated on import.
 
-## Key Improvements
+## Format
 
-### 1. **Size Reduction**
+This example contains a level-11 Aphelios build with The Collector and Infinity Edge, 24 manual bonus AD, 18 manual lethality, and two AD shards:
 
--   **Item Compression**: Instead of storing full item data (name, cost, AD, etc.), items are now referenced by simple numeric IDs
--   **Compact JSON**: Uses abbreviated field names (`n` for name, `i` for items, `b` for bonuses)
--   **Removed Redundancy**: Eliminates calculated values that can be recomputed (like totalCost, AD, etc.)
-
-### 2. **Champion Level Support**
-
--   Export now includes the current champion level
--   Import automatically sets the champion level when available
--   Backward compatible with existing exports
-
-### 3. **Backward Compatibility**
-
--   New decoder tries the new format first, falls back to legacy format
--   Existing shared builds will continue to work
--   Graceful error handling for invalid data
-
-## Technical Implementation
-
-### Files Modified:
-
--   `app/utils/encoder.ts` - New custom encoder/decoder
--   `app/features/calculator/components/ShareModal.tsx` - Updated to use new encoder and include champion level
--   `app/features/calculator/components/BuildPanel.tsx` - Pass champion level to ShareModal
--   `app/features/calculator/CalculatorPage.tsx` - Updated import logic to handle champion level
--   `app/features/calculator/components/ImportModal.tsx` - Updated to use new decoder
-
-### Size Comparison Example:
-
-```
-Old Format (JSON + Base64):
-{"name":"Test Build","items":[{"name":"Long Sword","cost":350,"AD":10,"critChance":0,"infinityEdgeBonus":false,"lethality":0,"armorPenetration":0,"aliases":[],"imagePath":""}],"critChance":0,"critDamageModifier":1.75,"AD":10,"armorPenetration":0,"lethality":0,"totalCost":350,"bonusAD":0,"bonusLethality":0,"bonusCrit":0}
-
-New Format (Compressed):
-{"v":1,"l":18,"b":[{"n":"Test Build","i":[1],"b":[0,0,0]}]}
+```json
+{
+  "v": 1,
+  "c": "aphelios",
+  "l": 11,
+  "b": [
+    { "n": "Collector + IE", "i": [6676, 3031], "b": [24, 18, 0] }
+  ],
+  "r": { "af": false, "gs": 0, "ad": 2 }
+}
 ```
 
-**Estimated size reduction: 60-80%** depending on build complexity.
+| Field | Meaning |
+| --- | --- |
+| `v` | Writer's format version, currently `1`; the decoder does not enforce it |
+| `c`, `l` | Optional champion ID (`aphelios` or `draven`) and level |
+| `b` | Build array; each entry has name `n`, item IDs `i`, and bonuses `b` |
+| Build `b` | `[bonusAD, bonusLethality, bonusCritChance]`; crit uses a fraction, so `0.25` means 25% |
+| `r` | Optional runes: Absolute Focus `af`, Gathering Storm minutes `gs`, AD shard count `ad` |
+| `d` | Optional Draven settings: Q enabled `e`, Q rank `q`, linked rank `l` |
 
-## Usage
+For example, Draven Q enabled and linked to champion level is represented by `"d": { "e": true, "q": 5, "l": true }` alongside `"c": "draven"`. A linked rank is derived from champion level when applied, rather than taken from the stored `q` value.
 
-### Exporting:
+The share dialog lets users omit optional settings. Target armor, target bonus HP, Hexoptics distance, and other pages' timelines are not part of this format. Item stats and patch versions are not embedded: the same code can produce different results after game data changes.
 
--   Champion level is automatically included in exports
--   Both "Copy Code" and "Copy URL" buttons use the new compressed format
+## URLs and imports
 
-### Importing:
+Copy URL places `encodeURIComponent(code)` in `/calculator#builds=...`. Copy Code returns the JSON directly, without Base64 encoding. The import dialog accepts raw JSON, `builds=` followed by raw JSON, or a full share URL. Legacy root-page hash links redirect to the calculator.
 
--   Automatically detects and imports champion level when available
--   Falls back to legacy format for older exports
--   No user action required - works transparently
+Users select which parsed builds and settings to apply, and whether to replace existing builds. Levels are rounded and clamped to 1–18, AD shards to 0–2, and Draven Q ranks to 1–5. Gathering Storm minutes are rounded to 10-minute steps and clamped at zero. Unrecognized item IDs are skipped, and the build's item limit is six.
 
-## Benefits:
-
-1. **Smaller URLs**: Much shorter shareable links
-2. **Better UX**: Faster loading and sharing
-3. **Champion Level**: Preserves build context
-4. **Backward Compatible**: Existing shares still work
-5. **Future Proof**: Extensible format for additional features
-
-
-
+The decoder requires the checked-in item ID mapping. There is no sequential-ID generator or runtime fallback mapping. A separate legacy decoder accepts JSON arrays of serialized builds; the current JSON decoder does not recognize every older payload as a legacy format. Base64 decoding is not implemented.
