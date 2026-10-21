@@ -3,7 +3,7 @@ import { Item } from "../classes/Item";
 export const ALL_ITEMS = [
     new Item("Axiom Arc", 2750, 55, 0, false, 18, 0, [], "/images/items/Axiom_Arc.png"),
     new Item("B. F. Sword", 1300, 40, 0, false, 0, 0, ['bf'], "/images/items/B_F_Sword.png"),
-    new Item("Bastionbreaker", 3000, 55, 0, false, 22, 0, [], "/images/items/Bastionbreaker.png"),
+    new Item("Bastionbreaker", 3000, 55, 0, false, 18, 0, [], "/images/items/Bastionbreaker.png"),
     new Item("Black Cleaver", 3000, 45, 0, false, 0, 0, ['bc'], "/images/items/Black_Cleaver.png"),
     new Item("Blade of The Ruined King", 3200, 40, 0, false, 0, 0, ['bork', 'botrk', 'brk'], "/images/items/Blade_of_The_Ruined_King.png"),
     new Item("Bloodthirster", 3400, 80, 0, false, 0, 0, ['bt'], "/images/items/Bloodthirster.png"),
